@@ -42,14 +42,34 @@ const filteredWorkouts = computed(() => {
   return allWorkoutsSorted.value.filter((w: any) => (w.start_time || 0) >= cutoff);
 });
 
+// Extra filters
+const filters = ref<{ workoutNumber: number | null; workoutName: string }>(
+  { workoutNumber: null, workoutName: '' }
+);
+
+// Combine date filter with creative filters
+const filteredAndSearchedWorkouts = computed(() => {
+  const base = filteredWorkouts.value;
+  return base.filter((w: any) => {
+    // Workout number exact match
+    if (filters.value.workoutNumber && workoutIndex(w.id) !== filters.value.workoutNumber) return false;
+    // Name contains (case-insensitive)
+    if (filters.value.workoutName) {
+      const name = (w.name || '').toLowerCase();
+      if (!name.includes(filters.value.workoutName.toLowerCase())) return false;
+    }
+    return true;
+  });
+});
+
 // Helpers
 const formatDateFull = (timestamp: number) => {
   const d = new Date(timestamp * 1000);
   const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   const dayName = days[d.getDay()];
-  const dd = d.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
-  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-  return `${dayName}, ${dd} ${time}`;
+  const usDate = d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }); // MM/DD/YYYY
+  const time = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+  return `${dayName}, ${usDate} ${time}`;
 };
 
 const biometrics = (workout: any) => {
@@ -74,7 +94,7 @@ const totalSets = (workout: any) => (workout.exercises || []).reduce((s: number,
 // Contribution graph (heatmap) data by day
 const workoutsByDay = computed(() => {
   const map: Record<string, any[]> = {};
-  for (const w of filteredWorkouts.value) {
+  for (const w of filteredAndSearchedWorkouts.value) {
     const dayKey = new Date((w.start_time || 0) * 1000).toISOString().slice(0,10); // YYYY-MM-DD
     (map[dayKey] ||= []).push(w);
   }
@@ -143,35 +163,42 @@ onMounted(async () => { await store.fetchWorkouts(); });
   <div class="workouts-list">
     <div class="header-row">
       <h1>Workout History (List)</h1>
-      <div class="filters">
-        <label class="filter-label">Time Range</label>
-        <select class="filter-select" :value="filterRange" @change="onChangeFilter(($event.target as HTMLSelectElement).value as any)">
-          <option value="all">All</option>
-          <option value="1w">Last week</option>
-          <option value="1m">Last month</option>
-          <option value="3m">Last 3 months</option>
-          <option value="6m">Last 6 months</option>
-          <option value="12m">Last 12 months</option>
-        </select>
-      </div>
     </div>
 
     <!-- Contribution Graph -->
     <div class="contrib-graph">
-      <div class="month-row">
-        <span v-for="(col, ci) in weeks" :key="'m-' + ci" class="month-label">{{ col.monthLabel || '' }}</span>
-      </div>
-      <div class="grid">
-        <div class="weekday-col">
-          <span v-for="label in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']" :key="label" class="weekday">{{ label }}</span>
-        </div>
-        <div class="weeks-wrap">
-          <div v-for="(col, ci) in weeks" :key="'c-' + ci" class="week-col">
-            <div v-for="day in col.days" :key="day.date" class="cell" :style="{ backgroundColor: cellColor(day.count) }" @click="scrollToDay(day.date)" :title="`${day.date} — ${day.count} workout(s)`"></div>
+      <div class="graph-and-filters">
+        <div class="graph-area">
+          <div class="month-row">
+            <span v-for="(col, ci) in weeks" :key="'m-' + ci" class="month-label">{{ col.monthLabel || '' }}</span>
+          </div>
+          <div class="grid">
+            <div class="weekday-col">
+              <span v-for="label in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']" :key="label" class="weekday">{{ label }}</span>
+            </div>
+            <div class="weeks-wrap">
+              <div v-for="(col, ci) in weeks" :key="'c-' + ci" class="week-col">
+                <div v-for="day in col.days" :key="day.date" class="cell" :style="{ backgroundColor: cellColor(day.count) }" @click="scrollToDay(day.date)" :title="`${day.date} — ${day.count} workout(s)`"></div>
+              </div>
+            </div>
           </div>
         </div>
+        <div class="filters">
+          <label class="filter-label">Time Range</label>
+          <select class="filter-select" :value="filterRange" @change="onChangeFilter(($event.target as HTMLSelectElement).value as any)">
+            <option value="all">All</option>
+            <option value="1w">Last week</option>
+            <option value="1m">Last month</option>
+            <option value="3m">Last 3 months</option>
+            <option value="6m">Last 6 months</option>
+            <option value="12m">Last 12 months</option>
+          </select>
+          <label class="filter-label">By Number</label>
+          <input class="filter-input" type="number" min="1" placeholder="#" v-model.number="filters.workoutNumber" />
+          <label class="filter-label">Name</label>
+          <input class="filter-input" type="text" placeholder="Contains…" v-model="filters.workoutName" />
+        </div>
       </div>
-      
     </div>
 
     <!-- Loading state -->
@@ -181,7 +208,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
     </div>
 
     <div v-else class="list">
-      <div v-for="workout in filteredWorkouts" :key="workout.id" class="item" :data-day="new Date(workout.start_time * 1000).toISOString().slice(0,10)">
+      <div v-for="workout in filteredAndSearchedWorkouts" :key="workout.id" class="item" :data-day="new Date(workout.start_time * 1000).toISOString().slice(0,10)">
         <!-- Collapsed line -->
         <button class="item-toggle" @click="toggleItem(workout.id)">
           <div class="line">
@@ -267,9 +294,11 @@ h1 { margin: 0; color: var(--text-primary); font-size: 2rem; font-weight: 600; l
 
 /* Contribution graph */
 .contrib-graph { margin-bottom: 1.5rem; }
+.contrib-graph .graph-and-filters { display: flex; align-items: flex-start; gap: 1rem; }
+.contrib-graph .graph-area { display: inline-block; }
 .contrib-graph .month-row { display: flex; gap: 3px; margin-bottom: 4px; }
 .contrib-graph .month-label { display: inline-block; width: 12px; font-size: 0.7rem; color: var(--text-secondary); text-align: center; }
-.contrib-graph .grid { display: flex; gap: 6px; align-items: flex-start; }
+.contrib-graph .grid { display: flex; gap: 6px; align-items: flex-start; width: auto; }
 .contrib-graph .weekday-col { display: flex; flex-direction: column; gap: 3px; }
 .contrib-graph .weekday { width: 28px; font-size: 0.7rem; color: var(--text-secondary); text-align: right; line-height: 12px; }
 .contrib-graph .weeks-wrap { display: flex; gap: 3px; }
