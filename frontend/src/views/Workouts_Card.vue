@@ -86,6 +86,24 @@ const caloriesDisplay = (workout: any) => {
   return typeof cal === "number" ? `${Math.round(cal)} kcal` : null;
 };
 
+// PR helpers based on sets.prs / sets.personalRecords
+type PRItem = { type: string; value: number | string };
+const extractSetPRs = (set: any): PRItem[] => {
+  const prsArr = Array.isArray(set?.prs) ? set.prs : (set?.prs ? [set.prs] : []);
+  const personalArr = Array.isArray(set?.personalRecords) ? set.personalRecords : (set?.personalRecords ? [set.personalRecords] : []);
+  const all = [...prsArr, ...personalArr].filter(Boolean).map((p: any) => ({ type: String(p.type || ''), value: p.value }));
+  return all.filter(p => p.type);
+};
+const exercisePRs = (exercise: any): PRItem[] => {
+  const sets = Array.isArray(exercise?.sets) ? exercise.sets : [];
+  const items: PRItem[] = [];
+  for (const s of sets) items.push(...extractSetPRs(s));
+  const seen = new Set<string>();
+  return items.filter(it => { const k = `${it.type}|${it.value}`; if (seen.has(k)) return false; seen.add(k); return true; });
+};
+const exerciseHasPR = (exercise: any) => exercisePRs(exercise).length > 0;
+// Note: set-level highlighting reverted per request; keep extractor for future use if needed
+
 const toggleExercise = (exerciseId: string) => {
   expandedExercises.value[exerciseId] = !expandedExercises.value[exerciseId];
 };
@@ -105,7 +123,7 @@ onMounted(async () => {
 <template>
   <div class="workouts">
     <div class="header-row">
-      <h1>Workout History</h1> <!-- Page title -->
+      <h1>Workout History (Card)</h1> <!-- Page title -->
 
       <div class="filters"> <!-- Filter controls -->
         <label class="filter-label">Time Range</label>
@@ -167,13 +185,16 @@ onMounted(async () => {
           <!--  Exercises List  -->
           <div class="exercises">
             <h3>Exercises</h3>
-            <div v-for="exercise in workout.exercises" :key="exercise.id" class="exercise">
+            <div v-for="exercise in workout.exercises" :key="exercise.id" class="exercise" :class="{ 'pr-highlight': exerciseHasPR(exercise) }">
               <button class="exercise-toggle" @click="toggleExercise(exercise.id)">
                 <span class="exercise-title">{{ exercise.title || "Unknown Exercise" }}</span>
                 <span class="toggle-icon">{{ expandedExercises[exercise.id] ? "▾" : "▸" }}</span>
               </button>
 
               <div v-show="expandedExercises[exercise.id]" class="exercise-content">
+                <div v-if="exerciseHasPR(exercise)" class="pr-summary">
+                  <span v-for="(pr, i) in exercisePRs(exercise)" :key="i" class="pr-chip">{{ (pr.type || '').split('_').join(' ') }}: <strong>{{ pr.value }}</strong></span>
+                </div>
                 <table class="sets-table">
                   <thead>
                     <tr>
@@ -243,6 +264,7 @@ onMounted(async () => {
   .pill { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid transparent; }
   .pill-red { background: rgba(239, 68, 68, 0.15); color: #ef4444; border-color: rgba(239, 68, 68, 0.35); }
   .pill-orange { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35); }
+  .pill-pr { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35); }
 
   .stats-row { display: flex; gap: 1.25rem; margin-bottom: 1rem; }
   .stat { display: flex; flex-direction: column; gap: 0.15rem; }
@@ -262,6 +284,11 @@ onMounted(async () => {
   .sets-table th, .sets-table td { padding: 0.5rem; border-bottom: 1px solid var(--border-color); text-align: left; color: var(--text-primary); }
   .sets-table th { color: var(--text-secondary); font-weight: 500; }
   .exercise-notes { padding: 0.5rem 0.75rem; color: var(--text-secondary); }
+
+  /* PR highlighting */
+  .pr-highlight { border: 2px solid #f59e0b; }
+  .pr-summary { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0; padding: 0.25rem 0.5rem; }
+  .pr-chip { background: rgba(245, 158, 11, 0.22); color: #eedebc; border: 2px solid #f59e0b; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.85rem; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.15); margin: 2px; }
 
   .pagination { grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem; }
   .pagination.top { margin-bottom: 1rem; }

@@ -91,6 +91,30 @@ const caloriesDisplay = (workout: any) => {
 const formatDuration = (start: number, end: number) => `${Math.floor((end - start) / 60)} min`;
 const totalSets = (workout: any) => (workout.exercises || []).reduce((s: number, ex: any) => s + ((ex.sets || []).length), 0);
 
+// PR helpers using sets.prs / sets.personalRecords
+type PRItem = { type: string; value: number | string };
+const extractSetPRs = (set: any): PRItem[] => {
+  const prsArr = Array.isArray(set?.prs) ? set.prs : (set?.prs ? [set.prs] : []);
+  const personalArr = Array.isArray(set?.personalRecords) ? set.personalRecords : (set?.personalRecords ? [set.personalRecords] : []);
+  const all = [...prsArr, ...personalArr].filter(Boolean).map((p: any) => ({ type: String(p.type || ''), value: p.value }));
+  return all.filter(p => p.type);
+};
+const exercisePRs = (exercise: any): PRItem[] => {
+  const sets = Array.isArray(exercise?.sets) ? exercise.sets : [];
+  const items: PRItem[] = [];
+  for (const s of sets) items.push(...extractSetPRs(s));
+  const seen = new Set<string>();
+  return items.filter(it => { const k = `${it.type}|${it.value}`; if (seen.has(k)) return false; seen.add(k); return true; });
+};
+const setHasPR = (set: any) => extractSetPRs(set).length > 0;
+const workoutPRCount = (workout: any) => {
+  let count = 0;
+  for (const ex of (workout.exercises || [])) {
+    for (const s of (ex.sets || [])) count += extractSetPRs(s).length;
+  }
+  return count;
+};
+
 // Contribution graph (heatmap) data by day
 const workoutsByDay = computed(() => {
   const map: Record<string, any[]> = {};
@@ -218,6 +242,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
             <span class="line-name">{{ workout.name || "Unnamed" }}</span>
             <span v-if="bpmDisplay(workout)" class="pill pill-red">❤️ {{ bpmDisplay(workout) }}</span>
             <span v-if="caloriesDisplay(workout)" class="pill pill-orange">🔥 {{ caloriesDisplay(workout) }}</span>
+            <span v-if="workoutPRCount(workout) > 0" class="pill pill-gold" title="Personal Records">🏆 {{ workoutPRCount(workout) }}</span>
           </div>
           <span class="toggle-icon">{{ expanded[workout.id] ? "▾" : "▸" }}</span>
         </button>
@@ -254,6 +279,9 @@ onMounted(async () => { await store.fetchWorkouts(); });
                   <img v-if="exercise.thumbnail_url" :src="exercise.thumbnail_url" class="thumb" alt="Exercise thumbnail" />
                   <div class="exercise-title">{{ exercise.title || "Unknown Exercise" }}</div>
                 </div>
+              <div v-if="exercisePRs(exercise).length" class="pr-summary">
+                <span v-for="(pr, i) in exercisePRs(exercise)" :key="i" class="pr-chip">{{ (pr.type || '').split('_').join(' ') }}: <strong>{{ pr.value }}</strong></span>
+              </div>
               <table class="sets-table">
                 <thead>
                   <tr>
@@ -264,7 +292,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="set in exercise.sets" :key="set.id">
+                  <tr v-for="set in exercise.sets" :key="set.id" :class="{ 'set-pr-highlight': setHasPR(set) }">
                     <td>{{ set.index + 1 }}</td>
                     <td>{{ set.weight_kg || "-" }}</td>
                     <td>{{ set.reps || "-" }}</td>
@@ -323,6 +351,7 @@ h1 { margin: 0; color: var(--text-primary); font-size: 2rem; font-weight: 600; l
 .pill-orange { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35); }
 .pill-green { background: rgba(16,185,129,0.15); color: var(--emerald-primary); border-color: rgba(16,185,129,0.35); }
 .pill-blue { background: rgba(59,130,246,0.15); color: #3b82f6; border-color: rgba(59,130,246,0.35); }
+.pill-gold { background: rgba(201, 187, 0, 0.205); color: #eeea05; border-color: rgba(253, 228, 3, 0.35); }
 .toggle-icon { color: var(--text-secondary); margin-left: 0.5rem; }
 
 .details { padding: 1rem; }
@@ -345,6 +374,11 @@ h1 { margin: 0; color: var(--text-primary); font-size: 2rem; font-weight: 600; l
 .sets-table th, .sets-table td { padding: 0.5rem; border-bottom: 1px solid var(--border-color); text-align: left; color: var(--text-primary); }
 .sets-table th { color: var(--text-secondary); font-weight: 500; }
 .exercise-notes { padding: 0.5rem 0.75rem; color: var(--text-secondary); }
+
+/* PR styling for list view */
+.set-pr-highlight { border-left: 5px solid #f59e0b; }
+.pr-summary { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0; padding: 0.25rem 0.5rem; }
+.pr-chip { background: rgba(245, 158, 11, 0.22); color: #eedebc; border: 2px solid #f59e0b; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.85rem; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.15); margin: 2px; }
 
 @media (max-width: 900px) {
   .row { grid-template-columns: 1fr; }
