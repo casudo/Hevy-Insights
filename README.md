@@ -13,7 +13,7 @@
 > [!NOTE]
 > This is a hobby project. Feel free to create issues and contribute.
 
-# Overview <!-- omit from toc -->
+# About Hevy Insights <!-- omit from toc -->
 
 Hevy Insights is a dynamic web application that provides insights and analytics of your workouts and exercises. It visualizes workout data from the Hevy app in a clean dashboard so that you can always keep track of your progress!
 
@@ -23,6 +23,7 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 # Table of Contents <!-- omit from toc -->
 
 - [Features](#features)
+- [Screenshots](#screenshots)
 - [Usage](#usage)
   - [Hosted Online](#hosted-online)
   - [Local Setup](#local-setup)
@@ -46,6 +47,24 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 - **Authentication**: Login with Hevy credentials (no Hevy PRO membership required!). Credentials are stored in your browser's local storage **only**.
 - **Dashboard**: Interactive charts and statistics of your workouts, including volume, muscle distribution and hours trained.
 - **Workout History**: Workout logs with detailed exercise information up to the date of account creation - card or list design.
+
+# Screenshots
+
+> [!NOTE]
+> Screenshots as of **v1.0.0**
+
+*Login Page*
+![Login Page](/readme_images/login_page.png)
+
+*Dashboard*
+![Dashboard Page](/readme_images/dashboard_page.png)
+
+*Workouts Page - Card Design*
+![Workouts Page - Card Design](/readme_images/workout_page_card.png)
+
+*Workouts Page - List Design*
+![Workouts Page - List Design](/readme_images/workout_page_list.png)
+
 
 # Usage
 
