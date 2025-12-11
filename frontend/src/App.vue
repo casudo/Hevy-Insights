@@ -6,6 +6,7 @@ import { authService } from "./services/api";
 const router = useRouter();
 const route = useRoute();
 const showNav = ref(false);
+const appVersion = "v1.0.0"; // Update version as needed
 
 const checkAuth = () => {
   const token = localStorage.getItem("hevy_auth_token");
@@ -55,6 +56,7 @@ router.afterEach(() => {
       </nav>
 
       <div class="sidebar-footer">
+        <div class="version-info">{{ appVersion }}</div>
         <button @click="logout" class="logout-btn">
           <span class="nav-icon">🚪</span>
           <span class="nav-text">Logout</span>
@@ -206,6 +208,12 @@ body {
 .sidebar-footer {
   padding: 1rem 0.75rem;
   border-top: 1px solid var(--border-color);
+}
+
+.version-info {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin: 0 0 0.5rem 0.5rem;
 }
 
 .logout-btn {
