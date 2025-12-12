@@ -1,12 +1,12 @@
 openapi: "3.1.1"
 info:
   title: Free Hevy API Docs
-  version: "1.0.0"
+  version: "1.1.0"
   description: This Swagger documentation provides details about various Hevy API endpoints which can be retrieved without a Hevy PRO subscription.
   contact:
     name: casudo
     email: hevy@kida.one
-    url: https://kida.one
+    url: https://hevy.kida.one
 
 servers:
   - url: https://api.hevyapp.com

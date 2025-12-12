@@ -70,12 +70,15 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 
 # Usage
 
-> [!WARNING]
-> Hevy Insights is not yet published or hosted online. You need to run the backend and frontend servers locally on your machine by following the instructions below. It'll will be available online in the future.
+You can either use Hevy Insights online or run it locally on your machine.
 
 ## Hosted Online
 
-> Hevy Insights will be hosted online in the future. Stay tuned for updates!
+Navigate to the hosted version of Hevy Insights at: [https://hevy.kida.one](https://hevy.casudo.dev)
+The latest version is always hosted there.
+
+> [!IMPORTANT]
+> **Only** your Hevy API token is stored **at your own browser's local storage**. No other data is stored!
 
 ## Local Setup
 
