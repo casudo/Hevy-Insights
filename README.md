@@ -40,6 +40,7 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
     - [When `nginx.conf` is used](#when-nginxconf-is-used)
     - [Direct-to-Backend with CORS](#direct-to-backend-with-cors)
 - [Development](#development)
+  - [Swagger Documentation](#swagger-documentation)
   - [Backend Setup](#backend-setup)
   - [Frontend Setup](#frontend-setup)
 - [Legal Disclaimer](#legal-disclaimer)
@@ -244,6 +245,11 @@ app.add_middleware(
 > For other inquiries, feel free to contact me -> [casudo](https://github.com/casudo)
 
 Clone/download the repository and follow the steps below.
+
+## Swagger Documentation
+
+The OpenAPI specification for the Hevy API endpoints is located in `docs/swagger.yaml`.
+You can see it online via [my GitHub Pages](https://casudo.github.io/Hevy-Insights).
 
 ## Backend Setup
 
