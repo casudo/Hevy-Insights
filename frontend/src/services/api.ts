@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api"; // FastAPI server URL
+// Use relative API in production (proxied by Nginx); localhost in dev
+const API_BASE_URL = import.meta.env.PROD ? "/api" : "http://localhost:5000/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,

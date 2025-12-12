@@ -36,6 +36,9 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
     - [Documentation \& Configuration](#documentation--configuration)
   - [High-Level-Flow](#high-level-flow)
     - [Authentication Flow](#authentication-flow)
+  - [API in Dev vs Prod](#api-in-dev-vs-prod)
+    - [When `nginx.conf` is used](#when-nginxconf-is-used)
+    - [Direct-to-Backend with CORS](#direct-to-backend-with-cors)
 - [Development](#development)
   - [Backend Setup](#backend-setup)
   - [Frontend Setup](#frontend-setup)
@@ -165,6 +168,7 @@ hevy-insights/
 - **`src/main.ts`**: Vue application initialization and router setup.
 - **`src/style.css`**: Global styles for the application.
 - **`index.html`**: HTML entry point.
+- **`nginx.conf`**: Nginx configuration for serving the built frontend in production mode with SPA fallback and API proxying.
 - **`package-lock.json`**: npm package lock file.
 - **`package.json`**: Node.js dependencies (Vue 3, Vue Router, Axios, Chart.js, TypeScript, Vite).
 
@@ -196,6 +200,39 @@ hevy-insights/
 3. Frontend stores token in localStorage
 4. Subsequent API requests include token in `auth-token` header
 5. Backend uses token to authenticate requests to Hevy API  
+
+## API in Dev vs Prod
+
+- In development, the frontend talks directly to the FastAPI server: the Axios base URL in [frontend/src/services/api.ts](frontend/src/services/api.ts) is `http://localhost:5000/api` when `import.meta.env.PROD` is false.
+- In production, the Axios base URL is `/api` (same origin). Requests resolve as `https://your-domain/api/...` and are reverse‑proxied to the backend by Nginx.
+- The `import.meta.env.PROD` flag is set automatically by Vite at build time. No extra configuration is required.
+
+### When `nginx.conf` is used
+
+- The file [frontend/nginx.conf](frontend/nginx.conf) is used when the built frontend is served by Nginx (e.g. on a server with Nginx).
+- It performs two critical roles:
+   - SPA fallback: routes like `/dashboard` and `/workouts-list` return `index.html` so client‑side routing works.
+   - API proxy: requests to `/api/...` are forwarded to the FastAPI backend (e.g., `http://backend:5000`). This keeps a single public origin and avoids CORS in production.
+- If your deployment does not use Nginx (e.g., serving static files from a CDN without proxying), ensure your hosting platform supports SPA fallback and adjust the API base accordingly.
+
+### Direct-to-Backend with CORS
+
+- In local development, the frontend dev server runs on `http://localhost:5173` and the backend on `http://localhost:5000`. Because these are different origins, FastAPI enables CORS middleware so the browser can call the backend directly.
+- Typical CORS setup (illustrative) in `fastapi_server.py`:
+
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+      CORSMiddleware,
+      allow_origins=["http://localhost:5173"],
+      allow_credentials=True,
+      allow_methods=["*"],
+      allow_headers=["*"],
+)
+```
+
+- In production behind Nginx, CORS is not required because the frontend and `/api` share the same origin.
 
 # Development
 
