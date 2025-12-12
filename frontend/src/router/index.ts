@@ -38,7 +38,7 @@ const router = createRouter({
 });
 
 // Navigation guard to check authentication
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem("hevy_auth_token");
   
   if (to.meta.requiresAuth && !token) {
