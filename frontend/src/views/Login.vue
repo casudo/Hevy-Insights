@@ -119,7 +119,7 @@ const handleLogin = async () => {
         <div class="login-footer">
           <div class="divider"></div>
           <p class="footer-text">
-            Made by <strong>casudo</strong> • Track your fitness journey
+            Made by <strong><a href="https://github.com/casudo" target="_blank" rel="noopener noreferrer">casudo</a></strong> • Track your fitness journey
           </p>
         </div>
       </div>
@@ -487,6 +487,15 @@ const handleLogin = async () => {
 .footer-text strong {
   color: #10b981;
   font-weight: 600;
+}
+
+/* Keep footer link green across states */
+.footer-text a {
+  color: #10b981;
+  text-decoration: none;
+}
+.footer-text a:visited {
+  color: #10b981; /* avoid purple visited color */
 }
 
 /* Responsive Design */
