@@ -387,6 +387,9 @@ onMounted(async () => { await store.fetchWorkouts(); });
 
   /* Mobile Responsive */
   @media (max-width: 640px) {
+    /* Hide contribution graph entirely on mobile */
+    .graph-area { display: none !important; }
+
     .workouts-list { padding: 1rem; }
     .header-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
     .filters { flex-wrap: wrap; }
