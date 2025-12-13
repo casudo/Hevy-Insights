@@ -3,6 +3,7 @@ import Login from "../views/Login.vue";
 import Dashboard from "../views/Dashboard.vue";
 import WorkoutsCard from "../views/Workouts_Card.vue";
 import WorkoutsList from "../views/Workouts_List.vue";
+import Exercises from "../views/Exercises.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -32,6 +33,12 @@ const router = createRouter({
       path: "/workouts-list",
       name: "Workouts_List",
       component: WorkoutsList,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/exercises",
+      name: "Exercises",
+      component: Exercises,
       meta: { requiresAuth: true },
     },
     // Catch-all for unknown paths
