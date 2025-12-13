@@ -9,10 +9,15 @@ const showNav = ref(false);
 const appVersion = "v1.0.1"; // Update version as needed
 const isMobileSidebarOpen = ref(false);
 const showTopbar = ref(true);
+const showScrollTop = ref(false);
 
 const updateNavVisibility = () => {
   // Show nav/topbar on all routes except login
   showNav.value = route.path !== "/login";
+};
+
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
 const logout = () => {
@@ -28,6 +33,8 @@ onMounted(() => {
     const y = window.scrollY;
     // Show topbar when scrolling up or near top; hide on scroll down
     showTopbar.value = y < 10 || y < lastY;
+    // Show scroll to top button when scrolled down 300px
+    showScrollTop.value = y > 300;
     lastY = y;
   };
   window.addEventListener("scroll", onScroll, { passive: true });
@@ -101,6 +108,12 @@ watch(isMobileSidebarOpen, (open) => {
 
     <!-- Backdrop for mobile to close sidebar -->
     <div v-if="isMobileSidebarOpen" class="backdrop" @click="isMobileSidebarOpen = false"></div>
+    
+    <!-- Scroll to Top Button -->
+    <button v-if="showScrollTop" class="scroll-to-top" @click="scrollToTop" title="Scroll to top">
+      ↑
+    </button>
+    
     <!-- Main Content Area -->
     <main :class="{ 'with-sidebar': showNav, 'without-sidebar': !showNav, 'dimmed': isMobileSidebarOpen }">
       <router-view />
@@ -147,6 +160,57 @@ body.sidebar-open {
   overflow: hidden;
   overscroll-behavior: contain;
   touch-action: none;
+}
+
+/* Scroll to Top Button */
+.scroll-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  background: var(--emerald-primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 2.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
+
+.scroll-to-top:hover {
+  background: var(--emerald-dark);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+.scroll-to-top:active {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .scroll-to-top {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 2rem;
+    display: grid;
+    place-items: center;
+    line-height: 1;
+  }
 }
 
 #app {
