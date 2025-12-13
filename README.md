@@ -7,7 +7,7 @@
   ---
 
   <!-- Placeholder for badges -->
-  ![GitHub License](https://img.shields.io/github/license/casudo/Hevy-Insights) ![GitHub release (with filter)](https://img.shields.io/github/v/release/casudo/Hevy-Insights)
+  ![GitHub License](https://img.shields.io/github/license/casudo/Hevy-Insights) ![GitHub release (with filter)](https://img.shields.io/github/v/release/casudo/Hevy-Insights) ![GitHub action checks](https://img.shields.io/github/check-runs/casudo/Hevy-Insights/main) ![GitHub issues](https://img.shields.io/github/issues/casudo/Hevy-Insights) ![GitHub last commit](https://img.shields.io/github/last-commit/casudo/Hevy-Insights)
 </div>
 
 > [!NOTE]
