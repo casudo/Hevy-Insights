@@ -119,7 +119,7 @@ const handleLogin = async () => {
         <div class="login-footer">
           <div class="divider"></div>
           <p class="footer-text">
-            Made by <strong><a href="https://github.com/casudo" target="_blank" rel="noopener noreferrer">casudo</a></strong> • Track your fitness journey
+            Made by <strong><a href="https://github.com/casudo/Hevy-Insights" target="_blank" rel="noopener noreferrer">casudo</a></strong> • Track your fitness journey
           </p>
         </div>
       </div>
