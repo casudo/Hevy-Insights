@@ -59,7 +59,7 @@ const exercises = computed(() => {
       const entry = (map[id] ||= {
         id,
         title,
-        thumbnail_url: ex.thumbnail_url || null,
+        video_url: ex.url || null,
         sets: [] as any[],
         prs: [] as any[],
         domId: id,
@@ -392,8 +392,10 @@ const barChartOptions = {
 
           <!-- Media and Stats -->
           <div class="media-and-stats">
-            <!-- Exercise Thumbnail -->
-            <div class="thumb" v-if="ex.thumbnail_url"><img :src="ex.thumbnail_url" alt="Exercise thumbnail" /></div>
+            <!-- Exercise Video -->
+            <div class="thumb" v-if="ex.video_url">
+              <video :src="ex.video_url" autoplay loop muted playsinline></video>
+            </div>
 
             <!-- Top Sets -->
             <div class="top-sets inline" v-if="ex.topSets && ex.topSets.length">
@@ -497,6 +499,7 @@ const barChartOptions = {
 
 .media-and-stats { display: grid; grid-template-columns: 200px auto 1fr; gap: 1rem; align-items: start; margin-top: 0.75rem; }
 .thumb img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border-color); }
+.thumb video { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border-color); }
 .right-section { display: flex; gap: 1rem; }
 .pr-list { max-width: 320px; }
 .pr-list h3 { margin: 0 0 0.5rem 0; font-size: 1rem; color: var(--text-primary); }
