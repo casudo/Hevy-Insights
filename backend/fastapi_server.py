@@ -92,6 +92,7 @@ def get_auth_token(auth_token: Optional[str]) -> str:
 
 @app.post("/api/login", response_model=LoginResponse, tags=["Authentication"])
 @limiter.limit("5/minute")  # Max 5 login attempts per minute per IP
+def login(credentials: LoginRequest) -> LoginResponse:
     """
     Login with Hevy credentials to obtain an authentication token.
 
@@ -115,7 +116,7 @@ def get_auth_token(auth_token: Optional[str]) -> str:
 
 
 @app.post("/api/validate", response_model=ValidateTokenResponse, tags=["Authentication"])
-async def validate_token(token_data: ValidateTokenRequest) -> ValidateTokenResponse:
+def validate_token(token_data: ValidateTokenRequest) -> ValidateTokenResponse:
     """
     Validate an authentication token.
 
@@ -135,7 +136,7 @@ async def validate_token(token_data: ValidateTokenRequest) -> ValidateTokenRespo
 
 
 @app.get("/api/user/account", tags=["User"])
-async def get_user_account(auth_token: str = Header(..., alias="auth-token")) -> dict:
+def get_user_account(auth_token: str = Header(..., alias="auth-token")) -> dict:
     """
     Get authenticated user's account information.
 
@@ -156,7 +157,7 @@ async def get_user_account(auth_token: str = Header(..., alias="auth-token")) ->
 
 
 @app.get("/api/workouts", tags=["Workouts"])
-async def get_workouts(
+def get_workouts(
     auth_token: str = Header(..., alias="auth-token"),
     offset: int = Query(0, ge=0, description="Pagination offset (increments of 5)"),
     username: str = Query(..., description="Filter by username"),
