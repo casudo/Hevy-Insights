@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
+import { useHevyCache } from "../stores/hevy_cache";
+
+const store = useHevyCache();
+const userAccount = computed(() => store.userAccount);
 
 // Color theme presets
 const colorThemes = [
@@ -70,8 +74,24 @@ const resetSettings = () => {
     <div class="settings-header">
       <div class="header-content">
         <div class="title-section">
-          <h1>⚙️ Settings</h1>
-          <p class="subtitle">Customize your dashboard experience</p>
+          <h1>Settings</h1>
+          <p class="subtitle">Customize your dashboard experience.</p>
+        </div>
+
+        <div class="header-actions">
+          <!-- Back Button -->
+          <button @click="$router.push('/')" class="back-btn" title="Back to Dashboard">
+            ←
+          </button>
+          
+          <!-- User Badge -->
+          <div v-if="userAccount" class="user-badge">
+            <div class="user-avatar">{{ userAccount.username.charAt(0).toUpperCase() }}</div>
+            <div class="user-details">
+              <strong>{{ userAccount.username }}</strong>
+              <span>{{ userAccount.email }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -143,20 +163,100 @@ const resetSettings = () => {
 
 .title-section h1 {
   margin: 0;
-  color: #f8fafc;
+  color: var(--text-primary);
   font-size: 2rem;
   font-weight: 700;
   letter-spacing: -0.5px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  background: linear-gradient(135deg, var(--color-primary, #10b981), var(--color-secondary, #06b6d4));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .subtitle {
   margin: 0.5rem 0 0;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 1rem;
   font-weight: 400;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.back-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-btn:hover {
+  border-color: var(--color-primary, #10b981);
+  color: var(--color-primary, #10b981);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-primary, #10b981) 30%, transparent);
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  padding: 0.75rem 1.25rem;
+  border-radius: 50px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.user-badge:hover {
+  border-color: var(--color-primary, #10b981);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-primary, #10b981) 30%, transparent);
+  transform: translateY(-2px);
+}
+
+.user-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary, #10b981), var(--color-secondary, #06b6d4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.125rem;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.user-details strong {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.user-details span {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
 /* Settings Content */

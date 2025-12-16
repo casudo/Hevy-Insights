@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
 
 const store = useHevyCache();
+const userAccount = computed(() => store.userAccount);
 
 // UI state
 const currentPage = ref(1);
@@ -122,19 +123,29 @@ onMounted(async () => {
 
 <template>
   <div class="workouts">
-    <div class="header-row">
-      <h1>Workout History (Card)</h1> <!-- Page title -->
+    <!-- Header Section -->
+    <div class="workouts-card-header">
+      <div class="header-content">
+        <div class="title-section">
+          <h1>Workouts (Card)</h1>
+          <p class="subtitle">See your workouts in a card design.</p>
+        </div>
 
-      <div class="filters"> <!-- Filter controls -->
-        <label class="filter-label">Time Range</label>
-        <select class="filter-select" :value="filterRange" @change="onChangeFilter(($event.target as HTMLSelectElement).value as any)">
-          <option value="all">All</option>
-          <option value="1w">Last week</option>
-          <option value="1m">Last month</option>
-          <option value="3m">Last 3 months</option>
-          <option value="6m">Last 6 months</option>
-          <option value="12m">Last 12 months</option>
-        </select>
+        <div class="header-actions">
+          <!-- Settings Button -->
+          <button @click="$router.push('/settings')" class="settings-btn" title="Settings">
+            ⚙️
+          </button>
+          
+          <!-- User Badge -->
+          <div v-if="userAccount" class="user-badge">
+            <div class="user-avatar">{{ userAccount.username.charAt(0).toUpperCase() }}</div>
+            <div class="user-details">
+              <strong>{{ userAccount.username }}</strong>
+              <span>{{ userAccount.email }}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -147,11 +158,24 @@ onMounted(async () => {
     <div v-else>
       <!-- Top pagination -->
       <div class="pagination top">
-        <button @click="firstPage" :disabled="!hasPrev" class="pagination-btn">《 First</button>
-        <button @click="prevPage" :disabled="!hasPrev" class="pagination-btn">← Previous</button>
-        <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
-        <button @click="nextPage" :disabled="!hasMore" class="pagination-btn">Next →</button>
-        <button @click="lastPage" :disabled="!hasMore" class="pagination-btn">Last 》</button>
+        <div class="pagination-controls">
+          <button @click="firstPage" :disabled="!hasPrev" class="pagination-btn">《 First</button>
+          <button @click="prevPage" :disabled="!hasPrev" class="pagination-btn">← Previous</button>
+          <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button @click="nextPage" :disabled="!hasMore" class="pagination-btn">Next →</button>
+          <button @click="lastPage" :disabled="!hasMore" class="pagination-btn">Last 》</button>
+        </div>
+        <div class="filters">
+          <label class="filter-label">Time Range</label>
+          <select class="filter-select" :value="filterRange" @change="onChangeFilter(($event.target as HTMLSelectElement).value as any)">
+            <option value="all">All</option>
+            <option value="1w">Last week</option>
+            <option value="1m">Last month</option>
+            <option value="3m">Last 3 months</option>
+            <option value="6m">Last 6 months</option>
+            <option value="12m">Last 12 months</option>
+          </select>
+        </div>
       </div>
 
       <div class="grid">
@@ -225,11 +249,24 @@ onMounted(async () => {
 
       <!-- Bottom pagination -->
       <div class="pagination bottom">
-        <button @click="firstPage" :disabled="!hasPrev" class="pagination-btn">《 First</button>
-        <button @click="prevPage" :disabled="!hasPrev" class="pagination-btn">← Previous</button>
-        <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
-        <button @click="nextPage" :disabled="!hasMore" class="pagination-btn">Next →</button>
-        <button @click="lastPage" :disabled="!hasMore" class="pagination-btn">Last 》</button>
+        <div class="pagination-controls">
+          <button @click="firstPage" :disabled="!hasPrev" class="pagination-btn">《 First</button>
+          <button @click="prevPage" :disabled="!hasPrev" class="pagination-btn">← Previous</button>
+          <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button @click="nextPage" :disabled="!hasMore" class="pagination-btn">Next →</button>
+          <button @click="lastPage" :disabled="!hasMore" class="pagination-btn">Last 》</button>
+        </div>
+        <div class="filters">
+          <label class="filter-label">Time Range</label>
+          <select class="filter-select" :value="filterRange" @change="onChangeFilter(($event.target as HTMLSelectElement).value as any)">
+            <option value="all">All</option>
+            <option value="1w">Last week</option>
+            <option value="1m">Last month</option>
+            <option value="3m">Last 3 months</option>
+            <option value="6m">Last 6 months</option>
+            <option value="12m">Last 12 months</option>
+          </select>
+        </div>
       </div>
     </div>
   
@@ -239,76 +276,205 @@ onMounted(async () => {
 <!-- ===============================================================================  -->
 
 <style scoped>
-  .workouts { padding: 2.5rem 3rem; width: 100%; min-height: 100vh; }
-  .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-  h1 { margin: 0; color: var(--text-primary); font-size: 2rem; font-weight: 600; letter-spacing: -0.5px; }
-  .filters { display: flex; align-items: center; gap: 0.75rem; }
-  .filter-label { color: var(--text-secondary); font-size: 0.9rem; }
-  .filter-select { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem 0.75rem; }
 
-  .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem; gap: 1rem; }
-  .loading-spinner { width: 48px; height: 48px; border: 4px solid color-mix(in srgb, var(--color-primary, #10b981) 25%, transparent); border-top-color: var(--color-primary, #10b981); border-radius: 50%; animation: spin 0.9s linear infinite; }
-  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  .loading-container p { color: var(--text-secondary); font-size: 1.1rem; }
+.workouts {
+  padding: 1.5rem 1.25rem;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
 
-  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
-  .card { min-width: 0; display: flex; flex-direction: column; }
-  .card { background: var(--bg-card); padding: 1rem; border-radius: 12px; box-shadow: 0 4px 15px var(--shadow); border: 1px solid var(--border-color); transition: all 0.3s ease; }
-  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--shadow); border-color: var(--color-primary, #10b981); }
+/* Header Styles */
+.workouts-card-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
 
-  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); }
-  .title-row { display: flex; align-items: center; gap: 0.5rem; }
-  .index-pill { display: inline-block; background: color-mix(in srgb, var(--color-primary, #10b981) 15%, transparent); color: var(--color-primary, #10b981); border: 1px solid color-mix(in srgb, var(--color-primary, #10b981) 30%, transparent); border-radius: 999px; padding: 0.15rem 0.5rem; font-size: 0.8rem; font-weight: 600; }
-  .card-header h2 { margin: 0; color: var(--text-primary); font-size: 1.125rem; font-weight: 600; }
-  .header-meta { display: flex; align-items: center; gap: 0.5rem; }
-  .date { color: var(--text-secondary); font-size: 0.85rem; }
-  .pill { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid transparent; }
-  .pill-red { background: rgba(239, 68, 68, 0.15); color: #ef4444; border-color: rgba(239, 68, 68, 0.35); }
-  .pill-orange { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35); }
-  .pill-pr { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35); }
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
 
-  .stats-row { display: flex; gap: 1.25rem; margin-bottom: 1rem; }
-  .stat { display: flex; flex-direction: column; gap: 0.15rem; }
-  .stat strong { color: var(--text-primary); font-size: 1rem; }
-  .stat span { color: var(--text-secondary); font-size: 0.8rem; }
+.title-section h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--color-primary, #10b981), var(--color-secondary, #06b6d4));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
-  .workout-description { margin: 0.5rem 0 1rem; color: var(--text-secondary); }
+.subtitle {
+  margin: 0.5rem 0 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 400;
+}
 
-  .exercises h3 { margin: 0 0 0.5rem; color: var(--text-primary); font-size: 1rem; }
-  .exercise { border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 0.5rem; overflow: hidden; }
-  .exercise-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); color: var(--text-primary); border: none; padding: 0.6rem 0.75rem; cursor: pointer; }
-  .exercise-title { font-weight: 600; }
-  .toggle-icon { color: var(--text-secondary); }
-  .exercise-content { background: var(--bg-card); }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
 
-  .sets-table { width: 100%; border-collapse: collapse; }
-  .sets-table th, .sets-table td { padding: 0.5rem; border-bottom: 1px solid var(--border-color); text-align: left; color: var(--text-primary); }
-  .sets-table th { color: var(--text-secondary); font-weight: 500; }
-  .exercise-notes { padding: 0.5rem 0.75rem; color: var(--text-secondary); }
+.settings-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  /* PR highlighting */
-  .pr-highlight { border: 2px solid #f59e0b; }
-  .pr-summary { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0; padding: 0.25rem 0.5rem; }
-  .pr-chip { background: rgba(245, 158, 11, 0.22); color: #eedebc; border: 2px solid #f59e0b; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.85rem; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.15); margin: 2px; }
+.settings-btn:hover {
+  border-color: var(--color-primary, #10b981);
+  color: var(--color-primary, #10b981);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-primary, #10b981) 30%, transparent);
+}
 
-  .pagination { grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem; }
-  .pagination.top { margin-bottom: 1rem; }
-  .pagination.bottom { margin-top: 1rem; }
-  .pagination-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem 0.875rem; cursor: pointer; }
-  .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .page-info { color: var(--text-secondary); }
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  padding: 0.75rem 1.25rem;
+  border-radius: 50px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
 
-  /* Mobile Responsive */
-  @media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 640px) {
-    .workouts { padding: 1rem; }
-    .header-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-    .grid { grid-template-columns: 1fr; }
-    .card { padding: 0.75rem; }
-    .card-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-    .stats-row { flex-wrap: wrap; gap: 0.75rem; }
-    .stat strong { font-size: 0.95rem; }
-    .sets-table { display: block; overflow-x: auto; }
-    .sets-table table { min-width: 420px; }
+.user-badge:hover {
+  border-color: var(--color-primary, #10b981);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-primary, #10b981) 30%, transparent);
+  transform: translateY(-2px);
+}
+
+.user-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary, #10b981), var(--color-secondary, #06b6d4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.125rem;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.user-details strong {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.user-details span {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.filters { display: flex; align-items: center; gap: 0.75rem; }
+.filter-label { color: var(--text-secondary); font-size: 0.9rem; }
+.filter-select { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem 0.75rem; }
+
+.loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem; gap: 1rem; }
+.loading-spinner { width: 48px; height: 48px; border: 4px solid color-mix(in srgb, var(--color-primary, #10b981) 25%, transparent); border-top-color: var(--color-primary, #10b981); border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.loading-container p { color: var(--text-secondary); font-size: 1.1rem; }
+
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.card { min-width: 0; display: flex; flex-direction: column; }
+.card { background: var(--bg-card); padding: 1rem; border-radius: 12px; box-shadow: 0 4px 15px var(--shadow); border: 1px solid var(--border-color); transition: all 0.3s ease; }
+.card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--shadow); border-color: var(--color-primary, #10b981); }
+
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); }
+.title-row { display: flex; align-items: center; gap: 0.5rem; }
+.index-pill { display: inline-block; background: color-mix(in srgb, var(--color-primary, #10b981) 15%, transparent); color: var(--color-primary, #10b981); border: 1px solid color-mix(in srgb, var(--color-primary, #10b981) 30%, transparent); border-radius: 999px; padding: 0.15rem 0.5rem; font-size: 0.8rem; font-weight: 600; }
+.card-header h2 { margin: 0; color: var(--text-primary); font-size: 1.125rem; font-weight: 600; }
+.header-meta { display: flex; align-items: center; gap: 0.5rem; }
+.date { color: var(--text-secondary); font-size: 0.85rem; }
+.pill { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid transparent; }
+.pill-red { background: rgba(239, 68, 68, 0.15); color: #ef4444; border-color: rgba(239, 68, 68, 0.35); }
+.pill-orange { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35); }
+.pill-pr { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35); }
+
+.stats-row { display: flex; gap: 1.25rem; margin-bottom: 1rem; }
+.stat { display: flex; flex-direction: column; gap: 0.15rem; }
+.stat strong { color: var(--text-primary); font-size: 1rem; }
+.stat span { color: var(--text-secondary); font-size: 0.8rem; }
+
+.workout-description { margin: 0.5rem 0 1rem; color: var(--text-secondary); }
+
+.exercises h3 { margin: 0 0 0.5rem; color: var(--text-primary); font-size: 1rem; }
+.exercise { border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 0.5rem; overflow: hidden; }
+.exercise-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); color: var(--text-primary); border: none; padding: 0.6rem 0.75rem; cursor: pointer; }
+.exercise-title { font-weight: 600; }
+.toggle-icon { color: var(--text-secondary); }
+.exercise-content { background: var(--bg-card); }
+
+.sets-table { width: 100%; border-collapse: collapse; }
+.sets-table th, .sets-table td { padding: 0.5rem; border-bottom: 1px solid var(--border-color); text-align: left; color: var(--text-primary); }
+.sets-table th { color: var(--text-secondary); font-weight: 500; }
+.exercise-notes { padding: 0.5rem 0.75rem; color: var(--text-secondary); }
+
+/* PR highlighting */
+.pr-highlight { border: 2px solid #f59e0b; }
+.pr-summary { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0; padding: 0.25rem 0.5rem; }
+.pr-chip { background: rgba(245, 158, 11, 0.22); color: #eedebc; border: 2px solid #f59e0b; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.85rem; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.15); margin: 2px; }
+
+.pagination { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+.pagination.top { margin-bottom: 1rem; }
+.pagination.bottom { margin-top: 1rem; }
+.pagination-controls { display: flex; justify-content: center; align-items: center; gap: 1rem; }
+.pagination-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem 0.875rem; cursor: pointer; }
+.pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.page-info { color: var(--text-secondary); }
+
+/* Mobile Responsive */
+@media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) {
+  .workouts { padding: 1rem; }
+  .header-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .grid { grid-template-columns: 1fr; }
+  .card { padding: 0.75rem; }
+  .card-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .stats-row { flex-wrap: wrap; gap: 0.75rem; }
+  .stat strong { font-size: 0.95rem; }
+  .sets-table { display: block; overflow-x: auto; }
+  .sets-table table { min-width: 420px; }
+}
+@media (max-width: 480px) {
+  .workouts {
+    padding: 1rem;
   }
+  
+  .title-section h1 {
+    font-size: 1.625rem;
+  }
+}
+
 </style>
