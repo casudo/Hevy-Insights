@@ -18,8 +18,7 @@ const applyTheme = () => {
     default: { primary: "#10b981", secondary: "#06b6d4" },
     purple: { primary: "#8b5cf6", secondary: "#ec4899" },
     blue: { primary: "#3b82f6", secondary: "#6366f1" },
-    orange: { primary: "#f59e0b", secondary: "#ef4444" },
-    teal: { primary: "#14b8a6", secondary: "#22c55e" }
+    orange: { primary: "#f59e0b", secondary: "#ef4444" }
   };
   const theme = colorThemes[savedTheme] || colorThemes.default;
   document.documentElement.style.setProperty("--color-primary", theme!.primary);
