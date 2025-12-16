@@ -466,12 +466,19 @@ onMounted(() => {
           <p v-if="userAccount" class="subtitle">Welcome back, {{ userAccount.username }}!</p>
         </div>
 
-        <!-- User Badge -->
-        <div v-if="userAccount" class="user-badge">
-          <div class="user-avatar">{{ userAccount.username.charAt(0).toUpperCase() }}</div>
-          <div class="user-details">
-            <strong>{{ userAccount.username }}</strong>
-            <span>{{ userAccount.email }}</span>
+        <div class="header-actions">
+          <!-- Settings Button -->
+          <button @click="$router.push('/settings')" class="settings-btn" title="Settings">
+            ⚙️
+          </button>
+          
+          <!-- User Badge -->
+          <div v-if="userAccount" class="user-badge">
+            <div class="user-avatar">{{ userAccount.username.charAt(0).toUpperCase() }}</div>
+            <div class="user-details">
+              <strong>{{ userAccount.username }}</strong>
+              <span>{{ userAccount.email }}</span>
+            </div>
           </div>
         </div>
       </div>
