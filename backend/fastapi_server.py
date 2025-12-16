@@ -32,8 +32,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",  # Vue dev server
-        "http://localhost",  # Production (Nginx proxy)
-        "http://127.0.0.1",
+        "http://localhost:80",  # Production (Nginx proxy)
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST"],  # Only allow necessary methods
