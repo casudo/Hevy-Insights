@@ -50,6 +50,8 @@ const repsAndSets_Display = ref<DisplayStyle>("mo");
 const range = ref<Range>("6m");
 
 const muscleDistribution_Range = ref<Range>("all");
+  
+// ---------- Helper functions for date keys ----------
 
 const startOfWeek = (d: Date) => {
   const dd = new Date(d);
@@ -181,6 +183,8 @@ const muscleDistribution_Data = computed(() => {
   };
 });
 
+// ---------- Summary Stats ----------
+
 // Workout streak (weeks with >=1 workout)
 const workoutStreakWeeks = computed(() => {
   const now = new Date();
@@ -224,6 +228,26 @@ const longestWorkout = computed(() => {
   return { workout: best, minutes: bestDur };
 });
 
+// Total workouts, total volume, avg volume
+const totalWorkouts = computed(() => workouts.value.length);
+const totalVolume = computed(() =>
+  workouts.value.reduce((sum, w) => sum + (w.estimated_volume_kg || 0), 0)
+);
+const avgVolume = computed(() =>
+  totalWorkouts.value > 0 ? Math.round(totalVolume.value / totalWorkouts.value) : 0
+);
+
+const totalMinutesAll = computed(() => {
+  let mins = 0;
+  for (const w of workouts.value) {
+    const start = w.start_time || 0;
+    const end = w.end_time || start;
+    mins += Math.max(0, Math.floor((end - start) / 60));
+  }
+  return mins;
+});
+const totalHoursAll = computed(() => Number((totalMinutesAll.value / 60).toFixed(2)));
+
 const fetchData = async () => {
   try {
     await store.fetchUserAccount();
@@ -260,24 +284,7 @@ const processChartData = () => {
   };
 };
 
-const totalWorkouts = computed(() => workouts.value.length);
-const totalVolume = computed(() =>
-  workouts.value.reduce((sum, w) => sum + (w.estimated_volume_kg || 0), 0)
-);
-const avgVolume = computed(() =>
-  totalWorkouts.value > 0 ? Math.round(totalVolume.value / totalWorkouts.value) : 0
-);
-
-const totalMinutesAll = computed(() => {
-  let mins = 0;
-  for (const w of workouts.value) {
-    const start = w.start_time || 0;
-    const end = w.end_time || start;
-    mins += Math.max(0, Math.floor((end - start) / 60));
-  }
-  return mins;
-});
-const totalHoursAll = computed(() => Number((totalMinutesAll.value / 60).toFixed(2)));
+// ---------- Chart Options ----------
 
 const chartOptions = {
   responsive: true,
