@@ -29,6 +29,8 @@ class HevyConfig:
     def __init__(self):
         self.base_url = "https://api.hevyapp.com"
         self.x_api_key = getenv("X_API_KEY")  # Static for all users (free API)
+        if not self.x_api_key:
+            raise ValueError("X_API_KEY environment variable is required")
 
     @property
     def login_url(self) -> str:
