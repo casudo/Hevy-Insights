@@ -95,6 +95,11 @@ watch(isMobileSidebarOpen, (open) => {
           <span class="nav-icon">📚</span>
           <span class="nav-text">Exercises</span>
         </router-link>
+        <!-- Remove, since already included next to profile badge? -->
+        <router-link to="/settings" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">Settings</span>
+        </router-link>        
       </nav>
 
       <div class="sidebar-footer">

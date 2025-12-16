@@ -4,6 +4,7 @@ import Dashboard from "../views/Dashboard.vue";
 import WorkoutsCard from "../views/Workouts_Card.vue";
 import WorkoutsList from "../views/Workouts_List.vue";
 import Exercises from "../views/Exercises.vue";
+import Settings from "../views/Settings.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -39,6 +40,12 @@ const router = createRouter({
       path: "/exercises",
       name: "Exercises",
       component: Exercises,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/settings",
+      name: "Settings",
+      component: Settings,
       meta: { requiresAuth: true },
     },
     // Catch-all for unknown paths
