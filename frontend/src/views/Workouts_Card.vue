@@ -106,7 +106,11 @@ const exerciseHasPR = (exercise: any) => exercisePRs(exercise).length > 0;
 // Note: set-level highlighting reverted per request; keep extractor for future use if needed
 
 const toggleExercise = (exerciseId: string) => {
-  expandedExercises.value[exerciseId] = !expandedExercises.value[exerciseId];
+  // Create a new object to ensure reactivity
+  expandedExercises.value = {
+    ...expandedExercises.value,
+    [exerciseId]: !expandedExercises.value[exerciseId]
+  };
 };
 
 const onChangeFilter = (val: "all"|"1w"|"1m"|"3m"|"6m"|"12m") => {
@@ -185,7 +189,7 @@ onMounted(async () => {
           <div class="card-header">
             <div class="title-row">
               <span class="index-pill">#{{ workoutIndex(workout.id) }}</span>
-              <h2>{{ workout.name || "Unnamed Workout" }}</h2>
+              <h2>{{ workout.title || workout.name || "Unnamed Workout" }}</h2>
             </div>
             <div class="header-meta">
               <span class="date">{{ formatDate(workout.start_time) }}</span>

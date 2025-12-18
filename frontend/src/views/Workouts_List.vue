@@ -265,7 +265,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
             <span class="pill pill-green">#{{ workoutIndex(workout.id) }}</span>
             <span class="line-date">{{ formatDateFull(workout.start_time) }}</span>
             <span class="line-sep">•</span>
-            <span class="line-name">{{ workout.name || "Unnamed" }}</span>
+            <span class="line-name">{{ workout.title || workout.name || "Unnamed" }}</span>
             <span v-if="bpmDisplay(workout)" class="pill pill-red">❤️ {{ bpmDisplay(workout) }}</span>
             <span v-if="caloriesDisplay(workout)" class="pill pill-orange">🔥 {{ caloriesDisplay(workout) }}</span>
             <span v-if="workoutPRCount(workout) > 0" class="pill pill-gold" title="Personal Records">🏆 {{ workoutPRCount(workout) }}</span>
