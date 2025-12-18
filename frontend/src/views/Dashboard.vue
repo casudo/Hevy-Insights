@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
-import { calculateCSVStats } from "../utils/csvCalculator";
+import { calculateCSVStats, calculatePRsGrouped, calculateMuscleDistribution } from "../utils/csvCalculator";
 import { Line, Doughnut, Radar } from "vue-chartjs";
 import {
   Chart as ChartJS,
@@ -188,74 +188,14 @@ const repsAndSets_Data = computed(() => {
 // PRs Over Time - Count total PRs earned in workouts
 const prsOverTime_Data = computed(() => {
   const filtered = filterByRange(prsOverTime_Range.value);
-  const prMap: Record<string, number> = {};
-  
   const useWeeks = prsOverTime_Display.value === "wk";
   
-  // In CSV mode, calculate PRs based on 3 metrics: 1RM, Best Reps, Highest Weight
+  let prMap: Record<string, number> = {};
+  
+  // CSV mode - calculate PRs with filtering
   if (store.isCSVMode) {
-    // Track PRs per exercise: 1RM, max weight, max reps
-    interface ExercisePRs {
-      max1RM: number;
-      maxWeight: number;
-      maxReps: number;
-    }
-    const exercisePRs: Record<string, ExercisePRs> = {};
-    
-    for (const w of filtered) {
-      const d = new Date((w.start_time || 0) * 1000);
-      const key = useWeeks ? weekKey(d) : monthKey(d);
-      
-      for (const ex of (w.exercises || [])) {
-        const exerciseKey = ex.title.toLowerCase();
-        
-        // Initialize PR tracking for this exercise
-        if (!exercisePRs[exerciseKey]) {
-          exercisePRs[exerciseKey] = {
-            max1RM: 0,
-            maxWeight: 0,
-            maxReps: 0
-          };
-        }
-        
-        for (const s of (ex.sets || [])) {
-          let prCount = 0;
-          
-          // Check weight-based PRs
-          if (s.weight_kg && s.reps) {
-            // PR Type 1: Estimated 1RM (weight * (1 + reps/30))
-            const estimated1RM = s.weight_kg * (1 + s.reps / 30);
-            if (estimated1RM > exercisePRs[exerciseKey].max1RM) {
-              exercisePRs[exerciseKey].max1RM = estimated1RM;
-              prCount++;
-            }
-            
-            // PR Type 2: Highest Weight
-            if (s.weight_kg > exercisePRs[exerciseKey].maxWeight) {
-              exercisePRs[exerciseKey].maxWeight = s.weight_kg;
-              prCount++;
-            }
-            
-            // PR Type 3: Best Reps (at any weight)
-            if (s.reps > exercisePRs[exerciseKey].maxReps) {
-              exercisePRs[exerciseKey].maxReps = s.reps;
-              prCount++;
-            }
-          } else if (s.reps && !s.weight_kg) {
-            // Bodyweight exercises - track reps only
-            if (s.reps > exercisePRs[exerciseKey].maxReps) {
-              exercisePRs[exerciseKey].maxReps = s.reps;
-              prCount++;
-            }
-          }
-          
-          // Add PR count to this period
-          if (prCount > 0) {
-            prMap[key] = (prMap[key] || 0) + prCount;
-          }
-        }
-      }
-    }
+    // Use centralized PR calculation from csvCalculator
+    prMap = calculatePRsGrouped(filtered as any, useWeeks ? 'week' : 'month');
   } else {
     // API mode - count actual PRs from API data
     for (const w of filtered) {
@@ -310,65 +250,8 @@ const muscleDistribution_Data = computed(() => {
   
   // CSV mode - calculate muscle distribution with filtering
   if (store.isCSVMode) {
-    const muscleGroups: Record<string, number> = {
-      chest: 0,
-      back: 0,
-      shoulders: 0,
-      biceps: 0,
-      triceps: 0,
-      legs: 0,
-      core: 0,
-    };
-    
-    // Exercise to muscle mapping (same as csvA.ts)
-    const exerciseToMuscle: Record<string, string[]> = {
-      'bench press': ['chest'], 'chest press': ['chest'], 'push up': ['chest', 'triceps'],
-      'fly': ['chest'], 'dip': ['chest', 'triceps'], 'incline': ['chest'],
-      'deadlift': ['back', 'legs'], 'pull up': ['back', 'biceps'], 'row': ['back'],
-      'lat pulldown': ['back'], 'pulldown': ['back'], 'chin up': ['back', 'biceps'],
-      'shoulder press': ['shoulders'], 'overhead press': ['shoulders'], 'military press': ['shoulders'],
-      'lateral raise': ['shoulders'], 'front raise': ['shoulders'], 'rear delt': ['shoulders'],
-      'bicep curl': ['biceps'], 'biceps curl': ['biceps'], 'hammer curl': ['biceps'],
-      'preacher curl': ['biceps'], 'ez bar': ['biceps', 'triceps'],
-      'tricep extension': ['triceps'], 'tricep pushdown': ['triceps'], 'skull crusher': ['triceps'],
-      'close grip': ['triceps'], 'overhead extension': ['triceps'],
-      'squat': ['legs'], 'leg press': ['legs'], 'leg extension': ['legs'], 'leg curl': ['legs'],
-      'lunge': ['legs'], 'calf raise': ['legs'], 'romanian deadlift': ['legs', 'back'],
-      'plank': ['core'], 'crunch': ['core'], 'sit up': ['core'], 'ab wheel': ['core'],
-    };
-    
-    for (const workout of filtered) {
-      for (const exercise of workout.exercises) {
-        const exerciseName = exercise.title.toLowerCase();
-        const setCount = exercise.sets.length;
-        let matched = false;
-        
-        for (const [pattern, muscles] of Object.entries(exerciseToMuscle)) {
-          if (exerciseName.includes(pattern)) {
-            for (const muscle of muscles) {
-              muscleGroups[muscle] = (muscleGroups[muscle] || 0) + setCount;
-            }
-            matched = true;
-            break;
-          }
-        }
-        
-        // Fallback: workout title-based mapping
-        if (!matched) {
-          const workoutTitle = workout.title.toLowerCase();
-          if (workoutTitle.includes('brust') || workoutTitle.includes('chest')) {
-            muscleGroups.chest = (muscleGroups.chest || 0) + setCount;
-          } else if (workoutTitle.includes('rücken') || workoutTitle.includes('back')) {
-            muscleGroups.back = (muscleGroups.back || 0) + setCount;
-          } else if (workoutTitle.includes('bein') || workoutTitle.includes('leg')) {
-            muscleGroups.legs = (muscleGroups.legs || 0) + setCount;
-          } else if (workoutTitle.includes('schulter') || workoutTitle.includes('shoulder')) {
-            muscleGroups.shoulders = (muscleGroups.shoulders || 0) + setCount;
-          }
-        }
-      }
-    }
-    
+    // Use centralized muscle calculation from csvCalculator
+    const muscleGroups = calculateMuscleDistribution(filtered as any);
     const filteredKeys = Object.keys(muscleGroups).filter(k => (muscleGroups[k] || 0) > 0);
     return {
       labels: filteredKeys,
@@ -376,7 +259,7 @@ const muscleDistribution_Data = computed(() => {
     };
   }
   
-  // API mode logic
+  // API mode - uses muscle_group from API data
   const muscleGroups: { [key: string]: number } = {};
   
   for (const w of filtered) {
