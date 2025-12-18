@@ -710,7 +710,7 @@ const removeFile = () => {
 }
 
 .file-upload-area {
-  padding: 2.5rem 2rem;
+  padding: 1rem 1rem;
   border: 2px dashed rgba(16, 185, 129, 0.3);
   border-radius: 16px;
   background: rgba(15, 15, 25, 0.6);
