@@ -9,7 +9,7 @@ const route = useRoute();
 const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
 const showNav = ref(false);
-const appVersion = "v1.2.0"; // Update version as needed
+const appVersion = "v1.3.0"; // Update version as needed
 const isMobileSidebarOpen = ref(false);
 const showTopbar = ref(true);
 const showScrollTop = ref(false);
@@ -39,6 +39,7 @@ const scrollToTop = () => {
 
 const logout = () => {
   authService.logout();
+  store.logout();
   router.push("/login");
 };
 
@@ -83,7 +84,7 @@ watch(isMobileSidebarOpen, (open) => {
     <header v-if="showNav && showTopbar" class="topbar">
       <button class="menu-btn" @click="isMobileSidebarOpen = !isMobileSidebarOpen">☰</button>
       <router-link to="/dashboard" class="topbar-brand">
-        <span class="brand-text">Hevy Insights<span v-if="userAccount" class="brand-username"> for {{ userAccount.username }}</span></span>
+        <span class="brand-text">Hevy Insights<span v-if="userAccount" class="brand-username"> {{ $t('nav.brandTextFor') }} {{ userAccount.username }}</span></span>
       </router-link>
     </header>
     
@@ -99,24 +100,29 @@ watch(isMobileSidebarOpen, (open) => {
       <nav class="sidebar-nav">
         <router-link to="/dashboard" class="nav-item">
           <span class="nav-icon">📊</span>
-          <span class="nav-text">Dashboard</span>
+          <span class="nav-text">{{ $t('nav.dashboard') }}</span>
         </router-link>
         <router-link to="/workouts-card" class="nav-item">
           <span class="nav-icon">🏋️</span>
-          <span class="nav-text">Workouts (Card)</span>
+          <span class="nav-text">{{ $t('nav.workoutsCard') }}</span>
         </router-link>
         <router-link to="/workouts-list" class="nav-item">
           <span class="nav-icon">🏋️</span>
-          <span class="nav-text">Workouts (List)</span>
+          <span class="nav-text">{{ $t('nav.workoutsList') }}</span>
         </router-link>
         <router-link to="/exercises" class="nav-item">
           <span class="nav-icon">📚</span>
-          <span class="nav-text">Exercises</span>
+          <span class="nav-text">{{ $t('nav.exercises') }}</span>
         </router-link>
+        <!-- 
+        <router-link to="/share" class="nav-item">
+          <span class="nav-icon">📤</span>
+          <span class="nav-text">{{ $t('nav.share') }}</span>
+        </router-link> -->
         <!-- Remove, since already included next to profile badge? -->
         <router-link to="/settings" class="nav-item">
           <span class="nav-icon">⚙️</span>
-          <span class="nav-text">Settings</span>
+          <span class="nav-text">{{ $t('nav.settings') }}</span>
         </router-link>        
       </nav>
 
@@ -124,7 +130,7 @@ watch(isMobileSidebarOpen, (open) => {
         <div class="version-info">{{ appVersion }}</div>
         <button @click="logout" class="logout-btn">
           <span class="nav-icon">🚪</span>
-          <span class="nav-text">Logout</span>
+          <span class="nav-text">{{ $t('nav.logout') }}</span>
         </button>
       </div>
     </aside>
@@ -510,6 +516,10 @@ main.without-sidebar {
   
   main.with-sidebar {
     padding-top: var(--topbar-height);
+  }
+  
+  main.without-sidebar {
+    padding-top: 0;
   }
   
   .topbar.hidden {

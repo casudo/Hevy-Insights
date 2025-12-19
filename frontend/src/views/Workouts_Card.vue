@@ -106,7 +106,11 @@ const exerciseHasPR = (exercise: any) => exercisePRs(exercise).length > 0;
 // Note: set-level highlighting reverted per request; keep extractor for future use if needed
 
 const toggleExercise = (exerciseId: string) => {
-  expandedExercises.value[exerciseId] = !expandedExercises.value[exerciseId];
+  // Create a new object to ensure reactivity
+  expandedExercises.value = {
+    ...expandedExercises.value,
+    [exerciseId]: !expandedExercises.value[exerciseId]
+  };
 };
 
 const onChangeFilter = (val: "all"|"1w"|"1m"|"3m"|"6m"|"12m") => {
@@ -127,8 +131,8 @@ onMounted(async () => {
     <div class="workouts-card-header">
       <div class="header-content">
         <div class="title-section">
-          <h1>Workouts (Card)</h1>
-          <p class="subtitle">See your workouts in a card design.</p>
+          <h1>{{ $t('workouts.workoutsCardTitle') }}</h1>
+          <p class="subtitle">{{ $t('workouts.workoutsCardSubtitle') }}</p>
         </div>
 
         <div class="header-actions">
@@ -152,28 +156,28 @@ onMounted(async () => {
     <!-- Loading state -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
-      <p>Loading your workout data...</p>
+      <p>{{ $t('global.loadingSpinnerText') }}</p>
     </div>
 
     <div v-else>
       <!-- Top pagination -->
       <div class="pagination top">
         <div class="pagination-controls">
-          <button @click="firstPage" :disabled="!hasPrev" class="pagination-btn">《 First</button>
-          <button @click="prevPage" :disabled="!hasPrev" class="pagination-btn">← Previous</button>
-          <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
-          <button @click="nextPage" :disabled="!hasMore" class="pagination-btn">Next →</button>
-          <button @click="lastPage" :disabled="!hasMore" class="pagination-btn">Last 》</button>
+          <button @click="firstPage" :disabled="!hasPrev" class="pagination-btn">《 {{ $t('global.pagination.first') }}</button>
+          <button @click="prevPage" :disabled="!hasPrev" class="pagination-btn">← {{ $t('global.pagination.previous') }}</button>
+          <span class="page-info">{{ $t('global.pagination.page') }} {{ currentPage }} {{ $t('global.pagination.pageOf') }} {{ totalPages }}</span>
+          <button @click="nextPage" :disabled="!hasMore" class="pagination-btn">{{ $t('global.pagination.next') }} →</button>
+          <button @click="lastPage" :disabled="!hasMore" class="pagination-btn">{{ $t('global.pagination.last') }} 》</button>
         </div>
         <div class="filters">
-          <label class="filter-label">Time Range</label>
+          <label class="filter-label">{{ $t('global.timeRangeFilter.timeRange') }}</label>
           <select class="filter-select" :value="filterRange" @change="onChangeFilter(($event.target as HTMLSelectElement).value as any)">
-            <option value="all">All</option>
-            <option value="1w">Last week</option>
-            <option value="1m">Last month</option>
-            <option value="3m">Last 3 months</option>
-            <option value="6m">Last 6 months</option>
-            <option value="12m">Last 12 months</option>
+            <option value="all">{{ $t('global.timeRangeFilter.allTime') }}</option>
+            <option value="1w">{{ $t('global.timeRangeFilter.lastWeek') }}</option>
+            <option value="1m">{{ $t('global.timeRangeFilter.lastMonth') }}</option>
+            <option value="3m">{{ $t('global.timeRangeFilter.last3Months') }}</option>
+            <option value="6m">{{ $t('global.timeRangeFilter.last6Months') }}</option>
+            <option value="12m">{{ $t('global.timeRangeFilter.last12Months') }}</option>
           </select>
         </div>
       </div>
@@ -185,7 +189,7 @@ onMounted(async () => {
           <div class="card-header">
             <div class="title-row">
               <span class="index-pill">#{{ workoutIndex(workout.id) }}</span>
-              <h2>{{ workout.name || "Unnamed Workout" }}</h2>
+              <h2>{{ workout.title || workout.name || "Unnamed Workout" }}</h2>
             </div>
             <div class="header-meta">
               <span class="date">{{ formatDate(workout.start_time) }}</span>
@@ -196,9 +200,9 @@ onMounted(async () => {
 
           <!--  Middle Row with Stats  -->
           <div class="stats-row">
-            <div class="stat"><strong>{{ workout.estimated_volume_kg?.toLocaleString() || 0 }} kg</strong><span>Volume</span></div>
-            <div class="stat"><strong>{{ formatDuration(workout.start_time, workout.end_time) }}</strong><span>Duration</span></div>
-            <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>Exercises</span></div>
+            <div class="stat"><strong>{{ workout.estimated_volume_kg?.toLocaleString() || 0 }} kg</strong><span>{{ $t('global.volume') }}</span></div>
+            <div class="stat"><strong>{{ formatDuration(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.duration') }}</span></div>
+            <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.exercises') }}</span></div>
             <div class="stat"><strong>{{ totalSets(workout) }}</strong><span>Total Sets</span></div>
           </div>
 
@@ -208,7 +212,7 @@ onMounted(async () => {
 
           <!--  Exercises List  -->
           <div class="exercises">
-            <h3>Exercises</h3>
+            <h3>{{ $t('global.exercises') }}</h3>
             <div v-for="exercise in workout.exercises" :key="exercise.id" class="exercise" :class="{ 'pr-highlight': exerciseHasPR(exercise) }">
               <button class="exercise-toggle" @click="toggleExercise(exercise.id)">
                 <span class="exercise-title">{{ exercise.title || "Unknown Exercise" }}</span>
@@ -223,7 +227,7 @@ onMounted(async () => {
                   <thead>
                     <tr>
                       <th>Set</th>
-                      <th>Weight (kg)</th>
+                      <th>{{ $t('global.weight') }} (kg)</th>
                       <th>Reps</th>
                       <th>RPE</th>
                     </tr>
@@ -239,7 +243,7 @@ onMounted(async () => {
                 </table>
 
                 <div v-if="exercise.notes" class="exercise-notes">
-                  <em>Notes: {{ exercise.notes }}</em>
+                  <em>{{ $t('global.notes') }}: {{ exercise.notes }}</em>
                 </div>
               </div>
             </div>
@@ -250,21 +254,21 @@ onMounted(async () => {
       <!-- Bottom pagination -->
       <div class="pagination bottom">
         <div class="pagination-controls">
-          <button @click="firstPage" :disabled="!hasPrev" class="pagination-btn">《 First</button>
-          <button @click="prevPage" :disabled="!hasPrev" class="pagination-btn">← Previous</button>
-          <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
-          <button @click="nextPage" :disabled="!hasMore" class="pagination-btn">Next →</button>
-          <button @click="lastPage" :disabled="!hasMore" class="pagination-btn">Last 》</button>
+          <button @click="firstPage" :disabled="!hasPrev" class="pagination-btn">《 {{ $t('global.pagination.first') }}</button>
+          <button @click="prevPage" :disabled="!hasPrev" class="pagination-btn">← {{ $t('global.pagination.previous') }}</button>
+          <span class="page-info">{{ $t('global.pagination.page') }} {{ currentPage }} {{ $t('global.pagination.pageOf') }} {{ totalPages }}</span>
+          <button @click="nextPage" :disabled="!hasMore" class="pagination-btn">{{ $t('global.pagination.next') }} →</button>
+          <button @click="lastPage" :disabled="!hasMore" class="pagination-btn">{{ $t('global.pagination.last') }} 》</button>
         </div>
         <div class="filters">
-          <label class="filter-label">Time Range</label>
+          <label class="filter-label">{{ $t('global.timeRangeFilter.timeRange') }}</label>
           <select class="filter-select" :value="filterRange" @change="onChangeFilter(($event.target as HTMLSelectElement).value as any)">
-            <option value="all">All</option>
-            <option value="1w">Last week</option>
-            <option value="1m">Last month</option>
-            <option value="3m">Last 3 months</option>
-            <option value="6m">Last 6 months</option>
-            <option value="12m">Last 12 months</option>
+            <option value="all">{{ $t('global.timeRangeFilter.allTime') }}</option>
+            <option value="1w">{{ $t('global.timeRangeFilter.lastWeek') }}</option>
+            <option value="1m">{{ $t('global.timeRangeFilter.lastMonth') }}</option>
+            <option value="3m">{{ $t('global.timeRangeFilter.last3Months') }}</option>
+            <option value="6m">{{ $t('global.timeRangeFilter.last6Months') }}</option>
+            <option value="12m">{{ $t('global.timeRangeFilter.last12Months') }}</option>
           </select>
         </div>
       </div>

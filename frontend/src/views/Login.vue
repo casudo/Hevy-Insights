@@ -1,37 +1,121 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import { authService } from "../services/api";
+import { useHevyCache } from "../stores/hevy_cache";
+import { readCSVFile, parseCSV, validateCSVFile } from "../utils/csvParser";
 
 const router = useRouter();
+const { t } = useI18n();
+const store = useHevyCache();
+
+// Mode selection
+type LoginMode = "credentials" | "csv";
+const loginMode = ref<LoginMode>("credentials");
+
+// Credentials login
 const emailOrUsername = ref("");
 const password = ref("");
 const loading = ref(false);
 const error = ref("");
 
+// CSV upload
+const csvFile = ref<File | null>(null);
+const csvError = ref("");
+const uploadLoading = ref(false);
+const fileInputRef = ref<HTMLInputElement | null>(null);
+
 const handleLogin = async () => {
   if (!emailOrUsername.value || !password.value) {
-    error.value = "Please enter both username/email and password";
+    error.value = t("login.api.errors.emptyFields");
     return;
   }
 
   loading.value = true;
   error.value = "";
 
-  // Try to login via authService
+  // Attempt login via API service
   try {
     const result = await authService.login(emailOrUsername.value, password.value);
     
     if (result.auth_token) {
       localStorage.setItem("hevy_auth_token", result.auth_token);
+      await store.switchToAPIMode();
       router.push("/dashboard");
     } else {
-      error.value = "Login failed. Please try again.";
+      error.value = t("login.api.errors.loginFailed");
     }
   } catch (err: any) {
-    error.value = err.response?.data?.detail || "Invalid credentials. Please try again.";
+    error.value = err.response?.data?.detail || t("login.api.errors.invalidCredentials");
   } finally {
     loading.value = false;
+  }
+};
+
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files[0]) {
+    csvFile.value = target.files[0];
+    csvError.value = "";
+  }
+};
+
+const handleCSVUpload = async () => {
+  if (!csvFile.value) {
+    csvError.value = t("login.csv.errors.noFile");
+    return;
+  }
+
+  uploadLoading.value = true;
+  csvError.value = "";
+
+  // Try to "login" with CSV file
+  try {
+    // Validate file
+    try {
+      const isValid = await validateCSVFile(csvFile.value);
+      if (!isValid) {
+        csvError.value = t("login.csv.errors.invalidFile");
+        return;
+      }
+    } catch (err: any) {
+      csvError.value = err?.message || t("login.csv.errors.invalidFile");
+      return;
+    }
+
+    // Read and parse CSV
+    const content = await readCSVFile(csvFile.value);
+    const workouts = parseCSV(content);
+
+    if (workouts.length === 0) {
+      csvError.value = t("login.csv.errors.emptyFile");
+      uploadLoading.value = false;
+      return;
+    }
+
+    // Store data and switch to CSV mode
+    store.loadCSVWorkouts(workouts);
+    localStorage.setItem("hevy_auth_token", "csv_mode");
+
+    // Navigate to dashboard
+    router.push("/dashboard");
+  } catch (err: any) {
+    csvError.value = err.message || t("login.csv.errors.uploadFailed");
+  } finally {
+    uploadLoading.value = false;
+  }
+};
+
+const triggerFileInput = () => {
+  fileInputRef.value?.click();
+};
+
+const removeFile = () => {
+  csvFile.value = null;
+  csvError.value = "";
+  if (fileInputRef.value) {
+    fileInputRef.value.value = "";
   }
 };
 </script>
@@ -56,22 +140,44 @@ const handleLogin = async () => {
             <div class="logo-icon">🏋️</div>
             <h1 class="logo-text">Hevy Insights</h1>
           </div>
-          <p class="welcome-text">Welcome! Please login to continue.</p>
+          <p class="welcome-text">{{ t('login.welcome') }}</p>
         </div>
 
-        <!-- Form Section -->
-        <form @submit.prevent="handleLogin" class="login-form">
+        <!-- Mode Toggle -->
+        <div class="mode-toggle">
+          <button
+            type="button"
+            class="mode-button"
+            :class="{ active: loginMode === 'credentials' }"
+            @click="loginMode = 'credentials'"
+          >
+            <span class="mode-icon">🔑</span>
+            <span>{{ t('login.api.modeButton') }}</span>
+          </button>
+          <button
+            type="button"
+            class="mode-button"
+            :class="{ active: loginMode === 'csv' }"
+            @click="loginMode = 'csv'"
+          >
+            <span class="mode-icon">📂</span>
+            <span>{{ t('login.csv.modeButton') }}</span>
+          </button>
+        </div>
+
+        <!-- Credentials Login Form -->
+        <form v-if="loginMode === 'credentials'" @submit.prevent="handleLogin" class="login-form">
           <div class="input-group">
             <label for="username" class="input-label">
               <span class="label-icon">👤</span>
-              Username or Email
+              {{ t('login.api.usernameOrEmail') }}
             </label>
             <input
               id="username"
               v-model="emailOrUsername"
               type="text"
               class="input-field"
-              placeholder="Enter your username or email"
+              :placeholder="t('login.api.usernamePlaceholder')"
               required
               :disabled="loading"
               autocomplete="username"
@@ -81,14 +187,14 @@ const handleLogin = async () => {
           <div class="input-group">
             <label for="password" class="input-label">
               <span class="label-icon">🔒</span>
-              Password
+              {{ t('login.api.password') }}
             </label>
             <input
               id="password"
               v-model="password"
               type="password"
               class="input-field"
-              placeholder="Enter your password"
+              :placeholder="t('login.api.passwordPlaceholder')"
               required
               :disabled="loading"
               autocomplete="current-password"
@@ -106,26 +212,98 @@ const handleLogin = async () => {
           <!-- Submit Button -->
           <button type="submit" class="submit-button" :disabled="loading">
             <span v-if="!loading" class="button-content">
-              <span class="button-text">Login</span>
+              <span class="button-text">{{ t('login.api.loginButton') }}</span>
             </span>
             <span v-else class="button-loading">
               <span class="loading-spinner"></span>
-              <span>Logging in...</span>
+              <span>{{ t('login.api.loggingIn') }}</span>
             </span>
           </button>
         </form>
+
+        <!-- CSV Upload Form -->
+        <div v-else class="csv-upload-form">
+          <div class="upload-info">
+            <span class="info-icon">ℹ️</span>
+            <p class="info-text">{{ t("login.csv.description") }}</p>
+          </div>
+
+          <!-- File Input (Hidden) -->
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept=".csv"
+            @change="handleFileSelect"
+            class="file-input-hidden"
+          />
+
+          <!-- File Upload Area -->
+          <div
+            class="file-upload-area"
+            :class="{ 'has-file': csvFile }"
+            @click="!csvFile && triggerFileInput()"
+          >
+            <div v-if="!csvFile" class="upload-prompt">
+              <span class="upload-icon">📁</span>
+              <p class="upload-title">{{ t("login.csv.selectFile") }}</p>
+              <p class="upload-subtitle">{{ t("login.csv.dragDrop") }}</p>
+              <button type="button" class="browse-button" @click.stop="triggerFileInput">
+                {{ t("login.csv.browse") }}
+              </button>
+            </div>
+
+            <div v-else class="file-preview">
+              <div class="file-info">
+                <span class="file-icon">📄</span>
+                <div class="file-details">
+                  <p class="file-name">{{ csvFile.name }}</p>
+                  <p class="file-size">{{ (csvFile.size / 1024).toFixed(2) }} KB</p>
+                </div>
+              </div>
+              <button type="button" class="remove-button" @click.stop="removeFile">
+                <span>✕</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Error Message -->
+          <transition name="fade">
+            <div v-if="csvError" class="error-alert">
+              <span class="error-icon">⚠️</span>
+              <span class="error-text">{{ csvError }}</span>
+            </div>
+          </transition>
+
+          <!-- Upload Button -->
+          <button
+            type="button"
+            class="submit-button"
+            :disabled="!csvFile || uploadLoading"
+            @click="handleCSVUpload"
+          >
+            <span v-if="!uploadLoading" class="button-content">
+              <span class="button-text">{{ t("login.csv.uploadButton") }}</span>
+            </span>
+            <span v-else class="button-loading">
+              <span class="loading-spinner"></span>
+              <span>{{ t("login.csv.uploading") }}</span>
+            </span>
+          </button>
+        </div>
 
         <!-- Footer -->
         <div class="login-footer">
           <div class="divider"></div>
           <p class="footer-text">
-            Made by <strong><a href="https://github.com/casudo/Hevy-Insights" target="_blank" rel="noopener noreferrer">casudo</a></strong> • Track your fitness journey
+            {{ t('login.madeBy') }} <strong><a href="https://github.com/casudo/Hevy-Insights" target="_blank" rel="noopener noreferrer">casudo</a></strong> • {{ t('login.tagline') }}
           </p>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<!-- =============================================================================== -->
 
 <style scoped>
 /* Wrapper and Background */
@@ -459,6 +637,211 @@ const handleLogin = async () => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Mode Toggle */
+.mode-toggle {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(15, 15, 25, 0.8);
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+
+.mode-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.25rem;
+  background: transparent;
+  color: #9A9A9A;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.mode-button:hover {
+  color: #e5e7eb;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.mode-button.active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-color: #10b981;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+.mode-icon {
+  font-size: 1.125rem;
+}
+
+/* CSV Upload Form */
+.csv-upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.upload-info {
+  display: flex;
+  align-items: start;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: rgba(6, 182, 212, 0.05);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  border-left: 4px solid #06b6d4;
+  border-radius: 12px;
+}
+
+.info-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.info-text {
+  margin: 0;
+  color: #9dd7e5;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.file-upload-area {
+  padding: 1rem 1rem;
+  border: 2px dashed rgba(16, 185, 129, 0.3);
+  border-radius: 16px;
+  background: rgba(15, 15, 25, 0.6);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(20, 20, 30, 0.8);
+}
+
+.file-upload-area.has-file {
+  cursor: default;
+  border-style: solid;
+  padding: 1.5rem;
+}
+
+.upload-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  opacity: 0.7;
+}
+
+.upload-title {
+  margin: 0;
+  color: #e5e7eb;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.upload-subtitle {
+  margin: 0;
+  color: #9A9A9A;
+  font-size: 0.9rem;
+}
+
+.browse-button {
+  margin-top: 0.5rem;
+  padding: 0.65rem 1.5rem;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.browse-button:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.file-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.file-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  margin: 0;
+  color: #e5e7eb;
+  font-size: 0.95rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  margin: 0.25rem 0 0 0;
+  color: #9A9A9A;
+  font-size: 0.85rem;
+}
+
+.remove-button {
+  width: 32px;
+  height: 32px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.remove-button:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
 }
 
 /* Footer */

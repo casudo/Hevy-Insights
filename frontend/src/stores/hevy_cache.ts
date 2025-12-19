@@ -21,13 +21,21 @@ export const useHevyCache = defineStore("hevyCache", {
     isLoadingWorkouts: false,
     workoutsLastFetched: null as number | null,
     error: null as string | null,
+    dataSource: (localStorage.getItem("data_source") || "api") as "api" | "csv",
   }),
 
   getters: {
-    username: (state) => state.userAccount?.username || null,
+    username: (state) => {
+      if (state.dataSource === "csv") {
+        return "CSV User";
+      }
+      return state.userAccount?.username || null;
+    },
     hasWorkouts: (state) => state.workouts.length > 0,
-    // Cache workouts for 5 minutes
+    isCSVMode: (state) => state.dataSource === "csv",
+    // Cache workouts for 5 minutes (API only)
     shouldRefetchWorkouts: (state) => {
+      if (state.dataSource === "csv") return false; // Never refetch CSV data
       if (!state.workoutsLastFetched) return true;
       const fiveMinutes = 5 * 60 * 1000;
       return Date.now() - state.workoutsLastFetched > fiveMinutes;
@@ -36,6 +44,17 @@ export const useHevyCache = defineStore("hevyCache", {
 
   actions: {
     async fetchUserAccount(force = false) {
+      // In CSV mode, create a mock user account
+      if (this.dataSource === "csv") {
+        if (!this.userAccount || force) {
+          this.userAccount = {
+            username: "CSV User",
+            email: "csv@import.local",
+          };
+        }
+        return this.userAccount;
+      }
+
       if (this.userAccount && !force) return this.userAccount;
       
       this.isLoadingUser = true;
@@ -53,6 +72,26 @@ export const useHevyCache = defineStore("hevyCache", {
     },
 
     async fetchWorkouts(force = false) {
+      // In CSV mode, load from localStorage - do NOT call API
+      if (this.dataSource === "csv") {
+        if (this.hasWorkouts && !force) {
+          return this.workouts;
+        }
+        
+        const csvData = localStorage.getItem("csv_workouts");
+        if (csvData) {
+          try {
+            this.workouts = JSON.parse(csvData);
+            this.workoutsLastFetched = Date.now();
+          } catch (error) {
+            console.error("Failed to parse CSV workouts from localStorage", error);
+            this.workouts = [];
+          }
+        }
+        // Always return here for CSV mode - never call API
+        return this.workouts;
+      }
+
       // Use cache if available and not forced
       if (this.hasWorkouts && !this.shouldRefetchWorkouts && !force) {
         if (import.meta.env.DEV) {
@@ -68,9 +107,14 @@ export const useHevyCache = defineStore("hevyCache", {
       this.error = null;
 
       try {
-        // Ensure we have username
+        // Ensure we have username for API mode
         if (!this.username) {
           await this.fetchUserAccount();
+        }
+
+        // Safety check: username must exist for API calls
+        if (!this.username) {
+          throw new Error("Username not available for API requests");
         }
 
         const allWorkouts: Workout[] = [];
@@ -115,9 +159,28 @@ export const useHevyCache = defineStore("hevyCache", {
       }
     },
 
+    loadCSVWorkouts(workouts: Workout[]) {
+      this.dataSource = "csv";
+      this.workouts = workouts;
+      this.workoutsLastFetched = Date.now();
+      localStorage.setItem("data_source", "csv");
+      localStorage.setItem("csv_workouts", JSON.stringify(workouts));
+    },
+
+    switchToAPIMode() {
+      this.dataSource = "api";
+      this.workouts = [];
+      this.workoutsLastFetched = null;
+      localStorage.setItem("data_source", "api");
+      localStorage.removeItem("csv_workouts");
+    },
+
     clearCache() {
       this.workouts = [];
       this.workoutsLastFetched = null;
+      if (this.dataSource === "csv") {
+        localStorage.removeItem("csv_workouts");
+      }
     },
 
     logout() {
@@ -125,6 +188,9 @@ export const useHevyCache = defineStore("hevyCache", {
       this.workouts = [];
       this.workoutsLastFetched = null;
       this.error = null;
+      this.dataSource = "api";
+      localStorage.removeItem("data_source");
+      localStorage.removeItem("csv_workouts");
     },
   },
 });

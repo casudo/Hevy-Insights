@@ -1,0 +1,175 @@
+{
+  "login": {
+    "welcome": "¡Bienvenido! Por favor inicia sesión para continuar.",
+    "api": {
+      "modeButton": "Inicio de sesión API",
+      "usernameOrEmail": "Usuario o Correo",
+      "password": "Contraseña",
+      "usernamePlaceholder": "Ingresa tu usuario o correo",
+      "passwordPlaceholder": "Ingresa tu contraseña",
+      "loginButton": "Iniciar sesión",
+      "loggingIn": "Iniciando sesión...",
+      "errors": {
+        "emptyFields": "Por favor ingresa usuario/correo y contraseña",
+        "loginFailed": "Error al iniciar sesión. Por favor intenta de nuevo.",
+        "invalidCredentials": "Credenciales inválidas. Por favor intenta de nuevo."
+      }
+    },
+    "csv": {
+      "modeButton": "Subir CSV",
+      "description": "Antes de exportar tus datos desde la aplicación Hevy, asegúrate de que el idioma de tu aplicación esté configurado en inglés y que la unidad de peso sea KG.",
+      "selectFile": "Seleccionar archivo CSV",
+      "dragDrop": "o arrastra y suelta aquí",
+      "browse": "Examinar archivos",
+      "uploadButton": "Subir y Continuar",
+      "uploading": "Subiendo...",
+      "errors": {
+        "noFile": "Por favor selecciona un archivo CSV",
+        "invalidFile": "Archivo inválido. Por favor selecciona un archivo CSV válido (máx. 10MB)",
+        "emptyFile": "El archivo CSV está vacío o no contiene datos de entrenamiento",
+        "uploadFailed": "Error al subir CSV. Por favor verifica el formato del archivo."
+      }
+    },
+    "madeBy": "Hecho por",
+    "tagline": "Sigue tu viaje fitness"
+  },
+  "nav": {
+    "brandTextFor": "para",
+    "dashboard": "Panel",
+    "workoutsCard": "Entrenamientos (Tarjetas)",
+    "workoutsList": "Entrenamientos (Lista)",
+    "exercises": "Ejercicios",
+    "share": "Compartir",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "subtitle": "Bienvenido de nuevo",
+    "stats": {
+      "totalWorkouts": "Entrenamientos Totales",
+      "totalVolume": "Volumen Total (kg)",
+      "avgVolume": "Volumen Prom. (kg)",
+      "totalHoursTrained": "Horas Totales de Entrenamiento",
+      "workoutStreak": "Racha de Entrenamientos (Semanas)",
+      "mostTrainedExercise": "Ejercicio Más Entrenado",
+      "longestWorkout": "Entrenamiento Más Largo"
+    },
+    "charts": {
+      "hoursTrained": "Horas Entrenadas",
+      "hoursTrainedDescription": "Duración del entrenamiento a lo largo del tiempo",
+      "volumeProgression": "Progresión de Volumen",
+      "volumeProgressionDescription": "Peso total levantado por período",
+      "repsAndSets": "Repeticiones y Series",
+      "repsAndSetsDescription": "Desglose del volumen de entrenamiento",
+      "PRsOverTime": "PRs a lo Largo del Tiempo",
+      "PRsOverTimeDescription": "Récords personales alcanzados",
+      "weeklyRhythm": "Ritmo Semanal",
+      "weeklyRhythmDescription": "Frecuencia de entrenamiento por día",
+      "muscleDistribution": "Distribución Muscular",
+      "muscleDistributionDescription": "Series por grupo muscular"
+    }
+  },
+  "workouts": {
+    "workoutsCardTitle": "Entrenamientos (Tarjetas)",
+    "workoutsCardSubtitle": "Explora tus entrenamientos en diseño de tarjetas.",
+    "workoutsListTitle": "Entrenamientos (Lista)",
+    "workoutsListSubtitle": "Explora tus entrenamientos en formato de lista detallado con calendario de contribución."
+  },
+  "exercises": {
+    "title": "Ejercicios",
+    "subtitle": "Análisis detallado y seguimiento de progreso para cada ejercicio.",
+    "searchFilter": "Buscar ejercicios por nombre...",
+    "personalRecords": "Récords Personales",
+    "stats": {
+      "statsHeader": "Estadísticas",
+      "totalSessions": "Sesiones Totales"
+    },
+    "graphs": {
+      "maxWeight": "Peso Máx. (A lo Largo del Tiempo)",
+      "avgVolume": "Volumen Prom. por Serie",
+      "weightVsReps": "Peso Máx. vs Repeticiones",
+      "volumeSession": "Volumen (Sesión - todas las series ese día)",
+      "labels": {
+        "maxWeight": "Peso Máx.",
+        "avgVolume": "Volumen Prom. por Serie",
+        "reps": "Repeticiones",
+        "date": "Fecha",
+        "volume": "Volumen (kg)"
+      },
+      "axis": {
+        "weightVsReps": {
+          "x": "Repeticiones a Peso Máx.",
+          "y": "Peso Máx."
+        },
+        "volumeSession": {
+          "x": "Fecha",
+          "y": "Volumen"
+        }
+      }
+    }
+  },
+  "settings": {
+    "title": "Configuración",
+    "subtitle": "Personaliza tu experiencia en Hevy Insights.",
+    "themes": {
+      "title": "Tema de Color",
+      "description": "Elige tu esquema de color preferido para gráficos y acentos",
+      "green": "Esmeralda/Cian",
+      "purple": "Púrpura/Rosa",
+      "blue": "Azul/Índigo",
+      "orange": "Naranja/Rojo"
+    },
+    "language": {
+      "title": "Idioma",
+      "description": "Selecciona tu idioma preferido"
+    },
+    "dataManagement": {
+      "title": "Gestión de Datos",
+      "description": "Ver información sobre tu fuente de datos",
+      "dataSource": "Fuente de Datos",
+      "csvNote": "Estás usando el modo CSV. Los datos se almacenan localmente, no se usa API."
+    },
+    "resetButton": "Restablecer a Predeterminado",
+    "saveButton": "Guardar y Volver al Panel"
+  },
+  "global": {
+    "loadingSpinnerText": "Cargando tus datos de entrenamiento...",
+    "volume": "Volumen",
+    "hours": "Horas",
+    "duration": "Duración",
+    "exercises": "Ejercicios",
+    "weight": "Peso",
+    "notes": "Notas",
+    "description": "Descripción",
+    "monday": "Lunes",
+    "tuesday": "Martes",
+    "wednesday": "Miércoles",
+    "thursday": "Jueves",
+    "friday": "Viernes",
+    "saturday": "Sábado",
+    "sunday": "Domingo",
+    "day": "Día",
+    "pagination": {
+      "first": "Primera",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "last": "Última",
+      "page": "Página",
+      "pageOf": "de"
+    },
+    "searchFilter": {
+      "byNumber": "Por Número",
+      "byName": "Nombre"
+    },
+    "timeRangeFilter": {
+      "timeRange": "Rango de Tiempo",
+      "allTime": "Todo",
+      "lastWeek": "Última Semana",
+      "lastMonth": "Último Mes",
+      "last3Months": "Últimos 3 Meses",
+      "last6Months": "Últimos 6 Meses",
+      "last12Months": "Últimos 12 Meses"
+    }
+  }
+}

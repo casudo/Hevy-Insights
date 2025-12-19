@@ -2,6 +2,7 @@
 import { computed, ref, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
 import { Scatter, Bar, Line } from "vue-chartjs";
+import { useI18n } from "vue-i18n";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -28,6 +29,7 @@ ChartJS.register(
 const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
 const loading = computed(() => store.isLoadingWorkouts || store.isLoadingUser);
+const { t } = useI18n();
 
 // Get theme colors from CSS variables
 const primaryColor = computed(() => {
@@ -222,9 +224,9 @@ function getMaxWeightOverTimeChartData(ex: any) {
     labels,
     datasets: [
       {
-        label: "Max Weight (kg)",
+        label: `${t("exercises.graphs.labels.maxWeight")} (kg)`,
         data: weightData,
-        backgroundColor: primaryColor.value + '33',
+        backgroundColor: primaryColor.value + "33",
         borderColor: primaryColor.value,
         borderWidth: 2,
         tension: 0.4,
@@ -246,9 +248,9 @@ function getAvgVolumePerSetChartData(ex: any) {
     labels,
     datasets: [
       {
-        label: "Avg Volume per Set (kg)",
+        label: `${t("exercises.graphs.labels.avgVolume")} (kg)`,
         data: avgVolData,
-        backgroundColor: secondaryColor.value + '33',
+        backgroundColor: secondaryColor.value + "33",
         borderColor: secondaryColor.value,
         borderWidth: 2,
         tension: 0.4,
@@ -270,9 +272,9 @@ function getVolumeChartData(ex: any) {
     labels,
     datasets: [
       {
-        label: "Volume (kg)",
+        label: `${t("global.volume")} (kg)`,
         data: volData,
-        backgroundColor: primaryColor.value + '33',
+        backgroundColor: primaryColor.value + "33",
         borderColor: primaryColor.value,
         borderWidth: 2,
       },
@@ -300,7 +302,7 @@ const scatterChartOptions = {
       ticks: { color: "#9A9A9A" },
       title: {
         display: true,
-        text: "Max Weight (kg)",
+        text: t("exercises.graphs.axis.weightVsReps.y") + " (kg)",
         color: "#9A9A9A",
       },
     },
@@ -309,7 +311,7 @@ const scatterChartOptions = {
       ticks: { color: "#9A9A9A", stepSize: 1 },
       title: {
         display: true,
-        text: "Reps at Max Weight",
+        text: t("exercises.graphs.axis.weightVsReps.x"),
         color: "#9A9A9A",
       },
     },
@@ -346,7 +348,7 @@ const barChartOptions = {
       ticks: { color: "#9A9A9A" },
       title: {
         display: true,
-        text: "Volume (kg)",
+        text: `${t("exercises.graphs.axis.volumeSession.y")} (kg)`,
         color: "#9A9A9A",
       },
     },
@@ -355,7 +357,7 @@ const barChartOptions = {
       ticks: { color: "#9A9A9A", maxRotation: 45, minRotation: 45 },
       title: {
         display: true,
-        text: "Date",
+        text: t("exercises.graphs.axis.volumeSession.x"),
         color: "#9A9A9A",
       },
     },
@@ -371,8 +373,8 @@ const barChartOptions = {
     <div class="exercises-header">
       <div class="header-content">
         <div class="title-section">
-          <h1>Exercises</h1>
-          <p class="subtitle">Detailed analysis and progress tracking for each exercise.</p>
+          <h1>{{ $t("exercises.title") }}</h1>
+          <p class="subtitle">{{ $t("exercises.subtitle") }}</p>
         </div>
 
         <div class="header-actions">
@@ -395,13 +397,13 @@ const barChartOptions = {
 
     <!-- Search Section -->
     <div class="search-section">
-      <input class="search-input" type="text" v-model="search" placeholder="🔍 Search exercises by name..." />
+      <input class="search-input" type="text" v-model="search" :placeholder="`🔍 ${$t('exercises.searchFilter')}`" />
     </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
-      <p>Loading your exercise data...</p>
+      <p>{{ $t("global.loadingSpinnerText") }}</p>
     </div>
 
     <div v-else class="exercise-list">
@@ -421,7 +423,7 @@ const barChartOptions = {
             </div>
 
             <div class="header-actions">
-              <label class="filter-label">Time Range</label>
+              <label class="filter-label">{{ $t("global.timeRangeFilter.timeRange") }}</label>
               <select class="filter-select" :value="rangeByExercise[ex.id] || 'all'" @change="(e:any)=> rangeByExercise[ex.id] = (e.target.value as Range)">
                 <option v-for="r in ranges" :key="r.value" :value="r.value">{{ r.label }}</option>
               </select>
@@ -441,7 +443,7 @@ const barChartOptions = {
               <table class="sets-table compact">
                 <thead>
                   <tr>
-                    <th>Day</th>
+                    <th>{{ $t("global.day") }}</th>
                     <th>kg</th>
                     <th>Reps</th>
                   </tr>
@@ -459,17 +461,17 @@ const barChartOptions = {
             <div class="right-section">
               <!-- PR's -->
               <div class="pr-list" v-if="ex.prDistinct && ex.prDistinct.length">
-                <h3>Personal Records</h3>
+                <h3>{{ $t("exercises.personalRecords") }}</h3>
                 <div class="pr-chips">
                   <span v-for="(pr,i) in ex.prDistinct" :key="i" class="pr-chip">{{ (pr.type||'').split('_').join(' ') }}: <strong>{{ pr.value }}</strong></span>
                 </div>
               </div>
               <!-- Stats -->
               <div class="exercise-stats">
-                <h3>Stats</h3>
+                <h3>{{ $t("exercises.stats.statsHeader") }}</h3>
                 <div class="stat-items">
                   <div class="stat-item">
-                    <span class="stat-label">Total Sessions:</span>
+                    <span class="stat-label">{{ $t("exercises.stats.totalSessions") }}</span>
                     <span class="stat-value">{{ ex.totalSessions || 0 }}</span>
                   </div>
                 </div>
@@ -480,28 +482,28 @@ const barChartOptions = {
           <!-- Graphs -->
           <div class="graphs">
             <div class="graph">
-              <h3>Max Weight (Over Time)</h3>
+              <h3>{{ $t("exercises.graphs.maxWeight") }}</h3>
               <div class="graph-grid chart-container">
                 <Line :data="getMaxWeightOverTimeChartData(ex)" :options="lineChartOptions" />
               </div>
             </div>
 
             <div class="graph">
-              <h3>Avg Volume per Set</h3>
+              <h3>{{ $t("exercises.graphs.avgVolume") }}</h3>
               <div class="graph-grid chart-container">
                 <Line :data="getAvgVolumePerSetChartData(ex)" :options="lineChartOptions" />
               </div>
             </div>
 
             <div class="graph">
-              <h3>Max Weight vs Reps</h3>
+              <h3>{{ $t("exercises.graphs.weightVsReps") }}</h3>
               <div class="graph-grid chart-container">
                 <Scatter :data="getWeightVsRepsChartData(ex)" :options="scatterChartOptions" />
               </div>
             </div>
 
             <div class="graph">
-              <h3>Volume (Session - all sets that day)</h3>
+              <h3>{{ $t("exercises.graphs.volumeSession") }}</h3>
               <div class="graph-grid chart-container">
                 <Bar :data="getVolumeChartData(ex)" :options="barChartOptions" />
               </div>

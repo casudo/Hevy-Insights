@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
+import { calculateCSVStats, calculatePRsGrouped, calculateMuscleDistribution } from "../utils/csvCalculator";
 import { Line, Doughnut, Radar } from "vue-chartjs";
 import {
   Chart as ChartJS,
@@ -33,6 +34,14 @@ const chartData = ref<any>(null);
 const loading = computed(() => store.isLoadingWorkouts || store.isLoadingUser);
 const userAccount = computed(() => store.userAccount);
 const workouts = computed(() => store.workouts);
+
+// CSV mode stats calculation
+const csvStats = computed(() => {
+  if (store.isCSVMode && workouts.value.length > 0) {
+    return calculateCSVStats(workouts.value as any);
+  }
+  return null;
+});
 
 // Get theme colors from CSS variables
 const primaryColor = computed(() => {
@@ -179,28 +188,35 @@ const repsAndSets_Data = computed(() => {
 // PRs Over Time - Count total PRs earned in workouts
 const prsOverTime_Data = computed(() => {
   const filtered = filterByRange(prsOverTime_Range.value);
-  const prMap: Record<string, number> = {};
-  
   const useWeeks = prsOverTime_Display.value === "wk";
   
-  for (const w of filtered) {
-    const d = new Date((w.start_time || 0) * 1000);
-    const key = useWeeks ? weekKey(d) : monthKey(d);
-    
-    // Count PRs from set.prs or set.personalRecords arrays
-    let prCount = 0;
-    for (const ex of (w.exercises || [])) {
-      for (const s of (ex.sets || [])) {
-        // set.prs
-        const prsArr = Array.isArray(s?.prs) ? s.prs : (s?.prs ? [s.prs] : []);
-        // set.personalRecords (Probably deprecated?)
-        const personalArr = Array.isArray(s?.personalRecords) ? s.personalRecords : (s?.personalRecords ? [s.personalRecords] : []);
-        const allPRs = [...prsArr, ...personalArr].filter(Boolean);
-        prCount += allPRs.length;
+  let prMap: Record<string, number> = {};
+  
+  // CSV mode - calculate PRs with filtering
+  if (store.isCSVMode) {
+    // Use centralized PR calculation from csvCalculator
+    prMap = calculatePRsGrouped(filtered as any, useWeeks ? 'week' : 'month');
+  } else {
+    // API mode - count actual PRs from API data
+    for (const w of filtered) {
+      const d = new Date((w.start_time || 0) * 1000);
+      const key = useWeeks ? weekKey(d) : monthKey(d);
+      
+      // Count PRs from set.prs or set.personalRecords arrays
+      let prCount = 0;
+      for (const ex of (w.exercises || [])) {
+        for (const s of (ex.sets || [])) {
+          // set.prs
+          const prsArr = Array.isArray(s?.prs) ? s.prs : (s?.prs ? [s.prs] : []);
+          // set.personalRecords (Probably deprecated?)
+          const personalArr = Array.isArray(s?.personalRecords) ? s.personalRecords : (s?.personalRecords ? [s.personalRecords] : []);
+          const allPRs = [...prsArr, ...personalArr].filter(Boolean);
+          prCount += allPRs.length;
+        }
       }
+      
+      prMap[key] = (prMap[key] || 0) + prCount;
     }
-    
-    prMap[key] = (prMap[key] || 0) + prCount;
   }
   
   const keys = Object.keys(prMap).sort();
@@ -231,6 +247,19 @@ const weeklyRhythm_Data = computed(() => {
 // Muscle Distribution
 const muscleDistribution_Data = computed(() => {
   const filtered = filterByRange(muscleDistribution_Range.value);
+  
+  // CSV mode - calculate muscle distribution with filtering
+  if (store.isCSVMode) {
+    // Use centralized muscle calculation from csvCalculator
+    const muscleGroups = calculateMuscleDistribution(filtered as any);
+    const filteredKeys = Object.keys(muscleGroups).filter(k => (muscleGroups[k] || 0) > 0);
+    return {
+      labels: filteredKeys,
+      data: filteredKeys.map(k => muscleGroups[k] || 0)
+    };
+  }
+  
+  // API mode - uses muscle_group from API data
   const muscleGroups: { [key: string]: number } = {};
   
   for (const w of filtered) {
@@ -294,12 +323,18 @@ const longestWorkout = computed(() => {
 
 // Total workouts, total volume, avg volume
 const totalWorkouts = computed(() => workouts.value.length);
-const totalVolume = computed(() =>
-  workouts.value.reduce((sum, w) => sum + (w.estimated_volume_kg || 0), 0)
-);
-const avgVolume = computed(() =>
-  totalWorkouts.value > 0 ? Math.round(totalVolume.value / totalWorkouts.value) : 0
-);
+const totalVolume = computed(() => {
+  if (store.isCSVMode && csvStats.value) {
+    return csvStats.value.totalVolume;
+  }
+  return workouts.value.reduce((sum, w) => sum + (w.estimated_volume_kg || 0), 0);
+});
+const avgVolume = computed(() => {
+  if (store.isCSVMode && csvStats.value) {
+    return csvStats.value.avgVolumePerWorkout;
+  }
+  return totalWorkouts.value > 0 ? Math.round(totalVolume.value / totalWorkouts.value) : 0;
+});
 
 const totalMinutesAll = computed(() => {
   let mins = 0;
@@ -494,8 +529,8 @@ onMounted(() => {
     <div class="dashboard-header">
       <div class="header-content">
         <div class="title-section">
-          <h1>Dashboard</h1>
-          <p v-if="userAccount" class="subtitle">Welcome back, {{ userAccount.username }}!</p>
+          <h1>{{ $t('dashboard.title') }}</h1>
+          <p v-if="userAccount" class="subtitle">{{ $t('dashboard.subtitle')}}, {{ userAccount.username }}!</p>
         </div>
 
         <div class="header-actions">
@@ -519,7 +554,7 @@ onMounted(() => {
     <!-- Loading State -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
-      <p>Loading your workout data...</p>
+      <p>{{ $t('global.loadingSpinnerText') }}</p>
     </div>
 
     <!-- Main Content -->
@@ -530,7 +565,7 @@ onMounted(() => {
           <div class="stat-icon workout-icon">🏋️</div>
           <div class="stat-content">
             <div class="stat-value">{{ totalWorkouts }}</div>
-            <div class="stat-label">Total Workouts</div>
+            <div class="stat-label">{{ $t('dashboard.stats.totalWorkouts') }}</div>
           </div>
         </div>
         
@@ -538,7 +573,7 @@ onMounted(() => {
           <div class="stat-icon volume-icon">💪</div>
           <div class="stat-content">
             <div class="stat-value">{{ totalVolume.toLocaleString() }}</div>
-            <div class="stat-label">Total Volume (kg)</div>
+            <div class="stat-label">{{ $t('dashboard.stats.totalVolume') }}</div>
           </div>
         </div>
         
@@ -546,7 +581,7 @@ onMounted(() => {
           <div class="stat-icon avg-icon">📊</div>
           <div class="stat-content">
             <div class="stat-value">{{ avgVolume.toLocaleString() }}</div>
-            <div class="stat-label">Avg Volume (kg)</div>
+            <div class="stat-label">{{ $t('dashboard.stats.avgVolume') }}</div>
           </div>
         </div>
 
@@ -554,7 +589,7 @@ onMounted(() => {
           <div class="stat-icon">⏳</div>
           <div class="stat-content">
             <div class="stat-value">{{ totalHoursAll }}</div>
-            <div class="stat-label">Total Hours Trained</div>
+            <div class="stat-label">{{ $t('dashboard.stats.totalHoursTrained') }}</div>
           </div>
         </div>
 
@@ -562,7 +597,7 @@ onMounted(() => {
           <div class="stat-icon">🔥</div>
           <div class="stat-content">
             <div class="stat-value">{{ workoutStreakWeeks }}</div>
-            <div class="stat-label">Workout Streak (Weeks)</div>
+            <div class="stat-label">{{ $t('dashboard.stats.workoutStreak') }}</div>
           </div>
         </div>
 
@@ -570,7 +605,7 @@ onMounted(() => {
           <div class="stat-icon">🏆</div>
           <div class="stat-content">
             <div class="stat-value">{{ mostTrainedExercise.name }}</div>
-            <div class="stat-label">Most Trained Exercise</div>
+            <div class="stat-label">{{ $t('dashboard.stats.mostTrainedExercise') }}</div>
           </div>
         </div>
 
@@ -578,7 +613,7 @@ onMounted(() => {
           <div class="stat-icon">⏱️</div>
           <div class="stat-content">
             <div class="stat-value">{{ longestWorkout.minutes }} min</div>
-            <div class="stat-label">Longest Workout</div>
+            <div class="stat-label">{{ $t('dashboard.stats.longestWorkout') }}</div>
           </div>
         </div>
       </div>
@@ -589,8 +624,8 @@ onMounted(() => {
         <div class="chart-container">
           <div class="chart-header">
             <div class="chart-title-section">
-              <h2>⏳ Hours Trained</h2>
-              <span class="chart-subtitle">Your training duration over time</span>
+              <h2>⏳ {{ $t('dashboard.charts.hoursTrained') }}</h2>
+              <span class="chart-subtitle">{{ $t('dashboard.charts.hoursTrainedDescription') }}</span>
             </div>
             <div class="chart-filters">
               <div class="filter-group">
@@ -612,7 +647,7 @@ onMounted(() => {
               :data="{ 
                 labels: hoursTrained_Data.labels, 
                 datasets: [{ 
-                  label: 'Hours', 
+                  label: $t('global.hours'), 
                   data: hoursTrained_Data.data, 
                   borderColor: primaryColor, 
                   backgroundColor: primaryColor + '33', 
@@ -632,8 +667,8 @@ onMounted(() => {
         <div class="chart-container">
           <div class="chart-header">
             <div class="chart-title-section">
-              <h2>💪 Volume Progression</h2>
-              <span class="chart-subtitle">Total weight lifted per period</span>
+              <h2>💪 {{ $t('dashboard.charts.volumeProgression') }}</h2>
+              <span class="chart-subtitle">{{ $t('dashboard.charts.volumeProgressionDescription') }}</span>
             </div>
             <div class="chart-filters">
               <div class="filter-group">
@@ -655,7 +690,7 @@ onMounted(() => {
               :data="{ 
                 labels: volumeProgression_Data.labels, 
                 datasets: [{ 
-                  label: 'Volume (kg)', 
+                  label: $t('global.volume') + ' (kg)', 
                   data: volumeProgression_Data.data, 
                   borderColor: secondaryColor, 
                   backgroundColor: secondaryColor + '33', 
@@ -675,8 +710,8 @@ onMounted(() => {
         <div class="chart-container">
           <div class="chart-header">
             <div class="chart-title-section">
-              <h2>📊 Reps & Sets</h2>
-              <span class="chart-subtitle">Training volume breakdown</span>
+              <h2>📊 {{ $t('dashboard.charts.repsAndSets') }}</h2>
+              <span class="chart-subtitle">{{ $t('dashboard.charts.repsAndSetsDescription') }}</span>
             </div>
             <div class="chart-filters">
               <div class="filter-group">
@@ -748,8 +783,8 @@ onMounted(() => {
         <div class="chart-container">
           <div class="chart-header">
             <div class="chart-title-section">
-              <h2>🏆 PRs Over Time</h2>
-              <span class="chart-subtitle">Personal records achieved</span>
+              <h2>🏆 {{ $t('dashboard.charts.PRsOverTime') }}</h2>
+              <span class="chart-subtitle">{{ $t('dashboard.charts.PRsOverTimeDescription') }}</span>
             </div>
             <div class="chart-filters">
               <div class="filter-group">
@@ -792,8 +827,8 @@ onMounted(() => {
         <div class="chart-container">
           <div class="chart-header">
             <div class="chart-title-section">
-              <h2>🔥 Weekly Rhythm</h2>
-              <span class="chart-subtitle">Training frequency by day</span>
+              <h2>🔥 {{ $t('dashboard.charts.weeklyRhythm') }}</h2>
+              <span class="chart-subtitle">{{ $t('dashboard.charts.weeklyRhythmDescription') }}</span>
             </div>
           </div>
           <div class="chart-body radar-body">
@@ -822,8 +857,8 @@ onMounted(() => {
         <div class="chart-container">
           <div class="chart-header">
             <div class="chart-title-section">
-              <h2>🎯 Muscle Distribution</h2>
-              <span class="chart-subtitle">Sets by muscle group</span>
+              <h2>🎯 {{ $t('dashboard.charts.muscleDistribution') }}</h2>
+              <span class="chart-subtitle">{{ $t('dashboard.charts.muscleDistributionDescription') }}</span>
             </div>
             <div class="chart-filters">
               <div class="filter-group">

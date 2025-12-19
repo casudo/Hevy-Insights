@@ -1,19 +1,43 @@
-# Development
+# Contributing to Hevy Insights <!-- omit from toc -->
+
+Thanks for your potential interest in contributing to Hevy Insights! There are several ways you can help improve the project, whether it's through code contributions, documentation, bug reports, or feature requests.
+
+> [!IMPORTANT]
+> Even if you are not a developer you can contribute by adding new languages and help with translations. See [more info here](#translations).
+
+## Table of Contents <!-- omit from toc -->
+
+- [Translations](#translations)
+- [Development](#development)
+  - [Setup development environment](#setup-development-environment)
+    - [Backend Setup](#backend-setup)
+    - [Frontend Setup](#frontend-setup)
+  - [Swagger Documentation](#swagger-documentation)
+
+## Translations
+
+If you want to improve current translations or add new languages, you can do so by editing the JSON files located in the `frontend/src/locales/` directory.
+
+To add a new language, copy the default `en.json` file and rename it to the desired [ISO-639-1 language code](https://en.wikipedia.org/wiki/ISO_639-1) (e.g., `pt.json` for Portuguese). Then, translate the strings accordingly.
+
+> [!WARNING]
+> You must be able to read the original strings in English to provide accurate translations.
+
+Once you're done commit your changes and create a pull request.
+
+## Development
 
 > [!IMPORTANT]
 > If you are interested in contributing to the development of Hevy Insights, please create an issue and submit a pull request.
 > For other inquiries, feel free to contact me -> [casudo](https://github.com/casudo)
 
-Clone/download the repository and follow the steps below.
+Clone/download the repository and follow the [Setup development environment](#setup-development-environment) guide.
 
-## Swagger Documentation
+### Setup development environment
 
-The OpenAPI specification for the Hevy API endpoints is located in `docs/swagger.yaml`.
-You can see it online via [my GitHub Pages](https://casudo.github.io/Hevy-Insights).
+#### Backend Setup
 
-## Backend Setup
-
-1. Optional, but recommended: Create a virtual environment and activate it:
+1. Create a virtual environment and activate it:
 
    ```bash
    python -m venv venv
@@ -34,7 +58,7 @@ You can see it online via [my GitHub Pages](https://casudo.github.io/Hevy-Insigh
 
    FastAPI endpoint documentation: `http://localhost:5000/api/docs`
 
-## Frontend Setup
+#### Frontend Setup
 
 **Prerequisites**:
 
@@ -55,3 +79,8 @@ You can see it online via [my GitHub Pages](https://casudo.github.io/Hevy-Insigh
    ```
 
    Frontend will run on `http://localhost:5173`
+
+### Swagger Documentation
+
+The OpenAPI specification for the Hevy API endpoints is located in `docs/swagger.yaml`.
+You can see it online via [my GitHub Pages](https://casudo.github.io/Hevy-Insights).
