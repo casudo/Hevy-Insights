@@ -1,0 +1,175 @@
+{
+  "login": {
+    "welcome": "Welcome! Please login to continue.",
+    "api": {
+      "modeButton": "API Login",
+      "usernameOrEmail": "Username or Email",
+      "password": "Password",
+      "usernamePlaceholder": "Enter your username or email",
+      "passwordPlaceholder": "Enter your password",
+      "loginButton": "Login",
+      "loggingIn": "Logging in...",
+      "errors": {
+        "emptyFields": "Please enter both username/email and password",
+        "loginFailed": "Login failed. Please try again.",
+        "invalidCredentials": "Invalid credentials. Please try again."
+      }
+    },
+    "csv": {
+      "modeButton": "Upload CSV Instead",
+      "description": "Before exporting your data from the Hevy app, ensure that your app language is set to English and that the weight unit is KG.",
+      "selectFile": "Select CSV File",
+      "dragDrop": "or drag and drop here",
+      "browse": "Browse Files",
+      "uploadButton": "Upload & Continue",
+      "uploading": "Uploading...",
+      "errors": {
+        "noFile": "Please select a CSV file",
+        "invalidFile": "Invalid file. Please select a valid CSV file (max 10MB)",
+        "emptyFile": "CSV file is empty or contains no workout data",
+        "uploadFailed": "Failed to upload CSV. Please check the file format."
+      }
+    },
+    "madeBy": "Made by",
+    "tagline": "Track your fitness journey"
+  },
+  "nav": {
+    "brandTextFor": "for",
+    "dashboard": "Dashboard",
+    "workoutsCard": "Workouts (Card)",
+    "workoutsList": "Workouts (List)",
+    "exercises": "Exercises",
+    "share": "Share",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Welcome back",
+    "stats": {
+      "totalWorkouts": "Total Workouts",
+      "totalVolume": "Total Volume (kg)",
+      "avgVolume": "Avg Volume (kg)",
+      "totalHoursTrained": "Total Hours Trained",
+      "workoutStreak": "Workout Streak (Weeks)",
+      "mostTrainedExercise": "Most Trained Exercise",
+      "longestWorkout": "Longest Workout"
+    },
+    "charts": {
+      "hoursTrained": "Hours Trained",
+      "hoursTrainedDescription": "Training duration over time",
+      "volumeProgression": "Volume Progression",
+      "volumeProgressionDescription": "Total weight lifted per period",
+      "repsAndSets": "Reps & Sets",
+      "repsAndSetsDescription": "Training volume breakdown",
+      "PRsOverTime": "PRs Over Time",
+      "PRsOverTimeDescription": "Personal records achieved",
+      "weeklyRythm": "Weekly Rhythm",
+      "weeklyRythmDescription": "Training frequency by day",
+      "muscleDistribution": "Muscle Distribution",
+      "muscleDistributionDescription": "Sets by muscle group"
+    }
+  },
+  "workouts": {
+    "workoutsCardTitle": "Workouts (Card)",
+    "workoutsCardSubtitle": "Browse your workouts in a card design.",
+    "workoutsListTitle": "Workouts (List)",
+    "workoutsListSubtitle": "Browse your workouts in a detailed list format with contribution calendar."
+  },
+  "exercises": {
+    "title": "Exercises",
+    "subtitle": "Detailed analysis and progress tracking for each exercise.",
+    "searchFilter": "Search exercises by name...",
+    "personalRecords": "Personal Records",
+    "stats": {
+      "statsHeader": "Stats",
+      "totalSessions": "Total Sessions"
+    },
+    "graphs": {
+      "maxWeight": "Max Weight (Over Time)",
+      "avgVolume": "Avg Volume per Set",
+      "weightVsReps": "Max Weight vs Reps",
+      "volumeSession": "Volume (Session - all sets that day)",
+      "labels": {
+        "maxWeight": "Max Weight",
+        "avgVolume": "Avg Volume per Set",
+        "reps": "Reps",
+        "date": "Date",
+        "volume": "Volume (kg)"
+      },
+      "axis": {
+        "weightVsReps": {
+          "x": "Reps at Max Weight",
+          "y": "Max Weight"
+        },
+        "volumeSession": {
+          "x": "Date",
+          "y": "Volume"
+        }
+      }
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your Hevy Insights experience.",
+    "themes": {
+      "title": "Color Theme",
+      "description": "Choose your preferred color scheme for charts and accents",
+      "green": "Emerald/Cyan",
+      "purple": "Purple/Pink",
+      "blue": "Blue/Indigo",
+      "orange": "Orange/Red"
+    },
+    "language": {
+      "title": "Language",
+      "description": "Select your preferred language"
+    },
+    "dataManagement": {
+      "title": "Data Management",
+      "description": "View information about your data source",
+      "dataSource": "Data Source",
+      "csvNote": "You are using CSV mode. Data is stored locally, no API used."
+    },
+    "resetButton": "Reset to Default",
+    "saveButton": "Save & Return to Dashboard"
+  },
+  "global": {
+    "loadingSpinnerText": "Loading your workout data...",
+    "volume": "Volume",
+    "hours": "Hours",
+    "duaration": "Duration",
+    "exercises": "Exercises",
+    "weight": "Weight",
+    "notes": "Notes",
+    "description": "Description",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "day": "Day",
+    "pagination": {
+      "first": "First",
+      "previous": "Previous",
+      "next": "Next",
+      "last": "Last",
+      "page": "Page",
+      "pageOf": "of"
+    },
+    "searchFilter": {
+      "byNumber": "By Number",
+      "byName": "Name"
+    },
+    "timeRangeFilter": {
+      "timeRange": "Time Range",
+      "allTime": "All",
+      "lastWeek": "Last Week",
+      "lastMonth": "Last Month",
+      "last3Months": "Last 3 Months",
+      "last6Months": "Last 6 Months",
+      "last12Months": "Last 12 Months"
+    }
+  }
+}
