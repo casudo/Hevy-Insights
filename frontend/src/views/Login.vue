@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import { authService } from "../services/api";
 import { useHevyCache } from "../stores/hevy_cache";
 import { readCSVFile, parseCSV, validateCSVFile } from "../utils/csvParser";
 
 const router = useRouter();
+const { t } = useI18n();
 const store = useHevyCache();
 
 // Mode selection
@@ -26,7 +28,7 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const handleLogin = async () => {
   if (!emailOrUsername.value || !password.value) {
-    error.value = t("login.errors.emptyFields");
+    error.value = t("login.api.errors.emptyFields");
     return;
   }
 
@@ -42,10 +44,10 @@ const handleLogin = async () => {
       await store.switchToAPIMode();
       router.push("/dashboard");
     } else {
-      error.value = t("login.errors.loginFailed");
+      error.value = t("login.api.errors.loginFailed");
     }
   } catch (err: any) {
-    error.value = err.response?.data?.detail || t("login.errors.invalidCredentials");
+    error.value = err.response?.data?.detail || t("login.api.errors.invalidCredentials");
   } finally {
     loading.value = false;
   }
@@ -61,7 +63,7 @@ const handleFileSelect = (event: Event) => {
 
 const handleCSVUpload = async () => {
   if (!csvFile.value) {
-    csvError.value = t("login.errors.noFile");
+    csvError.value = t("login.csv.errors.noFile");
     return;
   }
 
@@ -73,7 +75,7 @@ const handleCSVUpload = async () => {
     // Validate file
     const isValid = await validateCSVFile(csvFile.value);
     if (!isValid) {
-      csvError.value = t("login.errors.invalidFile");
+      csvError.value = t("login.csv.errors.invalidFile");
       uploadLoading.value = false;
       return;
     }
@@ -83,7 +85,7 @@ const handleCSVUpload = async () => {
     const workouts = parseCSV(content);
 
     if (workouts.length === 0) {
-      csvError.value = t("login.errors.emptyFile");
+      csvError.value = t("login.csv.errors.emptyFile");
       uploadLoading.value = false;
       return;
     }
@@ -95,7 +97,7 @@ const handleCSVUpload = async () => {
     // Navigate to dashboard
     router.push("/dashboard");
   } catch (err: any) {
-    csvError.value = err.message || t("login.errors.uploadFailed");
+    csvError.value = err.message || t("login.csv.errors.uploadFailed");
   } finally {
     uploadLoading.value = false;
   }
@@ -146,7 +148,7 @@ const removeFile = () => {
             @click="loginMode = 'credentials'"
           >
             <span class="mode-icon">🔑</span>
-            <span>{{ t('login.apiLogin') }}</span>
+            <span>{{ t('login.api.modeButton') }}</span>
           </button>
           <button
             type="button"
@@ -155,7 +157,7 @@ const removeFile = () => {
             @click="loginMode = 'csv'"
           >
             <span class="mode-icon">📂</span>
-            <span>{{ t('login.csvUpload') }}</span>
+            <span>{{ t('login.csv.modeButton') }}</span>
           </button>
         </div>
 
@@ -164,14 +166,14 @@ const removeFile = () => {
           <div class="input-group">
             <label for="username" class="input-label">
               <span class="label-icon">👤</span>
-              Username or Email
+              {{ t('login.api.usernameOrEmail') }}
             </label>
             <input
               id="username"
               v-model="emailOrUsername"
               type="text"
               class="input-field"
-              placeholder="Enter your username or email"
+              :placeholder="t('login.api.usernamePlaceholder')"
               required
               :disabled="loading"
               autocomplete="username"
@@ -181,14 +183,14 @@ const removeFile = () => {
           <div class="input-group">
             <label for="password" class="input-label">
               <span class="label-icon">🔒</span>
-              Password
+              {{ t('login.api.password') }}
             </label>
             <input
               id="password"
               v-model="password"
               type="password"
               class="input-field"
-              placeholder="Enter your password"
+              :placeholder="t('login.api.passwordPlaceholder')"
               required
               :disabled="loading"
               autocomplete="current-password"
@@ -206,11 +208,11 @@ const removeFile = () => {
           <!-- Submit Button -->
           <button type="submit" class="submit-button" :disabled="loading">
             <span v-if="!loading" class="button-content">
-              <span class="button-text">Login</span>
+              <span class="button-text">{{ t('login.api.loginButton') }}</span>
             </span>
             <span v-else class="button-loading">
               <span class="loading-spinner"></span>
-              <span>Logging in...</span>
+              <span>{{ t('login.api.loggingIn') }}</span>
             </span>
           </button>
         </form>
@@ -219,7 +221,7 @@ const removeFile = () => {
         <div v-else class="csv-upload-form">
           <div class="upload-info">
             <span class="info-icon">ℹ️</span>
-            <p class="info-text">{{ t("login.csvDescription") }}</p>
+            <p class="info-text">{{ t("login.csv.description") }}</p>
           </div>
 
           <!-- File Input (Hidden) -->
@@ -239,10 +241,10 @@ const removeFile = () => {
           >
             <div v-if="!csvFile" class="upload-prompt">
               <span class="upload-icon">📁</span>
-              <p class="upload-title">{{ t("login.selectFile") }}</p>
-              <p class="upload-subtitle">{{ t("login.dragDrop") }}</p>
+              <p class="upload-title">{{ t("login.csv.selectFile") }}</p>
+              <p class="upload-subtitle">{{ t("login.csv.dragDrop") }}</p>
               <button type="button" class="browse-button" @click.stop="triggerFileInput">
-                {{ t("login.browse") }}
+                {{ t("login.csv.browse") }}
               </button>
             </div>
 
@@ -276,11 +278,11 @@ const removeFile = () => {
             @click="handleCSVUpload"
           >
             <span v-if="!uploadLoading" class="button-content">
-              <span class="button-text">{{ t("login.uploadButton") }}</span>
+              <span class="button-text">{{ t("login.csv.uploadButton") }}</span>
             </span>
             <span v-else class="button-loading">
               <span class="loading-spinner"></span>
-              <span>{{ t("login.uploading") }}</span>
+              <span>{{ t("login.csv.uploading") }}</span>
             </span>
           </button>
         </div>
@@ -289,13 +291,15 @@ const removeFile = () => {
         <div class="login-footer">
           <div class="divider"></div>
           <p class="footer-text">
-            Made by <strong><a href="https://github.com/casudo/Hevy-Insights" target="_blank" rel="noopener noreferrer">casudo</a></strong> • Track your fitness journey
+            {{ t('login.madeBy') }} <strong><a href="https://github.com/casudo/Hevy-Insights" target="_blank" rel="noopener noreferrer">casudo</a></strong> • {{ t('login.tagline') }}
           </p>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<!-- =============================================================================== -->
 
 <style scoped>
 /* Wrapper and Background */

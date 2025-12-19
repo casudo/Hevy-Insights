@@ -1,35 +1,37 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useHevyCache } from "../stores/hevy_cache";
 
 const store = useHevyCache();
+const { locale, t } = useI18n();
 const userAccount = computed(() => store.userAccount);
 
 // Color theme presets
 const colorThemes = [
   { 
-    name: "Emerald/Cyan (Default)", 
+    name: t("settings.themes.green"), 
     value: "default",
     primary: "#10b981", 
     secondary: "#06b6d4",
     preview: "linear-gradient(135deg, #10b981, #06b6d4)"
   },
   { 
-    name: "Purple/Pink", 
+    name: t("settings.themes.purple"), 
     value: "purple",
     primary: "#8b5cf6", 
     secondary: "#ec4899",
     preview: "linear-gradient(135deg, #8b5cf6, #ec4899)"
   },
   { 
-    name: "Blue/Indigo", 
+    name: t("settings.themes.blue"), 
     value: "blue",
     primary: "#3b82f6", 
     secondary: "#6366f1",
     preview: "linear-gradient(135deg, #3b82f6, #6366f1)"
   },
   { 
-    name: "Orange/Red", 
+    name: t("settings.themes.orange"), 
     value: "orange",
     primary: "#f59e0b", 
     secondary: "#ef4444",
@@ -74,8 +76,8 @@ const resetSettings = () => {
     <div class="settings-header">
       <div class="header-content">
         <div class="title-section">
-          <h1>Settings</h1>
-          <p class="subtitle">Customize your dashboard experience.</p>
+          <h1>{{ t("settings.title") }}</h1>
+          <p class="subtitle">{{ t("settings.subtitle") }}</p>
         </div>
 
         <div class="header-actions">
@@ -96,8 +98,8 @@ const resetSettings = () => {
       <!-- Color Theme Section -->
       <div class="settings-section">
         <div class="section-header">
-          <h2>🎨 Color Theme</h2>
-          <p class="section-description">Choose your preferred color scheme for charts and accents</p>
+          <h2>🎨 {{ t("settings.themes.title") }}</h2>
+          <p class="section-description">{{ t("settings.themes.description") }}</p>
         </div>
 
         <div class="theme-grid">
@@ -134,10 +136,10 @@ const resetSettings = () => {
       <!-- Actions -->
       <div class="settings-actions">
         <button @click="resetSettings" class="btn-secondary">
-          Reset to Default
+          {{ t('settings.resetButton') }}
         </button>
         <button class="btn-primary" @click="$router.push('/dashboard')">
-          Save & Return to Dashboard
+          {{ t('settings.saveButton') }}
         </button>
       </div>
     </div>

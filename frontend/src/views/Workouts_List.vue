@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
+import { useI18n } from "vue-i18n";
 
 const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
+const { t } = useI18n();
 
 // UI state
 const filterRange = ref<"all" | "1w" | "1m" | "3m" | "6m" | "12m">("all");
@@ -66,7 +68,7 @@ const filteredAndSearchedWorkouts = computed(() => {
 // Helpers
 const formatDateFull = (timestamp: number) => {
   const d = new Date(timestamp * 1000);
-  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const days = [t("global.sunday"), t("global.monday"), t("global.tuesday"), t("global.wednesday"), t("global.thursday"), t("global.friday"), t("global.saturday")];
   const dayName = days[d.getDay()];
   const usDate = d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }); // MM/DD/YYYY
   const time = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
@@ -191,8 +193,8 @@ onMounted(async () => { await store.fetchWorkouts(); });
     <div class="workouts-list-header">
       <div class="header-content">
         <div class="title-section">
-          <h1>Workouts (List)</h1>
-          <p class="subtitle">See your workouts in a detailed list format with contribution calendar.</p>
+          <h1>{{ $t('workouts.workoutsListTitle') }}</h1>
+          <p class="subtitle">{{ $t('workouts.workoutsListSubtitle') }}</p>
         </div>
 
         <div class="header-actions">
@@ -234,18 +236,18 @@ onMounted(async () => { await store.fetchWorkouts(); });
         </div>
         <!-- Filters -->
         <div class="filters">
-          <label class="filter-label">Time Range</label>
+          <label class="filter-label">{{ $t('global.timeRangeFilter.timeRange') }}</label>
           <select class="filter-select" :value="filterRange" @change="onChangeFilter(($event.target as HTMLSelectElement).value as any)">
-            <option value="all">All</option>
-            <option value="1w">Last week</option>
-            <option value="1m">Last month</option>
-            <option value="3m">Last 3 months</option>
-            <option value="6m">Last 6 months</option>
-            <option value="12m">Last 12 months</option>
+            <option value="all">{{ $t('global.timeRangeFilter.allTime') }}</option>
+            <option value="1w">{{ $t('global.timeRangeFilter.lastWeek') }}</option>
+            <option value="1m">{{ $t('global.timeRangeFilter.lastMonth') }}</option>
+            <option value="3m">{{ $t('global.timeRangeFilter.last3Months') }}</option>
+            <option value="6m">{{ $t('global.timeRangeFilter.last6Months') }}</option>
+            <option value="12m">{{ $t('global.timeRangeFilter.last12Months') }}</option>
           </select>
-          <label class="filter-label">By Number</label>
+          <label class="filter-label">{{ $t('global.searchFilter.byNumber') }}</label>
           <input class="filter-input" type="number" min="1" placeholder="#" v-model.number="filters.workoutNumber" />
-          <label class="filter-label">Name</label>
+          <label class="filter-label">{{ $t('global.searchFilter.byName') }}</label>
           <input class="filter-input" type="text" placeholder="Contains…" v-model="filters.workoutName" />
         </div>
       </div>
@@ -254,7 +256,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
     <!-- Loading state -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
-      <p>Loading your workout data...</p>
+      <p>{{ $t('global.loadingSpinnerText') }}</p>
     </div>
 
     <div v-else class="list">
@@ -287,17 +289,17 @@ onMounted(async () => { await store.fetchWorkouts(); });
               </div>
             </div>
             <div class="stats">
-              <div class="stat"><strong>{{ workout.estimated_volume_kg?.toLocaleString() || 0 }} kg</strong><span>Volume</span></div>
-              <div class="stat"><strong>{{ formatDuration(workout.start_time, workout.end_time) }}</strong><span>Duration</span></div>
-              <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>Exercises</span></div>
-              <div class="stat"><strong>{{ totalSets(workout) }}</strong><span>Total Sets</span></div>
-              <div class="stat" v-if="workout.description"><strong>{{ workout.description }}</strong><span>Description</span></div>
+              <div class="stat"><strong>{{ workout.estimated_volume_kg?.toLocaleString() || 0 }} kg</strong><span>{{ $t('global.volume') }}</span></div>
+              <div class="stat"><strong>{{ formatDuration(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.duaration') }}</span></div>
+              <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.exercises') }}</span></div>
+              <div class="stat"><strong>{{ totalSets(workout) }}</strong><span>{{ $t('global.sets') }}</span></div>
+              <div class="stat" v-if="workout.description"><strong>{{ workout.description }}</strong><span>{{ $t('global.description') }}</span></div>
             </div>
           </div>
 
           <!-- Exercises list with thumbnails -->
           <div class="exercises">
-            <h3>Exercises</h3>
+            <h3>{{ $t('global.exercises') }}</h3>
             <div class="exercise-grid">
               <div v-for="(exercise, exIdx) in workout.exercises" :key="exercise.id" class="exercise">
                 <div class="exercise-header">
@@ -312,7 +314,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
                 <thead>
                   <tr>
                     <th>Set</th>
-                    <th>Weight (kg)</th>
+                    <th>{{ $t('global.weight') }} (kg)</th>
                     <th>Reps</th>
                     <th>RPE</th>
                   </tr>
@@ -326,7 +328,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
                   </tr>
                 </tbody>
               </table>
-              <div v-if="exercise.notes" class="exercise-notes"><em>Notes: {{ exercise.notes }}</em></div>
+              <div v-if="exercise.notes" class="exercise-notes"><em>{{ $t('global.notes') }}: {{ exercise.notes }}</em></div>
               </div>
             </div>
           </div>

@@ -529,8 +529,8 @@ onMounted(() => {
     <div class="dashboard-header">
       <div class="header-content">
         <div class="title-section">
-          <h1>Dashboard</h1>
-          <p v-if="userAccount" class="subtitle">Welcome back, {{ userAccount.username }}!</p>
+          <h1>{{ $t('dashboard.title') }}</h1>
+          <p v-if="userAccount" class="subtitle">{{ $t('dashboard.subtitle')}}, {{ userAccount.username }}!</p>
         </div>
 
         <div class="header-actions">
@@ -554,7 +554,7 @@ onMounted(() => {
     <!-- Loading State -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
-      <p>Loading your workout data...</p>
+      <p>{{ $t('global.loadingSpinnerText') }}</p>
     </div>
 
     <!-- Main Content -->
@@ -565,7 +565,7 @@ onMounted(() => {
           <div class="stat-icon workout-icon">🏋️</div>
           <div class="stat-content">
             <div class="stat-value">{{ totalWorkouts }}</div>
-            <div class="stat-label">Total Workouts</div>
+            <div class="stat-label">{{ $t('dashboard.stats.totalWorkouts') }}</div>
           </div>
         </div>
         
@@ -573,7 +573,7 @@ onMounted(() => {
           <div class="stat-icon volume-icon">💪</div>
           <div class="stat-content">
             <div class="stat-value">{{ totalVolume.toLocaleString() }}</div>
-            <div class="stat-label">Total Volume (kg)</div>
+            <div class="stat-label">{{ $t('dashboard.stats.totalVolume') }}</div>
           </div>
         </div>
         
@@ -581,7 +581,7 @@ onMounted(() => {
           <div class="stat-icon avg-icon">📊</div>
           <div class="stat-content">
             <div class="stat-value">{{ avgVolume.toLocaleString() }}</div>
-            <div class="stat-label">Avg Volume (kg)</div>
+            <div class="stat-label">{{ $t('dashboard.stats.avgVolume') }}</div>
           </div>
         </div>
 
@@ -589,7 +589,7 @@ onMounted(() => {
           <div class="stat-icon">⏳</div>
           <div class="stat-content">
             <div class="stat-value">{{ totalHoursAll }}</div>
-            <div class="stat-label">Total Hours Trained</div>
+            <div class="stat-label">{{ $t('dashboard.stats.totalHoursTrained') }}</div>
           </div>
         </div>
 
@@ -597,7 +597,7 @@ onMounted(() => {
           <div class="stat-icon">🔥</div>
           <div class="stat-content">
             <div class="stat-value">{{ workoutStreakWeeks }}</div>
-            <div class="stat-label">Workout Streak (Weeks)</div>
+            <div class="stat-label">{{ $t('dashboard.stats.workoutStreak') }}</div>
           </div>
         </div>
 
@@ -605,7 +605,7 @@ onMounted(() => {
           <div class="stat-icon">🏆</div>
           <div class="stat-content">
             <div class="stat-value">{{ mostTrainedExercise.name }}</div>
-            <div class="stat-label">Most Trained Exercise</div>
+            <div class="stat-label">{{ $t('dashboard.stats.mostTrainedExercise') }}</div>
           </div>
         </div>
 
@@ -613,7 +613,7 @@ onMounted(() => {
           <div class="stat-icon">⏱️</div>
           <div class="stat-content">
             <div class="stat-value">{{ longestWorkout.minutes }} min</div>
-            <div class="stat-label">Longest Workout</div>
+            <div class="stat-label">{{ $t('dashboard.stats.longestWorkout') }}</div>
           </div>
         </div>
       </div>
@@ -624,8 +624,8 @@ onMounted(() => {
         <div class="chart-container">
           <div class="chart-header">
             <div class="chart-title-section">
-              <h2>⏳ Hours Trained</h2>
-              <span class="chart-subtitle">Your training duration over time</span>
+              <h2>⏳ {{ $t('dashboard.charts.hoursTrained') }}</h2>
+              <span class="chart-subtitle">{{ $t('dashboard.charts.hoursTrainedDescription') }}</span>
             </div>
             <div class="chart-filters">
               <div class="filter-group">
@@ -647,7 +647,7 @@ onMounted(() => {
               :data="{ 
                 labels: hoursTrained_Data.labels, 
                 datasets: [{ 
-                  label: 'Hours', 
+                  label: $t('global.hours'), 
                   data: hoursTrained_Data.data, 
                   borderColor: primaryColor, 
                   backgroundColor: primaryColor + '33', 
@@ -667,8 +667,8 @@ onMounted(() => {
         <div class="chart-container">
           <div class="chart-header">
             <div class="chart-title-section">
-              <h2>💪 Volume Progression</h2>
-              <span class="chart-subtitle">Total weight lifted per period</span>
+              <h2>💪 {{ $t('dashboard.charts.volumeProgression') }}</h2>
+              <span class="chart-subtitle">{{ $t('dashboard.charts.volumeProgressionDescription') }}</span>
             </div>
             <div class="chart-filters">
               <div class="filter-group">
@@ -690,7 +690,7 @@ onMounted(() => {
               :data="{ 
                 labels: volumeProgression_Data.labels, 
                 datasets: [{ 
-                  label: 'Volume (kg)', 
+                  label: $t('global.volume') + ' (kg)', 
                   data: volumeProgression_Data.data, 
                   borderColor: secondaryColor, 
                   backgroundColor: secondaryColor + '33', 
@@ -710,8 +710,8 @@ onMounted(() => {
         <div class="chart-container">
           <div class="chart-header">
             <div class="chart-title-section">
-              <h2>📊 Reps & Sets</h2>
-              <span class="chart-subtitle">Training volume breakdown</span>
+              <h2>📊 {{ $t('dashboard.charts.repsAndSets') }}</h2>
+              <span class="chart-subtitle">{{ $t('dashboard.charts.repsAndSetsDescription') }}</span>
             </div>
             <div class="chart-filters">
               <div class="filter-group">
@@ -783,8 +783,8 @@ onMounted(() => {
         <div class="chart-container">
           <div class="chart-header">
             <div class="chart-title-section">
-              <h2>🏆 PRs Over Time</h2>
-              <span class="chart-subtitle">Personal records achieved</span>
+              <h2>🏆 {{ $t('dashboard.charts.PRsOverTime') }}</h2>
+              <span class="chart-subtitle">{{ $t('dashboard.charts.PRsOverTimeDescription') }}</span>
             </div>
             <div class="chart-filters">
               <div class="filter-group">
@@ -827,8 +827,8 @@ onMounted(() => {
         <div class="chart-container">
           <div class="chart-header">
             <div class="chart-title-section">
-              <h2>🔥 Weekly Rhythm</h2>
-              <span class="chart-subtitle">Training frequency by day</span>
+              <h2>🔥 {{ $t('dashboard.charts.weeklyRythm') }}</h2>
+              <span class="chart-subtitle">{{ $t('dashboard.charts.weeklyRythmDescription') }}</span>
             </div>
           </div>
           <div class="chart-body radar-body">
@@ -857,8 +857,8 @@ onMounted(() => {
         <div class="chart-container">
           <div class="chart-header">
             <div class="chart-title-section">
-              <h2>🎯 Muscle Distribution</h2>
-              <span class="chart-subtitle">Sets by muscle group</span>
+              <h2>🎯 {{ $t('dashboard.charts.muscleDistribution') }}</h2>
+              <span class="chart-subtitle">{{ $t('dashboard.charts.muscleDistributionDescription') }}</span>
             </div>
             <div class="chart-filters">
               <div class="filter-group">
