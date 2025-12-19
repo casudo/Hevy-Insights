@@ -483,8 +483,11 @@ const resetSettings = () => {
 }
 
 .language-check {
-  width: 24px;
-  height: 24px;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--color-primary, #10b981);
   color: white;
@@ -492,7 +495,7 @@ const resetSettings = () => {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 1rem;
   box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary, #10b981) 40%, transparent);
 }
 
