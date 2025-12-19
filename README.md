@@ -31,7 +31,7 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 - [Technical Documentation](#technical-documentation)
   - [Project Structure](#project-structure)
   - [High-Level-Flow](#high-level-flow)
-    - [Authentication Flow](#authentication-flow)
+    - [API Authentication Flow](#api-authentication-flow)
   - [API in Dev vs Prod](#api-in-dev-vs-prod)
     - [When nginx.conf is used](#when-nginxconf-is-used)
     - [Direct-to-Backend with CORS](#direct-to-backend-with-cors)
@@ -41,11 +41,12 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 
 # Features
 
-- **Authentication**: Login with Hevy credentials (no Hevy PRO membership required!). Credentials are stored in your browser's local storage **only**.
+- **Authentication**: Either login with Hevy credentials (no Hevy PRO membership required! Credentials are stored in your browser's local storage **only**) or upload your exported workout CSV file from Hevy.
 - **Dashboard**: Interactive charts and statistics of your workouts, including volume, muscle distribution and hours trained.
 - **Workout History**: Workout logs with detailed exercise information up to the date of account creation - card or list design.
 - **Exercises**: View all exercises with video thumbnails and detailed stats.
 - **Custom Settings**: Individualize your experience when using Hevy Insights.
+- **Languages**: Language support for 🇺🇸, 🇩🇪 and 🇪🇸.
 
 # Screenshots
 
@@ -110,7 +111,7 @@ Clone/download the repository and follow these steps:
 # Technical Documentation
 
 > [!NOTE]
-> As of 13.12.2025, **v1.2.0**
+> As of 19.12.2025, **v1.3.0**
 
 ## Project Structure
 
@@ -123,12 +124,16 @@ hevy-insights/
 └── frontend/                  # Frontend Components
     ├── public/                # Static assets
     ├── src/                   # Vue 3 TypeScript application
+    │   ├── locales/          # i18n language files
     │   ├── router/            # Vue Router configuration with auth guards
     │   │   └── index.ts       # Router entry point
     │   ├── services/          # API communication layer (Axios)
-    │   │   ├── api.ts         # Axios instance and API functions
+    │   │   └── api.ts         # Axios instance and API functions
     │   ├── stores/            # Pinia store for state management
     │   │   └── hevy_cache.ts  # Hevy data caching
+    │   ├── utils/             # Utility functions
+    │   │   ├── csvCalculator.ts  # CSV data calculation 
+    │   │   └── csvParser.ts   # CSV data parsing
     │   ├── views/             # Page components (Login, Dashboard, Workouts, ...)
     │   ├── App.vue            # Root Vue component
     │   ├── main.ts            # Vue app entry point
@@ -154,7 +159,7 @@ hevy-insights/
 - **Axios Service** (*frontend/src/services/api.ts*): Configures base URL and injects the `auth-token` header via interceptors. All frontend API calls to the backend go through these typed helpers.
 - **Backend** (FastAPI): Serves `/api` endpoints. Validates `auth-token` and proxies requests to the official Hevy API. Frontend receives JSON responses and Vue reactivity updates the UI.
 
-### Authentication Flow
+### API Authentication Flow
 
 1. User logs in via `/api/login` endpoint with Hevy credentials
 2. Backend receives `auth_token` from Hevy API
