@@ -466,7 +466,7 @@ const plateauExercises = computed(() => {
 
 // Get recent PRs - show last 10 PRs achieved
 const recentPRs = computed(() => {
-  const prs: Array<{ exercise: string; type: string; value: number; date: string }> = [];
+  const prsMap = new Map<string, { exercise: string; type: string; value: number; date: string }>();
   
   for (const w of workouts.value) {
     const date = new Date((w.start_time || 0) * 1000);
@@ -480,19 +480,29 @@ const recentPRs = computed(() => {
         const personalArr = Array.isArray(s?.personalRecords) ? s.personalRecords : (s?.personalRecords ? [s.personalRecords] : []);
         
         for (const pr of [...prsArr, ...personalArr].filter(Boolean)) {
-          prs.push({
-            exercise: exerciseName,
-            type: String(pr.type || '').replace(/_/g, ' '),
-            value: pr.value || 0,
-            date: dateStr
-          });
+          const type = String(pr.type || '').replace(/_/g, ' ');
+          const value = pr.value || 0;
+          
+          // Create unique key: exercise + type + value to avoid duplicates
+          const key = `${exerciseName}-${type}-${value}`;
+          
+          // Only keep the most recent PR for each unique combination
+          const existing = prsMap.get(key);
+          if (!existing || new Date(dateStr) > new Date(existing.date)) {
+            prsMap.set(key, {
+              exercise: exerciseName,
+              type,
+              value,
+              date: dateStr
+            });
+          }
         }
       }
     }
   }
   
-  // Sort by date (most recent first) and return top 10
-  return prs
+  // Convert map to array, sort by date (most recent first) and return top 10
+  return Array.from(prsMap.values())
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 10);
 });
@@ -1373,7 +1383,7 @@ onMounted(() => {
 
 .plateau-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.75rem;
 }
 
@@ -1440,8 +1450,15 @@ onMounted(() => {
 
 .pr-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.75rem;
+  max-width: 100%;
+}
+
+@media (min-width: 1200px) {
+  .pr-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
 .pr-card {
