@@ -44,6 +44,8 @@ const expandedSections = ref<Record<string, boolean>>({
   exerciseInsights: JSON.parse(localStorage.getItem("dashboard-section-exerciseInsights") || "true"),
   calendarViews: JSON.parse(localStorage.getItem("dashboard-section-calendarViews") || "true"),
   muscleDistribution: JSON.parse(localStorage.getItem("dashboard-section-muscleDistribution") || "true"),
+  plateaus: true, // Plateaus expanded by default
+  prs: false, // PRs collapsed by default
 });
 
 // Toggle section and save to localStorage
@@ -212,7 +214,7 @@ const prsOverTime_Data = computed(() => {
   // CSV mode - calculate PRs with filtering
   if (store.isCSVMode) {
     // Use centralized PR calculation from csvCalculator
-    prMap = calculatePRsGrouped(filtered as any, useWeeks ? 'week' : 'month');
+    prMap = calculatePRsGrouped(filtered as any, useWeeks ? "week" : "month");
   } else {
     // API mode - count actual PRs from API data
     for (const w of filtered) {
@@ -501,10 +503,10 @@ const recentPRs = computed(() => {
     }
   }
   
-  // Convert map to array, sort by date (most recent first) and return top 10
+  // Convert map to array, sort by date (most recent first) and return top 5
   return Array.from(prsMap.values())
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 10);
+    .slice(0, 5);
 });
 
 // Navigate to Exercises page and scroll to specific exercise
@@ -755,42 +757,66 @@ onMounted(() => {
       </div>
 
       <!-- Plateau Alerts (if any) -->
-      <div v-if="plateauExercises.length > 0" class="plateau-section">
-        <h3 class="plateau-section-title">⏸️ Plateau Detected</h3>
-        <div class="plateau-grid">
-          <div 
-            v-for="plateau in plateauExercises" 
-            :key="plateau.id"
-            class="plateau-card"
-            @click="navigateToExercise(plateau.id)"
-          >
-            <div class="plateau-icon">⏸️</div>
-            <div class="plateau-content">
-              <div class="plateau-title">{{ plateau.localizedTitle }}</div>
-              <div class="plateau-meta">{{ plateau.avgWeight.toFixed(1) }} kg × {{ plateau.avgReps }} reps</div>
-            </div>
+      <div v-if="plateauExercises.length > 0" class="dashboard-section plateau-section">
+        <div class="section-header" @click="toggleSection('plateaus')">
+          <div class="section-title">
+            <span class="section-icon">⏸️</span>
+            <h2>Plateau Detected ({{ plateauExercises.length }})</h2>
+          </div>
+          <div class="section-toggle">
+            <span class="toggle-icon">{{ expandedSections.plateaus ? '▼' : '▶' }}</span>
           </div>
         </div>
+        <transition name="expand">
+          <div v-if="expandedSections.plateaus" class="section-content">
+            <div class="plateau-grid">
+              <div 
+                v-for="plateau in plateauExercises" 
+                :key="plateau.id"
+                class="plateau-card"
+                @click="navigateToExercise(plateau.localizedTitle)"
+              >
+                <div class="plateau-icon">⏸️</div>
+                <div class="plateau-content">
+                  <div class="plateau-title">{{ plateau.localizedTitle }}</div>
+                  <div class="plateau-meta">{{ plateau.avgWeight.toFixed(1) }} kg × {{ plateau.avgReps }} reps</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </transition>
       </div>
 
       <!-- Recent PRs Section -->
-      <div v-if="recentPRs.length > 0" class="pr-section">
-        <h3 class="pr-section-title">🏆 Recent Personal Records</h3>
-        <div class="pr-grid">
-          <div 
-            v-for="(pr, index) in recentPRs" 
-            :key="index"
-            class="pr-card"
-          >
-            <div class="pr-icon">🏆</div>
-            <div class="pr-content">
-              <div class="pr-exercise">{{ pr.exercise }}</div>
-              <div class="pr-type">{{ pr.type }}</div>
-              <div class="pr-value">{{ pr.value }}</div>
-            </div>
-            <div class="pr-date">{{ new Date(pr.date).toLocaleDateString() }}</div>
+      <div v-if="recentPRs.length > 0" class="dashboard-section pr-section">
+        <div class="section-header" @click="toggleSection('prs')">
+          <div class="section-title">
+            <span class="section-icon">🏆</span>
+            <h2>Recent Personal Records ({{ recentPRs.length }})</h2>
+          </div>
+          <div class="section-toggle">
+            <span class="toggle-icon">{{ expandedSections.prs ? '▼' : '▶' }}</span>
           </div>
         </div>
+        <transition name="expand">
+          <div v-if="expandedSections.prs" class="section-content">
+            <div class="pr-grid">
+              <div 
+                v-for="(pr, index) in recentPRs" 
+                :key="index"
+                class="pr-card"
+              >
+                <div class="pr-icon">🏆</div>
+                <div class="pr-content">
+                  <div class="pr-exercise">{{ pr.exercise }}</div>
+                  <div class="pr-type">{{ pr.type }}</div>
+                  <div class="pr-value">{{ pr.value }}</div>
+                </div>
+                <div class="pr-date">{{ new Date(pr.date).toLocaleDateString() }}</div>
+              </div>
+            </div>
+          </div>
+        </transition>
       </div>
 
       <!-- Training Analytics Section (Expandable) -->
@@ -1367,17 +1393,23 @@ onMounted(() => {
 
 /* Plateau Alert Section */
 .plateau-section {
-  margin-bottom: 1.5rem;
   background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  border-radius: 12px;
-  padding: 1.25rem;
+  border-color: rgba(251, 191, 36, 0.4);
 }
 
-.plateau-section-title {
-  margin: 0 0 1rem 0;
-  font-size: 1.125rem;
-  font-weight: 600;
+.plateau-section .section-header {
+  background: rgba(251, 191, 36, 0.15);
+}
+
+.plateau-section .section-content {
+  background: rgba(251, 191, 36, 0.05);
+}
+
+.plateau-section .section-icon {
+  color: #fbbf24;
+}
+
+.plateau-section .section-title h2 {
   color: #fbbf24;
 }
 
@@ -1434,17 +1466,23 @@ onMounted(() => {
 
 /* PR Section Styles */
 .pr-section {
-  margin-bottom: 1.5rem;
   background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: 12px;
-  padding: 1.25rem;
+  border-color: rgba(16, 185, 129, 0.4);
 }
 
-.pr-section-title {
-  margin: 0 0 1rem 0;
-  font-size: 1.125rem;
-  font-weight: 600;
+.pr-section .section-header {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.pr-section .section-content {
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.pr-section .section-icon {
+  color: #10b981;
+}
+
+.pr-section .section-title h2 {
   color: #10b981;
 }
 
@@ -1648,19 +1686,6 @@ onMounted(() => {
   color: rgba(251, 191, 36, 0.9);
 }
 
-/* Expand/Collapse Animation */
-.expand-enter-active, .expand-leave-active {
-  transition: all 0.3s ease;
-  max-height: 5000px;
-  overflow: hidden;
-}
-
-.expand-enter-from, .expand-leave-to {
-  max-height: 0;
-  opacity: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-}
 
 /* Stats Grid (Legacy - keeping for compatibility) */
 .stats-grid {
@@ -1867,6 +1892,12 @@ onMounted(() => {
   
   .title-section h1 {
     font-size: 1.875rem;
+  }
+  
+  /* Hide plateau/PR section titles when collapsible is active */
+  .plateau-section .plateau-section-title:not(),
+  .pr-section .pr-section-title:not() {
+    display: none;
   }
   
   .stats-grid {
