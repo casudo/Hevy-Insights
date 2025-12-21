@@ -46,6 +46,14 @@
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "Willkommen zurück",
+    "sections": {
+      "plateausDetected": "Plateau erkannt ({count})",
+      "recentPRs": "Kürzliche persönliche Rekorde ({count})",
+      "trainingAnalysis": "Trainingsanalyse",
+      "exerciseInsights": "Übungs-Insights",
+      "calenderViews": "Kalenderansichten",
+      "muscleDistribution": "Muskelverteilung"
+    },
     "stats": {
       "totalWorkouts": "Gesamte Trainings",
       "totalVolume": "Gesamtvolumen (kg)",
@@ -67,7 +75,9 @@
       "weeklyRhythm": "Wöchentlicher Rhythmus",
       "weeklyRhythmDescription": "Trainingshäufigkeit nach Wochentag",
       "muscleDistribution": "Muskelverteilung",
-      "muscleDistributionDescription": "Sätze nach Muskelgruppe"
+      "muscleDistributionDescription": "Sätze nach Muskelgruppe",
+      "muscleRegions": "Muskelregionen",
+      "muscleRegionsDescription": "Gestapelte Aufschlüsselung nach Zeitraum"
     }
   },
   "workouts": {
@@ -137,7 +147,7 @@
   },
   "settings": {
     "title": "Einstellungen",
-    "subtitle": "Passen Sie Ihr Hevy Insights-Erlebnis an.",
+    "subtitle": "Passen Sie Ihr Hevy Insights Erlebnis an.",
     "themes": {
       "title": "Farbthema",
       "description": "Wählen Sie Ihr bevorzugtes Farbschema für Diagramme und Akzente",
@@ -182,6 +192,12 @@
     "saturday": "Samstag",
     "sunday": "Sonntag",
     "day": "Tag",
+    "arms": "Arme",
+    "back": "Rücken",
+    "chest": "Brust",
+    "core": "Kern",
+    "legs": "Beine",
+    "shoulders": "Schultern",
     "pagination": {
       "first": "Erste",
       "previous": "Zurück",
@@ -202,6 +218,13 @@
       "last3Months": "Letzte 3 Monate",
       "last6Months": "Letzte 6 Monate",
       "last12Months": "Letzte 12 Monate"
+    },
+    "footer": {
+      "contact": "Kontaktiere mich",
+      "donate": "Kauf mir einen Kaffee",
+      "github": "Stern auf GitHub",
+      "bugReport": "Fehler melden",
+      "madeBy": "Gemacht mit ❤️ von {author}"
     }
   }
 }

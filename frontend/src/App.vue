@@ -164,20 +164,20 @@ watch(isMobileSidebarOpen, (open) => {
         <div class="footer-content">
           <div class="footer-buttons">
             <a href="mailto:hevy@kida.one" target="_blank" class="footer-btn">
-              📧 Contact me
+              📧 {{ $t("global.footer.contact") }}
             </a>
             <a href="https://buymeacoffee.com/casudo" target="_blank" class="footer-btn">
-              ☕ Buy me a coffee
+              ☕ {{ $t("global.footer.donate") }}
             </a>
             <a href="https://github.com/casudo/Hevy-Insights" target="_blank" class="footer-btn">
-              ⭐ Star on GitHub
+              ⭐ {{ $t("global.footer.github") }}
             </a>
             <a href="https://github.com/casudo/Hevy-Insights/issues/new" target="_blank" class="footer-btn">
-              🐛 Report a bug
+              🐛 {{ $t("global.footer.bugReport") }}
             </a>
           </div>
           <div class="footer-love">
-            Made with ❤️ by casudo
+            {{ $t("global.footer.madeBy", { author: "casudo" }) }}
           </div>
         </div>
       </footer>

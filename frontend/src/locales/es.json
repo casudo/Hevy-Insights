@@ -46,6 +46,14 @@
   "dashboard": {
     "title": "Panel",
     "subtitle": "Bienvenido de nuevo",
+    "sections": {
+      "plateausDetected": "Mesetas detectadas ({count})",
+      "recentPRs": "Récords personales recientes ({count})",
+      "trainingAnalysis": "Análisis de entrenamiento",
+      "exerciseInsights": "Información de ejercicios",
+      "calenderViews": "Vistas de calendario",
+      "muscleDistribution": "Distribución muscular"
+    },
     "stats": {
       "totalWorkouts": "Entrenamientos Totales",
       "totalVolume": "Volumen Total (kg)",
@@ -67,7 +75,9 @@
       "weeklyRhythm": "Ritmo Semanal",
       "weeklyRhythmDescription": "Frecuencia de entrenamiento por día",
       "muscleDistribution": "Distribución Muscular",
-      "muscleDistributionDescription": "Series por grupo muscular"
+      "muscleDistributionDescription": "Series por grupo muscular",
+      "muscleRegions": "Regiones Musculares",
+      "muscleRegionsDescription": "Desglose apilado por período"
     }
   },
   "workouts": {
@@ -182,6 +192,12 @@
     "saturday": "Sábado",
     "sunday": "Domingo",
     "day": "Día",
+    "arms": "Brazos",
+    "back": "Espalda",
+    "chest": "Pecho",
+    "core": "Núcleo",
+    "legs": "Piernas",
+    "shoulders": "Hombros",
     "pagination": {
       "first": "Primera",
       "previous": "Anterior",
@@ -202,6 +218,13 @@
       "last3Months": "Últimos 3 Meses",
       "last6Months": "Últimos 6 Meses",
       "last12Months": "Últimos 12 Meses"
+    },
+    "footer": {
+      "contact": "Contáctame",
+      "donate": "Invítame a un café",
+      "github": "Dale una estrella en GitHub",
+      "bugReport": "Reportar un error",
+      "madeBy": "Hecho con ❤️ por {author}"
     }
   }
 }

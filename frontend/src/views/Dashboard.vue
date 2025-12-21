@@ -339,13 +339,13 @@ const muscleDistribution_Data = computed(() => {
 });
 
 // Muscle Regions (Stacked Bar Chart)
-const muscleRegionsPerMonth_Range = ref<Range>("1y");
-const muscleRegionsPerMonth_Display = ref<DisplayStyle>("mo");
-const muscleRegionsPerMonth_Grouping = ref<"groups" | "muscles">("groups");
+const muscleRegions_Range = ref<Range>("1y");
+const muscleRegions_Display = ref<DisplayStyle>("mo");
+const muscleRegions_Grouping = ref<"groups" | "muscles">("groups");
 
-const muscleRegionsPerMonth_Data = computed(() => {
-  const filtered = filterByRange(muscleRegionsPerMonth_Range.value);
-  const useWeeks = muscleRegionsPerMonth_Display.value === "wk";
+const muscleRegions_Data = computed(() => {
+  const filtered = filterByRange(muscleRegions_Range.value);
+  const useWeeks = muscleRegions_Display.value === "wk";
   
   // Group by week or month and muscle group
   const periodMuscleData: Record<string, Record<string, number>> = {};
@@ -362,7 +362,7 @@ const muscleRegionsPerMonth_Data = computed(() => {
     for (const ex of (w.exercises || [])) {
       const rawMuscle = ex.muscle_group || "Unknown";
       // Apply grouping based on filter setting
-      const muscleGroup = muscleRegionsPerMonth_Grouping.value === "groups" ? groupMuscles(rawMuscle) : rawMuscle;
+      const muscleGroup = muscleRegions_Grouping.value === "groups" ? groupMuscles(rawMuscle) : rawMuscle;
       allMuscles.add(muscleGroup);
       const setsCount = ex.sets?.length || 0;
       periodMuscleData[period][muscleGroup] = (periodMuscleData[period][muscleGroup] || 0) + setsCount;
@@ -386,7 +386,7 @@ const muscleRegionsPerMonth_Data = computed(() => {
   });
   
   return {
-    labels: periods.map(p => formatPeriodLabel(p, muscleRegionsPerMonth_Display.value)),
+    labels: periods.map(p => formatPeriodLabel(p, muscleRegions_Display.value)),
     datasets
   };
 });
@@ -863,7 +863,7 @@ onMounted(() => {
         <div class="section-header" @click="toggleSection('plateaus')">
           <div class="section-title">
             <span class="section-icon">⏸️</span>
-            <h2>Plateau Detected ({{ plateauExercises.length }})</h2>
+            <h2>{{ $t("dashboard.sections.plateausDetected", { count: plateauExercises.length }) }}</h2>
           </div>
           <div class="section-toggle">
             <span class="toggle-icon">{{ expandedSections.plateaus ? '▼' : '▶' }}</span>
@@ -894,7 +894,7 @@ onMounted(() => {
         <div class="section-header" @click="toggleSection('prs')">
           <div class="section-title">
             <span class="section-icon">🏆</span>
-            <h2>Recent Personal Records ({{ recentPRs.length }})</h2>
+            <h2>{{ $t("dashboard.sections.recentPRs", { count: recentPRs.length }) }}</h2>
           </div>
           <div class="section-toggle">
             <span class="toggle-icon">{{ expandedSections.prs ? '▼' : '▶' }}</span>
@@ -926,7 +926,7 @@ onMounted(() => {
         <div class="section-header" @click="toggleSection('trainingAnalytics')">
           <div class="section-title">
             <span class="section-icon">📊</span>
-            <h2>Training Analytics</h2>
+            <h2>{{ $t("dashboard.sections.trainingAnalysis") }}</h2>
           </div>
           <div class="section-toggle">
             <span class="toggle-icon">{{ expandedSections.trainingAnalytics ? "▼" : "▶" }}</span>
@@ -1147,7 +1147,7 @@ onMounted(() => {
         <div class="section-header" @click="toggleSection('exerciseInsights')">
           <div class="section-title">
             <span class="section-icon">🏆</span>
-            <h2>Exercise Insights</h2>
+            <h2>{{ $t("dashboard.sections.exerciseInsights") }}</h2>
           </div>
           <div class="section-toggle">
             <span class="toggle-icon">{{ expandedSections.exerciseInsights ? '▼' : '▶' }}</span>
@@ -1194,7 +1194,7 @@ onMounted(() => {
         <div class="section-header" @click="toggleSection('calendarViews')">
           <div class="section-title">
             <span class="section-icon">📅</span>
-            <h2>Calendar Views</h2>
+            <h2>{{ $t("dashboard.sections.calendarViews") }}</h2>
           </div>
           <div class="section-toggle">
             <span class="toggle-icon">{{ expandedSections.calendarViews ? '▼' : '▶' }}</span>
@@ -1242,7 +1242,7 @@ onMounted(() => {
         <div class="section-header" @click="toggleSection('muscleDistribution')">
           <div class="section-title">
             <span class="section-icon">💪</span>
-            <h2>Muscle Distribution</h2>
+            <h2>{{ $t("dashboard.sections.muscleDistribution") }}</h2>
           </div>
           <div class="section-toggle">
             <span class="toggle-icon">{{ expandedSections.muscleDistribution ? '▼' : '▶' }}</span>
@@ -1288,34 +1288,34 @@ onMounted(() => {
                 </div>
               </div>
               
-              <!-- Muscle Regions Per Month Chart -->
+              <!-- Muscle Regions Chart -->
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>📊 Muscle Regions</h3>
-                    <span class="chart-subtitle">Stacked breakdown by period</span>
+                    <h3>📊 {{ $t("dashboard.charts.muscleRegions") }}</h3>
+                    <span class="chart-subtitle">{{ $t("dashboard.charts.muscleRegionsDescription") }}</span>
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="muscleRegionsPerMonth_Range = 'all'" :class="['filter-btn', { active: muscleRegionsPerMonth_Range === 'all' }]">All</button>
-                      <button @click="muscleRegionsPerMonth_Range = '1y'" :class="['filter-btn', { active: muscleRegionsPerMonth_Range === '1y' }]">1Y</button>
-                      <button @click="muscleRegionsPerMonth_Range = '6m'" :class="['filter-btn', { active: muscleRegionsPerMonth_Range === '6m' }]">6M</button>
-                      <button @click="muscleRegionsPerMonth_Range = '3m'" :class="['filter-btn', { active: muscleRegionsPerMonth_Range === '3m' }]">3M</button>
+                      <button @click="muscleRegions_Range = 'all'" :class="['filter-btn', { active: muscleRegions_Range === 'all' }]">All</button>
+                      <button @click="muscleRegions_Range = '1y'" :class="['filter-btn', { active: muscleRegions_Range === '1y' }]">1Y</button>
+                      <button @click="muscleRegions_Range = '6m'" :class="['filter-btn', { active: muscleRegions_Range === '6m' }]">6M</button>
+                      <button @click="muscleRegions_Range = '3m'" :class="['filter-btn', { active: muscleRegions_Range === '3m' }]">3M</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="muscleRegionsPerMonth_Display = 'mo'" :class="['filter-btn', { active: muscleRegionsPerMonth_Display === 'mo' }]">Mo</button>
-                      <button @click="muscleRegionsPerMonth_Display = 'wk'" :class="['filter-btn', { active: muscleRegionsPerMonth_Display === 'wk' }]">Wk</button>
+                      <button @click="muscleRegions_Display = 'mo'" :class="['filter-btn', { active: muscleRegions_Display === 'mo' }]">Mo</button>
+                      <button @click="muscleRegions_Display = 'wk'" :class="['filter-btn', { active: muscleRegions_Display === 'wk' }]">Wk</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="muscleRegionsPerMonth_Grouping = 'groups'" :class="['filter-btn', { active: muscleRegionsPerMonth_Grouping === 'groups' }]" title="Muscle Groups">Groups</button>
-                      <button @click="muscleRegionsPerMonth_Grouping = 'muscles'" :class="['filter-btn', { active: muscleRegionsPerMonth_Grouping === 'muscles' }]" title="Individual Muscles">Muscles</button>
+                      <button @click="muscleRegions_Grouping = 'groups'" :class="['filter-btn', { active: muscleRegions_Grouping === 'groups' }]" title="Muscle Groups">Groups</button>
+                      <button @click="muscleRegions_Grouping = 'muscles'" :class="['filter-btn', { active: muscleRegions_Grouping === 'muscles' }]" title="Individual Muscles">Muscles</button>
                     </div>
                   </div>
                 </div>
                 <div class="chart-body">
                   <Bar
-                    :key="'muscle-regions-' + muscleRegionsPerMonth_Range + '-' + muscleRegionsPerMonth_Display + '-' + muscleRegionsPerMonth_Grouping"
-                    :data="muscleRegionsPerMonth_Data"
+                    :key="'muscle-regions-' + muscleRegions_Range + '-' + muscleRegions_Display + '-' + muscleRegions_Grouping"
+                    :data="muscleRegions_Data"
                     :options="{
                       responsive: true,
                       maintainAspectRatio: false,
