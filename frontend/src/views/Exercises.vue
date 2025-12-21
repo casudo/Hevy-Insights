@@ -39,9 +39,6 @@ const secondaryColor = computed(() => {
   return getComputedStyle(document.documentElement).getPropertyValue('--color-secondary').trim() || '#06b6d4';
 });
 
-// Time range filter per exercise
-type Range = "all" | "1w" | "1m" | "3m" | "6m" | "12m";
-const rangeByExercise = ref<Record<string, Range>>({});
 // Collapsed state per exercise (default collapsed)
 const expanded = ref<Record<string, boolean>>({});
 // Search by exercise name
@@ -365,15 +362,6 @@ function formatLastTrained(dateStr: string | null): string {
   return date.toLocaleDateString();
 }
 
-const ranges: Array<{ label: string; value: Range }> = [
-  { label: "All", value: "all" },
-  { label: "1w", value: "1w" },
-  { label: "1m", value: "1m" },
-  { label: "3m", value: "3m" },
-  { label: "6m", value: "6m" },
-  { label: "12m", value: "12m" },
-];
-
 // Filter days for a specific graph with custom range
 function filterGraphDates(ex: any, graphRange: GraphRange): string[] {
   const days = Object.keys(ex.byDay || {});
@@ -665,19 +653,9 @@ const barChartOptions = {
 
         <!-- Card Content (Expanded) -->
         <div v-show="expanded[ex.id]" class="card-content">
-          <!-- Card Header -->
-          <div class="card-header">
-            <!-- Plateau Insight Message -->
-            <div v-if="ex.strengthInsight" class="insight-message" :class="ex.strengthInsight.type">
-              {{ ex.strengthInsight.message }}
-            </div>
-
-            <div class="header-actions">
-              <label class="filter-label">{{ $t("global.timeRangeFilter.timeRange") }}</label>
-              <select class="filter-select" :value="rangeByExercise[ex.id] || 'all'" @change="(e:any)=> rangeByExercise[ex.id] = (e.target.value as Range)">
-                <option v-for="r in ranges" :key="r.value" :value="r.value">{{ r.label }}</option>
-              </select>
-            </div>
+          <!-- Plateau Insight Message -->
+          <div v-if="ex.strengthInsight" class="insight-message" :class="ex.strengthInsight.type">
+            {{ ex.strengthInsight.message }}
           </div>
 
           <!-- Media and Stats -->
