@@ -463,6 +463,40 @@ const plateauExercises = computed(() => {
     .sort((a, b) => new Date(b.lastDay).getTime() - new Date(a.lastDay).getTime())
     .slice(0, 5);
 });
+
+// Get recent PRs - show last 10 PRs achieved
+const recentPRs = computed(() => {
+  const prs: Array<{ exercise: string; type: string; value: number; date: string }> = [];
+  
+  for (const w of workouts.value) {
+    const date = new Date((w.start_time || 0) * 1000);
+    const dateStr = date.toISOString().slice(0, 10); // TODO: Use localized date settings from Settings.vue
+    
+    for (const ex of (w.exercises || [])) {
+      const exerciseName = ex.title || "Unknown Exercise";
+      
+      for (const s of (ex.sets || [])) {
+        const prsArr = Array.isArray(s?.prs) ? s.prs : (s?.prs ? [s.prs] : []);
+        const personalArr = Array.isArray(s?.personalRecords) ? s.personalRecords : (s?.personalRecords ? [s.personalRecords] : []);
+        
+        for (const pr of [...prsArr, ...personalArr].filter(Boolean)) {
+          prs.push({
+            exercise: exerciseName,
+            type: String(pr.type || '').replace(/_/g, ' '),
+            value: pr.value || 0,
+            date: dateStr
+          });
+        }
+      }
+    }
+  }
+  
+  // Sort by date (most recent first) and return top 10
+  return prs
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 10);
+});
+
 // Navigate to Exercises page and scroll to specific exercise
 const navigateToExercise = (exerciseId: string) => {
   router.push({
@@ -725,6 +759,26 @@ onMounted(() => {
               <div class="plateau-title">{{ plateau.localizedTitle }}</div>
               <div class="plateau-meta">{{ plateau.avgWeight.toFixed(1) }} kg × {{ plateau.avgReps }} reps</div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent PRs Section -->
+      <div v-if="recentPRs.length > 0" class="pr-section">
+        <h3 class="pr-section-title">🏆 Recent Personal Records</h3>
+        <div class="pr-grid">
+          <div 
+            v-for="(pr, index) in recentPRs" 
+            :key="index"
+            class="pr-card"
+          >
+            <div class="pr-icon">🏆</div>
+            <div class="pr-content">
+              <div class="pr-exercise">{{ pr.exercise }}</div>
+              <div class="pr-type">{{ pr.type }}</div>
+              <div class="pr-value">{{ pr.value }}</div>
+            </div>
+            <div class="pr-date">{{ new Date(pr.date).toLocaleDateString() }}</div>
           </div>
         </div>
       </div>
@@ -1366,6 +1420,85 @@ onMounted(() => {
   font-size: 0.8rem;
   color: #fbbf24;
   font-weight: 500;
+}
+
+/* PR Section Styles */
+.pr-section {
+  margin-bottom: 1.5rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.pr-section-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.pr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.pr-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.pr-card:hover {
+  transform: translateY(-2px);
+  border-color: #10b981;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+  background: rgba(15, 23, 42, 1);
+}
+
+.pr-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.pr-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pr-exercise {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f8fafc;
+  margin-bottom: 0.125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pr-type {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-transform: capitalize;
+  margin-bottom: 0.25rem;
+}
+
+.pr-value {
+  font-size: 0.85rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.pr-date {
+  font-size: 0.75rem;
+  color: #64748b;
+  flex-shrink: 0;
 }
 
 /* Dashboard Sections (Expandable/Collapsible) */
