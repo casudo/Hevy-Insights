@@ -14,6 +14,9 @@ const isMobileSidebarOpen = ref(false);
 const showTopbar = ref(true);
 const showScrollTop = ref(false);
 
+// Sidebar collapse state (desktop only)
+const isSidebarCollapsed = ref(localStorage.getItem("sidebar-collapsed") === "true");
+
 // Apply theme from localStorage
 const applyTheme = () => {
   const savedTheme = localStorage.getItem("color-theme") || "default";
@@ -35,6 +38,11 @@ const updateNavVisibility = () => {
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+const toggleSidebarCollapse = () => {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value;
+  localStorage.setItem("sidebar-collapsed", isSidebarCollapsed.value.toString());
 };
 
 const logout = () => {
@@ -84,33 +92,37 @@ watch(isMobileSidebarOpen, (open) => {
     <header v-if="showNav && showTopbar" class="topbar">
       <button class="menu-btn" @click="isMobileSidebarOpen = !isMobileSidebarOpen">☰</button>
       <router-link to="/dashboard" class="topbar-brand">
-        <span class="brand-text">Hevy Insights<span v-if="userAccount" class="brand-username"> {{ $t('nav.brandTextFor') }} {{ userAccount.username }}</span></span>
+        <span class="brand-text">Hevy Insights <span v-if="userAccount" class="brand-username">{{ $t('nav.brandTextFor') }} {{ userAccount.username }}</span></span>
       </router-link>
     </header>
     
     <!-- Sidebar Navigation -->
-    <aside v-if="showNav" :class="['sidebar', { 'mobile-open': isMobileSidebarOpen }]">
+    <aside v-if="showNav" :class="['sidebar', { 'mobile-open': isMobileSidebarOpen, 'collapsed': isSidebarCollapsed }]">
       <div class="sidebar-header">
         <router-link to="/dashboard" class="sidebar-brand">
           <span class="brand-icon">💪</span>
           <span class="brand-text">Hevy Insights</span>
         </router-link>
+        <button class="collapse-toggle" @click="toggleSidebarCollapse" :title="isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+          <span v-if="isSidebarCollapsed">▶</span>
+          <span v-else>◀</span>
+        </button>
       </div>
 
       <nav class="sidebar-nav">
-        <router-link to="/dashboard" class="nav-item">
+        <router-link to="/dashboard" class="nav-item" :title="$t('nav.dashboard')">
           <span class="nav-icon">📊</span>
           <span class="nav-text">{{ $t('nav.dashboard') }}</span>
         </router-link>
-        <router-link to="/workouts-card" class="nav-item">
+        <router-link to="/workouts-card" class="nav-item" :title="$t('nav.workoutsCard')">
           <span class="nav-icon">🏋️</span>
           <span class="nav-text">{{ $t('nav.workoutsCard') }}</span>
         </router-link>
-        <router-link to="/workouts-list" class="nav-item">
+        <router-link to="/workouts-list" class="nav-item" :title="$t('nav.workoutsList')">
           <span class="nav-icon">🏋️</span>
           <span class="nav-text">{{ $t('nav.workoutsList') }}</span>
         </router-link>
-        <router-link to="/exercises" class="nav-item">
+        <router-link to="/exercises" class="nav-item" :title="$t('nav.exercises')">
           <span class="nav-icon">📚</span>
           <span class="nav-text">{{ $t('nav.exercises') }}</span>
         </router-link>
@@ -120,7 +132,7 @@ watch(isMobileSidebarOpen, (open) => {
           <span class="nav-text">{{ $t('nav.share') }}</span>
         </router-link> -->
         <!-- Remove, since already included next to profile badge? -->
-        <router-link to="/settings" class="nav-item">
+        <router-link to="/settings" class="nav-item" :title="$t('nav.settings')">
           <span class="nav-icon">⚙️</span>
           <span class="nav-text">{{ $t('nav.settings') }}</span>
         </router-link>        
@@ -128,7 +140,7 @@ watch(isMobileSidebarOpen, (open) => {
 
       <div class="sidebar-footer">
         <div class="version-info">{{ appVersion }}</div>
-        <button @click="logout" class="logout-btn">
+        <button @click="logout" class="logout-btn" :title="$t('nav.logout')">
           <span class="nav-icon">🚪</span>
           <span class="nav-text">{{ $t('nav.logout') }}</span>
         </button>
@@ -144,7 +156,7 @@ watch(isMobileSidebarOpen, (open) => {
     </button>
     
     <!-- Main Content Area -->
-    <main :class="{ 'with-sidebar': showNav, 'without-sidebar': !showNav, 'dimmed': isMobileSidebarOpen }">
+    <main :class="{ 'with-sidebar': showNav, 'without-sidebar': !showNav, 'dimmed': isMobileSidebarOpen, 'sidebar-collapsed': isSidebarCollapsed }">
       <router-view />
       
       <!-- Global Footer (shown on all pages except login) -->
@@ -291,12 +303,73 @@ body.sidebar-open {
   flex-direction: column;
   z-index: 1000;
   box-shadow: 2px 0 10px var(--shadow), inset -1px 0 0 color-mix(in srgb, var(--color-primary, #10b981) 10%, transparent);
+  transition: width 0.3s ease;
+}
+
+/* Collapsed sidebar state (desktop only) */
+@media (min-width: 769px) {
+  .sidebar.collapsed {
+    width: 70px;
+  }
+
+  .sidebar.collapsed .brand-text,
+  .sidebar.collapsed .nav-text,
+  .sidebar.collapsed .version-info {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .sidebar.collapsed .sidebar-brand,
+  .sidebar.collapsed .nav-item,
+  .sidebar.collapsed .logout-btn {
+    justify-content: center;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .sidebar.collapsed .nav-item::before {
+    display: none;
+  }
 }
 
 .sidebar-header {
   padding: 1.5rem 1.25rem;
   border-bottom: 1px solid color-mix(in srgb, var(--color-primary, #10b981) 15%, var(--border-color));
   background: linear-gradient(90deg, color-mix(in srgb, var(--color-primary, #10b981) 5%, transparent), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.collapse-toggle {
+  display: none; /* Hidden on mobile */
+  width: 32px;
+  height: 32px;
+  background: color-mix(in srgb, var(--color-primary, #10b981) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary, #10b981) 20%, var(--border-color));
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.collapse-toggle:hover {
+  background: color-mix(in srgb, var(--color-primary, #10b981) 20%, transparent);
+  color: var(--color-primary, #10b981);
+  border-color: var(--color-primary, #10b981);
+}
+
+@media (min-width: 769px) {
+  .collapse-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .sidebar-brand {
@@ -416,6 +489,12 @@ main.with-sidebar {
   margin-left: var(--sidebar-width);
   width: calc(100% - var(--sidebar-width));
   min-height: 100vh;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+main.sidebar-collapsed {
+  margin-left: 70px;
+  width: calc(100% - 70px);
 }
 
 main.without-sidebar {
