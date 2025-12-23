@@ -79,19 +79,19 @@ watch(selectedLanguage, (newLang) => {
 });
 
 // Date/Time Format settings
-const dateFormats = [
-  { label: "YYYY-MM-DD (2025-12-21)", value: "iso" },
-  { label: "DD.MM.YYYY (21.12.2025)", value: "eu" },
-  { label: "MM/DD/YYYY (12/21/2025)", value: "us" },
-  { label: "DD/MM/YYYY (21/12/2025)", value: "uk" },
-];
+// const dateFormats = [
+//   { label: "YYYY-MM-DD (2025-12-21)", value: "iso" },
+//   { label: "DD.MM.YYYY (21.12.2025)", value: "eu" },
+//   { label: "MM/DD/YYYY (12/21/2025)", value: "us" },
+//   { label: "DD/MM/YYYY (21/12/2025)", value: "uk" },
+// ];
 
-const graphAxisFormats = [
-  { label: "YYYY-MM (2025-12)", value: "year-month" },
-  { label: "MM-YYYY (12-2025)", value: "month-year" },
-  { label: "MMM YYYY (Dec 2025)", value: "short" },
-  { label: "Month YYYY (December 2025)", value: "long" },
-];
+// const graphAxisFormats = [
+//   { label: "YYYY-MM (2025-12)", value: "year-month" },
+//   { label: "MM-YYYY (12-2025)", value: "month-year" },
+//   { label: "MMM YYYY (Dec 2025)", value: "short" },
+//   { label: "Month YYYY (December 2025)", value: "long" },
+// ];
 
 const selectedDateFormat = ref<string>(localStorage.getItem("date-format") || "iso");
 const selectedGraphAxisFormat = ref<string>(localStorage.getItem("graph-axis-format") || "year-month");
