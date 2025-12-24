@@ -63,7 +63,16 @@ const firstPage = () => { currentPage.value = 1; };
 const lastPage = () => { currentPage.value = totalPages.value; };
 
 const formatDate = (timestamp: number) => new Date(timestamp * 1000).toLocaleString();
-const formatDuration = (start: number, end: number) => `${Math.floor((end - start) / 60)} min`;
+
+const formatDuration = (start: number, end: number) => {
+  const minutes = Math.floor((end - start) / 60);
+  if (minutes < 60) return `${minutes}m`;
+
+  const hours = Math.floor(minutes / 60);
+  const minutesLeft = minutes - hours * 60;
+  if (!minutesLeft) return `${hours}h`;
+  return `${hours}h ${minutesLeft}m`
+};
 
 // Helpers for additional stats
 const totalSets = (workout: any) => {
