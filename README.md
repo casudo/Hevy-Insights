@@ -138,18 +138,16 @@ Clone/download the repository and follow these steps:
 
 ## Docker
 
-1. Build the Docker images:
-
-  `docker build -f backend/Dockerfile_backend -t casudo/hevy-insights-backend:latest .`
-
-  `docker build -f frontend/Dockerfile_frontend -t casudo/hevy-insights-frontend:latest .`
-
 1. Run the containers:
 
   `docker-compose up -d`
 
   > [!NOTE]
   > You can find the [docker-compose.yaml](./docker-compose.yaml) file in the repository root folder.
+
+2. Open your browser and navigate to `http://localhost:8123`
+
+3. Login with your Hevy username/email and password or upload your exported CSV file
 
 ---
 
