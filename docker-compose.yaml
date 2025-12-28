@@ -4,8 +4,10 @@ networks:
 
 services:
   backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile_backend
     container_name: hevy_backend
-    image: ghcr.io/casudo/hevy-insights-backend:latest
     restart: unless-stopped
     # ports: # Optional external exposure
     #  - 5000:5000
@@ -16,8 +18,10 @@ services:
       - YOUR_EXISTING_NETWORK
 
   frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile_frontend
     container_name: hevy_frontend
-    image: ghcr.io/casudo/hevy-insights-frontend:latest
     restart: unless-stopped
     ports:
       - 8123:8080
