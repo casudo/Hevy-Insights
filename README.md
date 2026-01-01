@@ -162,7 +162,7 @@ Clone/download the repository and follow these steps:
 - Mobile: Shrink login mode buttons
 - Mobile: After logging in, the website appears to be zoomed in
 - Implement custom filter range for plateau detection (e.g., last 10 sessions instead of the hardcoded 5 or last N days/weeks)
-- Support iFrame by modifying CSP headers in `nginx.conf`
+- Fix "Top 3 Best Sets" in Exercises not really showing the top 3 best sets of all time
 
 ---
 
