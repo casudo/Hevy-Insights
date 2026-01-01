@@ -56,8 +56,8 @@
     },
     "stats": {
       "totalWorkouts": "Total Workouts",
-      "totalVolume": "Total Volume (kg)",
-      "avgVolume": "Avg Volume (kg)",
+      "totalVolume": "Total Volume",
+      "avgVolume": "Avg Volume",
       "totalHoursTrained": "Total Hours Trained",
       "workoutStreak": "Workout Streak (Weeks)",
       "mostTrainedExercise": "Most Trained Exercise",
@@ -114,9 +114,9 @@
       "insufficientBadge": "New",
       "inactiveBadge": "Inactive",
       "maintainingBadge": "Maintaining",
-      "plateau": "Your top set has hovered around {weight}kg for {repsMin}-{repsMax} reps. Try adding more weight or reps to break the plateau!",
-      "gaining": "You've increased by {weightChange}kg or {repsChange} reps over your last sessions!",
-      "losing": "Performance decreased by {weightChange}kg or {repsChange} reps. Consider rest or form check.",
+      "plateau": "Your top set has hovered around {weight} for {repsMin}-{repsMax} reps. Try adding more weight or reps to break the plateau!",
+      "gaining": "You've increased by {weightChange} or {repsChange} reps over your last sessions!",
+      "losing": "Performance decreased by {weightChange} or {repsChange} reps. Consider rest or form check.",
       "insufficient": "Not enough data yet. Need at least {needed} sessions, currently have {sessions}.",
       "inactive": "Not trained in {days} days. Resume training to track progress!",
       "maintaining": "Performance is stable. You're maintaining your current strength level."
@@ -128,10 +128,7 @@
       "volumeSession": "Volume (Session - all sets that day)",
       "labels": {
         "maxWeight": "Max Weight",
-        "avgVolume": "Avg Volume per Set",
-        "reps": "Reps",
-        "date": "Date",
-        "volume": "Volume (kg)"
+        "avgVolume": "Avg Volume per Set"
       },
       "axis": {
         "weightVsReps": {
@@ -165,6 +162,10 @@
       "description": "Customize how dates and times are displayed",
       "dateFormat": "Date Format",
       "graphAxisFormat": "Graph Axis Format"
+    },
+    "weightUnit": {
+      "title": "Weight Unit",
+      "description": "Choose your preferred weight unit for display"
     },
     "plateauDetection": {
       "title": "Plateau Detection",

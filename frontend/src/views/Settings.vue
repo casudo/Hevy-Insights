@@ -105,6 +105,18 @@ watch(selectedGraphAxisFormat, (newFormat) => {
   localStorage.setItem("graph-axis-format", newFormat);
 });
 
+// Weight unit settings
+const weightUnits = [
+  { label: "Kilograms (kg)", value: "kg" },
+  { label: "Pounds (lbs)", value: "lbs" },
+];
+
+const selectedWeightUnit = ref<string>(store.weightUnit);
+
+watch(selectedWeightUnit, (newUnit) => {
+  store.setWeightUnit(newUnit as "kg" | "lbs");
+});
+
 // Plateau detection settings
 const plateauSessions = ref<number>(store.plateauDetectionSessions);
 
@@ -120,11 +132,13 @@ const resetSettings = () => {
   selectedLanguage.value = "en";
   selectedDateFormat.value = "iso";
   selectedGraphAxisFormat.value = "year-month";
+  selectedWeightUnit.value = "kg";
   plateauSessions.value = 5;
   locale.value = "en";
   localStorage.setItem("language", "en");
   localStorage.setItem("date-format", "iso");
   localStorage.setItem("graph-axis-format", "year-month");
+  store.setWeightUnit("kg");
   store.setPlateauDetectionSessions(5);
 };
 </script>
@@ -721,6 +735,58 @@ const resetSettings = () => {
   font-weight: 700;
   font-size: 1.2rem;
 }
+
+/* Weight Unit Options */
+.weight-unit-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.weight-unit-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(51, 65, 85, 0.5);
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.weight-unit-card:hover {
+  border-color: color-mix(in srgb, var(--color-primary, #10b981) 50%, transparent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.weight-unit-card.active {
+  border-color: var(--color-primary, #10b981);
+  background: color-mix(in srgb, var(--color-primary, #10b981) 10%, transparent);
+  box-shadow: 0 0 0 1px var(--color-primary, #10b981) inset;
+}
+
+.unit-name {
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.unit-check {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-primary, #10b981);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
 /* Plateau Detection Settings */
 .plateau-settings {
   background: rgba(0, 0, 0, 0.3);

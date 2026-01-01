@@ -22,6 +22,7 @@ export const useHevyCache = defineStore("hevyCache", {
     workoutsLastFetched: null as number | null,
     error: null as string | null,
     dataSource: (localStorage.getItem("data_source") || "api") as "api" | "csv",
+    weightUnit: (localStorage.getItem("weight_unit") || "kg") as "kg" | "lbs",
     plateauDetectionSessions: parseInt(localStorage.getItem("plateau_detection_sessions") || "5"),
   }),
 
@@ -193,6 +194,12 @@ export const useHevyCache = defineStore("hevyCache", {
       localStorage.removeItem("data_source");
       localStorage.removeItem("csv_workouts");
     },
+
+    setWeightUnit(unit: "kg" | "lbs") {
+      this.weightUnit = unit;
+      localStorage.setItem("weight_unit", unit);
+    },
+
     setPlateauDetectionSessions(sessions: number) {
       this.plateauDetectionSessions = sessions;
       localStorage.setItem("plateau_detection_sessions", sessions.toString());

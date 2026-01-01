@@ -56,8 +56,8 @@
     },
     "stats": {
       "totalWorkouts": "Gesamte Trainings",
-      "totalVolume": "Gesamtvolumen (kg)",
-      "avgVolume": "Durchschn. Volumen (kg)",
+      "totalVolume": "Gesamtvolumen",
+      "avgVolume": "Durchschn. Volumen",
       "totalHoursTrained": "Gesamte Trainingsstunden",
       "workoutStreak": "Trainingssträhne (Wochen)",
       "mostTrainedExercise": "Meist trainierte Übung",
@@ -114,9 +114,9 @@
       "insufficientBadge": "Neu",
       "inactiveBadge": "Inaktiv",
       "maintainingBadge": "Stabil",
-      "plateau": "Ihr bester Satz liegt bei etwa {weight}kg für {repsMin}-{repsMax} Wdh. Versuchen Sie, mehr Gewicht oder Wiederholungen hinzuzufügen!",
-      "gaining": "Sie haben um {weightChange}kg oder {repsChange} Wdh. in den letzten Einheiten zugelegt!",
-      "losing": "Leistung sank um {weightChange}kg oder {repsChange} Wdh. Erwägen Sie Erholung oder Formüberprüfung.",
+      "plateau": "Ihr bester Satz liegt bei etwa {weight} für {repsMin}-{repsMax} Wdh. Versuchen Sie, mehr Gewicht oder Wiederholungen hinzuzufügen!",
+      "gaining": "Sie haben um {weightChange} oder {repsChange} Wdh. in den letzten Einheiten zugelegt!",
+      "losing": "Leistung sank um {weightChange} oder {repsChange} Wdh. Erwägen Sie Erholung oder Formüberprüfung.",
       "insufficient": "Noch nicht genug Daten. Benötigt mindestens {needed} Einheiten, aktuell {sessions}.",
       "inactive": "Seit {days} Tagen nicht trainiert. Nehmen Sie das Training wieder auf!",
       "maintaining": "Leistung ist stabil. Sie halten Ihr aktuelles Kraftniveau."
@@ -128,10 +128,7 @@
       "volumeSession": "Volumen (Einheit - alle Sätze an diesem Tag)",
       "labels": {
         "maxWeight": "Max. Gewicht",
-        "avgVolume": "Durchschn. Volumen pro Satz",
-        "reps": "Wiederholungen",
-        "date": "Datum",
-        "volume": "Volumen (kg)"
+        "avgVolume": "Durchschn. Volumen pro Satz"
       },
       "axis": {
         "weightVsReps": {
@@ -165,6 +162,10 @@
       "description": "Passen Sie an, wie Datum und Uhrzeit angezeigt werden",
       "dateFormat": "Datumsformat",
       "graphAxisFormat": "Diagramm-Achsenformat"
+    },
+    "weightUnit": {
+      "title": "Gewichtseinheit",
+      "description": "Wählen Sie Ihre bevorzugte Gewichtseinheit für die Anzeige"
     },
     "plateauDetection": {
       "title": "Plateau-Erkennung",
