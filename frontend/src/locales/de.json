@@ -166,6 +166,12 @@
       "dateFormat": "Datumsformat",
       "graphAxisFormat": "Diagramm-Achsenformat"
     },
+    "plateauDetection": {
+      "title": "Plateau-Erkennung",
+      "description": "Passen Sie an, wie viele Ihrer letzten Trainingseinheiten zur Erkennung von Plateaus verwendet werden sollen",
+      "sessionsLabel": "Anzahl der zu analysierenden Einheiten:",
+      "hint": "Analysieren Sie die letzten N Einheiten, um Plateaus zu erkennen (mindestens 3, maximal 100). Standard ist 5."
+    },
     "dataManagement": {
       "title": "Datenverwaltung",
       "description": "Zeigen Sie Informationen über Ihre Datenquelle an",

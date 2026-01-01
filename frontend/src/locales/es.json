@@ -166,6 +166,12 @@
       "dateFormat": "Formato de Fecha",
       "graphAxisFormat": "Formato de Eje de Gráfico"
     },
+    "plateauDetection": {
+      "title": "Detección de Mesetas",
+      "description": "Personaliza cuántos de tus últimos entrenamientos se deben usar para detectar mesetas",
+      "sessionsLabel": "Número de sesiones a analizar:",
+      "hint": "Analiza las últimas N sesiones para detectar mesetas (mínimo 3, máximo 100). El valor predeterminado es 5."
+    },
     "dataManagement": {
       "title": "Gestión de Datos",
       "description": "Ver información sobre tu fuente de datos",

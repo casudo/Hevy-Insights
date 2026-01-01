@@ -125,13 +125,14 @@ function analyzeStrengthProgress(ex: any) {
     };
   }
   
-  // Check for insufficient data - need at least 5 sessions
-  if (days.length < 5) {
+  // Check for insufficient data - need at least the configured number of sessions
+  const minSessions = store.plateauDetectionSessions;
+  if (days.length < minSessions) {
     return {
       type: "insufficient",
       message: t("exercises.insights.insufficient", {
         sessions: days.length,
-        needed: 5
+        needed: minSessions
       })
     };
   }
@@ -141,21 +142,21 @@ function analyzeStrengthProgress(ex: any) {
   cutoffDate.setDate(cutoffDate.getDate() - 60);
   const recentDays = days.filter(d => new Date(d) >= cutoffDate);
   
-  // Need at least 5 recent sessions for analysis
-  if (recentDays.length < 5) {
+  // Need at least the configured number of recent sessions for analysis
+  if (recentDays.length < minSessions) {
     return {
       type: "insufficient",
       message: t("exercises.insights.insufficient", {
         sessions: recentDays.length,
-        needed: 5
+        needed: minSessions
       })
     };
   }
   
-  // Get last 5 recent sessions
-  const last5Days = recentDays.slice(-5);
+  // Get last N recent sessions (based on setting)
+  const lastNDays = recentDays.slice(-minSessions);
   
-  const sessions = last5Days.map(d => ({
+  const sessions = lastNDays.map(d => ({
     day: d,
     maxWeight: ex.byDay[d]?.maxWeight || 0,
     repsAtMax: ex.byDay[d]?.repsAtMax || 0,
@@ -317,7 +318,7 @@ const exercises = computed(() => {
     const days = Object.keys(byDay).sort();
     ex.lastTrainedDate = days.length > 0 ? days[days.length - 1] : null;
     
-    // Analyze last 5 sessions for plateaus and strength changes
+    // Analyze last N sessions for plateaus and strength changes (based on setting)
     ex.strengthInsight = analyzeStrengthProgress(ex);
   }
   // Initialize collapsed state for new items

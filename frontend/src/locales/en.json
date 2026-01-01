@@ -166,6 +166,12 @@
       "dateFormat": "Date Format",
       "graphAxisFormat": "Graph Axis Format"
     },
+    "plateauDetection": {
+      "title": "Plateau Detection",
+      "description": "Customize how many of your latest workouts should be used to detect plateaus",
+      "sessionsLabel": "Number of sessions to analyze:",
+      "hint": "Analyze the last N sessions to detect plateaus (minimum 3, maximum 100). Default is 5."
+    },
     "dataManagement": {
       "title": "Data Management",
       "description": "View information about your data source",
