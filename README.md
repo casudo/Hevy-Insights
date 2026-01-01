@@ -157,12 +157,7 @@ Clone/download the repository and follow these steps:
 - Better logging
 - Replace localStorage with HTTP cookie
 - Handle exercises with time (planks, jogging)
-- On page switch, start at the top and not on the height where the user previously left the other page
 - CSV upload: PRs not shown and muscle regions missing
-- Mobile: Shrink login mode buttons
-- Mobile: After logging in, the website appears to be zoomed in
-- Implement custom filter range for plateau detection (e.g., last 10 sessions instead of the hardcoded 5 or last N days/weeks)
-- Fix "Top 3 Best Sets" in Exercises not really showing the top 3 best sets of all time
 
 ---
 
