@@ -301,8 +301,14 @@ const exercises = computed(() => {
         vMax = Math.max(vMax, v.volume);
       }
     }
-    // top 3 best sets by weight across ALL workouts
-    ex.topSets = [...ex.sets].sort((a,b) => (Number(b.weight)||0) - (Number(a.weight)||0)).slice(0,3);
+    // top 3 best sets by weight × reps (total work) across ALL workouts
+    ex.topSets = [...ex.sets]
+      .sort((a,b) => {
+        const workA = (Number(a.weight)||0) * (Number(a.reps)||0);
+        const workB = (Number(b.weight)||0) * (Number(b.reps)||0);
+        return workB - workA;
+      })
+      .slice(0,3);
     // distinct PRs - keep only the best value for each PR type
     const prMap: Record<string, { type: string; value: number; day: string }> = {};
     for (const pr of ex.prs) {
