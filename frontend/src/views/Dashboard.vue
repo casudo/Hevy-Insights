@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useHevyCache } from "../stores/hevy_cache";
 import { calculateCSVStats, calculatePRsGrouped, calculateMuscleDistribution } from "../utils/csvCalculator";
+import { formatDuration } from "../utils/formatters";
 import { Line, Doughnut, Radar, Bar } from "vue-chartjs";
 import {
   Chart as ChartJS,
@@ -1171,7 +1172,7 @@ onMounted(() => {
                 <div class="insight-icon">⏱️</div>
                 <div class="insight-content">
                   <div class="insight-label">{{ $t('dashboard.stats.longestWorkout') }}</div>
-                  <div class="insight-value">{{ longestWorkout.minutes }} min</div>
+                  <div class="insight-value">{{ formatDuration(longestWorkout.minutes) }}</div>
                 </div>
               </div>
 

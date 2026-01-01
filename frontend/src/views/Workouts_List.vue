@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, nextTick } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
 import { useI18n } from "vue-i18n";
+import { formatDurationFromTimestamps } from "../utils/formatters";
 
 const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
@@ -91,7 +92,6 @@ const caloriesDisplay = (workout: any) => {
   const cal = bio?.total_calories;
   return typeof cal === "number" ? `${Math.round(cal)} kcal` : null;
 };
-const formatDuration = (start: number, end: number) => `${Math.floor((end - start) / 60)} min`;
 const totalSets = (workout: any) => (workout.exercises || []).reduce((s: number, ex: any) => s + ((ex.sets || []).length), 0);
 
 // PR helpers using sets.prs / sets.personalRecords
@@ -290,7 +290,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
             </div>
             <div class="stats">
               <div class="stat"><strong>{{ workout.estimated_volume_kg?.toLocaleString() || 0 }} kg</strong><span>{{ $t('global.volume') }}</span></div>
-              <div class="stat"><strong>{{ formatDuration(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.duration') }}</span></div>
+              <div class="stat"><strong>{{ formatDurationFromTimestamps(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.duration') }}</span></div>
               <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.exercises') }}</span></div>
               <div class="stat"><strong>{{ totalSets(workout) }}</strong><span>Sets</span></div>
               <div class="stat" v-if="workout.description"><strong>{{ workout.description }}</strong><span>{{ $t('global.description') }}</span></div>
