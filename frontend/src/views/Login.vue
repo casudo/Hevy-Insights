@@ -667,6 +667,17 @@ const removeFile = () => {
   font-family: inherit;
 }
 
+@media (max-width: 768px) {
+  .mode-button {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.85rem;
+    gap: 0.35rem;
+  }
+  .mode-icon {
+    font-size: 1rem;
+  }
+}
+
 .mode-button:hover {
   color: #e5e7eb;
   background: rgba(16, 185, 129, 0.05);

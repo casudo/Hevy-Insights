@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
+import { formatDurationFromTimestamps, formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
 
 const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
@@ -63,7 +64,6 @@ const firstPage = () => { currentPage.value = 1; };
 const lastPage = () => { currentPage.value = totalPages.value; };
 
 const formatDate = (timestamp: number) => new Date(timestamp * 1000).toLocaleString();
-const formatDuration = (start: number, end: number) => `${Math.floor((end - start) / 60)} min`;
 
 // Helpers for additional stats
 const totalSets = (workout: any) => {
@@ -200,8 +200,8 @@ onMounted(async () => {
 
           <!--  Middle Row with Stats  -->
           <div class="stats-row">
-            <div class="stat"><strong>{{ workout.estimated_volume_kg?.toLocaleString() || 0 }} kg</strong><span>{{ $t('global.volume') }}</span></div>
-            <div class="stat"><strong>{{ formatDuration(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.duration') }}</span></div>
+            <div class="stat"><strong>{{ formatWeight(workout.estimated_volume_kg || 0) }} {{ getWeightUnit() }}</strong><span>{{ $t('global.volume') }}</span></div>
+            <div class="stat"><strong>{{ formatDurationFromTimestamps(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.duration') }}</span></div>
             <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.exercises') }}</span></div>
             <div class="stat"><strong>{{ totalSets(workout) }}</strong><span>Total Sets</span></div>
           </div>
@@ -221,13 +221,13 @@ onMounted(async () => {
 
               <div v-show="expandedExercises[exercise.id]" class="exercise-content">
                 <div v-if="exerciseHasPR(exercise)" class="pr-summary">
-                  <span v-for="(pr, i) in exercisePRs(exercise)" :key="i" class="pr-chip">{{ (pr.type || '').split('_').join(' ') }}: <strong>{{ pr.value }}</strong></span>
+                  <span v-for="(pr, i) in exercisePRs(exercise)" :key="i" class="pr-chip">{{ (pr.type || '').split('_').join(' ') }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
                 </div>
                 <table class="sets-table">
                   <thead>
                     <tr>
                       <th>Set</th>
-                      <th>{{ $t('global.weight') }} (kg)</th>
+                      <th>{{ $t('global.weight') }} ({{ getWeightUnit() }})</th>
                       <th>Reps</th>
                       <th>RPE</th>
                     </tr>
@@ -235,7 +235,7 @@ onMounted(async () => {
                   <tbody>
                     <tr v-for="set in exercise.sets" :key="set.id">
                       <td>{{ set.index + 1 }}</td>
-                      <td>{{ set.weight_kg || "-" }}</td>
+                      <td>{{ set.weight_kg ? formatWeight(set.weight_kg) : "-" }}</td>
                       <td>{{ set.reps || "-" }}</td>
                       <td>{{ set.rpe || "-" }}</td>
                     </tr>

@@ -105,16 +105,41 @@ watch(selectedGraphAxisFormat, (newFormat) => {
   localStorage.setItem("graph-axis-format", newFormat);
 });
 
+// Weight unit settings
+const weightUnits = [
+  { label: "Kilograms (kg)", value: "kg" },
+  { label: "Pounds (lbs)", value: "lbs" },
+];
+
+const selectedWeightUnit = ref<string>(store.weightUnit);
+
+watch(selectedWeightUnit, (newUnit) => {
+  store.setWeightUnit(newUnit as "kg" | "lbs");
+});
+
+// Plateau detection settings
+const plateauSessions = ref<number>(store.plateauDetectionSessions);
+
+watch(plateauSessions, (newValue) => {
+  if (newValue >= 3 && newValue <= 100) {
+    store.setPlateauDetectionSessions(newValue);
+  }
+});
+
 // Reset to default
 const resetSettings = () => {
   selectedTheme.value = "default";
   selectedLanguage.value = "en";
   selectedDateFormat.value = "iso";
   selectedGraphAxisFormat.value = "year-month";
+  selectedWeightUnit.value = "kg";
+  plateauSessions.value = 5;
   locale.value = "en";
   localStorage.setItem("language", "en");
   localStorage.setItem("date-format", "iso");
   localStorage.setItem("graph-axis-format", "year-month");
+  store.setWeightUnit("kg");
+  store.setPlateauDetectionSessions(5);
 };
 </script>
 
@@ -240,6 +265,48 @@ const resetSettings = () => {
           </div>
         </div>
       </div>  -->
+
+      <!-- Weight Unit Section -->
+      <div class="settings-section">
+        <div class="section-header">
+          <h2>⚖️ {{ t('settings.weightUnit.title') }}</h2>
+          <p class="section-description">{{ t('settings.weightUnit.description') }}</p>
+        </div>
+
+        <div class="weight-unit-options">
+          <div
+            v-for="unit in weightUnits"
+            :key="unit.value"
+            @click="selectedWeightUnit = unit.value"
+            :class="['weight-unit-card', { active: selectedWeightUnit === unit.value }]"
+          >
+            <div class="unit-name">{{ unit.label }}</div>
+            <div v-if="selectedWeightUnit === unit.value" class="unit-check">✓</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plateau Detection Section -->
+      <div class="settings-section">
+        <div class="section-header">
+          <h2>📊 {{ t('settings.plateauDetection.title') }}</h2>
+          <p class="section-description">{{ t('settings.plateauDetection.description') }}</p>
+        </div>
+
+        <div class="plateau-settings">
+          <label class="plateau-label">
+            {{ t('settings.plateauDetection.sessionsLabel') }}
+            <input
+              type="number"
+              v-model.number="plateauSessions"
+              min="3"
+              max="100"
+              class="plateau-input"
+            />
+          </label>
+          <p class="plateau-hint">{{ t('settings.plateauDetection.hint') }}</p>
+        </div>
+      </div>
 
       <!-- Data Management Section -->
       <div class="settings-section">
@@ -668,6 +735,101 @@ const resetSettings = () => {
   font-weight: 700;
   font-size: 1.2rem;
 }
+
+/* Weight Unit Options */
+.weight-unit-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.weight-unit-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(51, 65, 85, 0.5);
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.weight-unit-card:hover {
+  border-color: color-mix(in srgb, var(--color-primary, #10b981) 50%, transparent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.weight-unit-card.active {
+  border-color: var(--color-primary, #10b981);
+  background: color-mix(in srgb, var(--color-primary, #10b981) 10%, transparent);
+  box-shadow: 0 0 0 1px var(--color-primary, #10b981) inset;
+}
+
+.unit-name {
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.unit-check {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-primary, #10b981);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* Plateau Detection Settings */
+.plateau-settings {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.plateau-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.plateau-input {
+  width: 80px;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(51, 65, 85, 0.5);
+  border-radius: 8px;
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.plateau-input:focus {
+  outline: none;
+  border-color: var(--color-primary, #10b981);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #10b981) 20%, transparent);
+}
+
+.plateau-hint {
+  margin-top: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
 /* Data Management */
 .data-info-card {
   background: rgba(0, 0, 0, 0.3);
