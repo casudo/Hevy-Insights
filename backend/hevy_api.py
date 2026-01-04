@@ -346,6 +346,31 @@ class HevyClient:
             logging.error(f"Unexpected error fetching PRO workouts: {e}")
             raise HevyError(f"Unexpected error occurred: {e}")
 
+    def validate_api_key(self) -> bool:
+        """
+        Validate the Hevy PRO API key by attempting to fetch a single workout.
+
+        Returns:
+            bool: True if valid, False otherwise
+        """
+        logging.debug("Validating PRO API key...")
+
+        if not self.pro_api_key:
+            logging.warning("No API key to validate")
+            return False
+
+        try:
+            ### Try to fetch a single workout to validate the key
+            response = self.session.get(self.config.pro_workouts_url, params={"page": 1, "pageSize": 1})
+            
+            is_valid = response.status_code == 200
+            logging.debug(f"PRO API key validation result: {is_valid}")
+            return is_valid
+
+        except requests.RequestException as e:
+            logging.error(f"Error validating PRO API key: {e}")
+            raise HevyError(f"PRO API key validation failed: {e}")
+
 
 ### ============================================================================
 

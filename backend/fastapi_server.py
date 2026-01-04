@@ -62,6 +62,15 @@ class ValidateTokenResponse(BaseModel):
     error: Optional[str] = None
 
 
+class ValidateApiKeyRequest(BaseModel):
+    api_key: str
+
+
+class ValidateApiKeyResponse(BaseModel):
+    valid: bool
+    error: Optional[str] = None
+
+
 class HealthResponse(BaseModel):
     status: str
 
@@ -114,7 +123,7 @@ def login(credentials: LoginRequest, request: Request) -> LoginResponse:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/api/validate", response_model=ValidateTokenResponse, tags=["Authentication"])
+@app.post("/api/validate-auth-token", response_model=ValidateTokenResponse, tags=["Authentication"])
 def validate_token(token_data: ValidateTokenRequest) -> ValidateTokenResponse:
     """
     Validate an authentication token.
@@ -132,6 +141,26 @@ def validate_token(token_data: ValidateTokenRequest) -> ValidateTokenResponse:
     except HevyError as e:
         logging.error(f"Token validation error: {e}")
         return ValidateTokenResponse(valid=False, error=str(e))
+
+
+@app.post("/api/validate-api-key", response_model=ValidateApiKeyResponse, tags=["Authentication"])
+def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
+    """
+    Validate a Hevy PRO API key.
+
+    - **api_key**: The API key to validate
+
+    Returns validation status.
+    """
+    try:
+        client = HevyClient(pro_api_key=key_data.api_key)
+        is_valid = client.validate_api_key()
+
+        return ValidateApiKeyResponse(valid=is_valid)
+
+    except HevyError as e:
+        logging.error(f"API key validation error: {e}")
+        return ValidateApiKeyResponse(valid=False, error=str(e))
 
 
 @app.get("/api/user/account", tags=["User"])
