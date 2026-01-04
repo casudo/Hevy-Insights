@@ -25,6 +25,7 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 - [Features](#features)
   - [Plateau \& Strength Detection](#plateau--strength-detection)
 - [Screenshots](#screenshots)
+- [Login Comparison](#login-comparison)
 - [Usage](#usage)
   - [Hosted Online](#hosted-online)
   - [Local Setup](#local-setup)
@@ -106,6 +107,27 @@ This feature helps you identify when it's time to:
 
 *Workouts Page - List Design*
 ![Workouts Page - List Design](/readme_images/workout_page_list.png)
+
+---
+
+# Login Comparison
+
+You can decide based on your needs which login method suits you best:
+
+> [!TIP]
+> I recommed using the **Hevy Credentials Login** for the best experience since it shows the most data.
+
+| Feature                      | Hevy Credentials Login       | Hevy PRO API Key Login       | CSV Upload                   |
+| ---------------------------- | ----------------------------- | ----------------------------- | ---------------------------- |
+| Requires Hevy PRO Membership | ✅ No                         | ❌ Yes                        | ✅ No                         |
+| Data Freshness               | ✅ Live data from Hevy API    | ✅ Live data from Hevy API    | ❌ Static data from CSV file  |
+| Data Range                   | ✅ Full history from Hevy API | ✅ Full history from Hevy API | ✅ Full history from CSV file |
+| Personal Record Tracking     | ✅ Yes                        | ❌ No                         | ⚠️ Yes, but not in detail     |
+| Muscle Distribution Data     | ✅ Yes                        | ❌ No                         | ⚠️ Not everything             |
+| Media (Images/GIFs)          | ✅ Yes                        | ❌ No                         | ❌ No                         |
+| Plateu Detection             | ✅ Yes                        | ✅ Yes                        | ✅ Yes                        |
+| Workout Streaks              | ✅ Yes                        | ✅ Yes                        | ❌ No                         |
+| Calories & Heart Rate Data   | ✅ Yes                        | ❌ No                         | ❌ No                         |
 
 # Usage
 
