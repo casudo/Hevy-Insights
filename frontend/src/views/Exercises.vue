@@ -651,6 +651,59 @@ function getVolumeChartData(ex: any, graphRange: GraphRange = 0) {
   };
 }
 
+// Cardio-specific chart data builders
+function getDistanceOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
+  const days = filterGraphDates(ex, graphRange);
+  const labels = days.map((d) => {
+    const date = new Date(d);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  });
+  const distanceData = days.map((d) => {
+    return ex.byDay[d]?.totalDistance || 0;
+  });
+  
+  return {
+    labels,
+    datasets: [
+      {
+        label: `${t("global.distance")} (km)`,
+        data: distanceData,
+        backgroundColor: primaryColor.value + "33",
+        borderColor: primaryColor.value,
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+      },
+    ],
+  };
+}
+
+function getDurationOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
+  const days = filterGraphDates(ex, graphRange);
+  const labels = days.map((d) => {
+    const date = new Date(d);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  });
+  const durationData = days.map((d) => {
+    return (ex.byDay[d]?.totalDuration || 0) / 60; // Convert to minutes
+  });
+  
+  return {
+    labels,
+    datasets: [
+      {
+        label: `${t("global.duration")} (min)`,
+        data: durationData,
+        backgroundColor: secondaryColor.value + "33",
+        borderColor: secondaryColor.value,
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+      },
+    ],
+  };
+}
+
 const scatterChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -923,156 +976,248 @@ const barChartOptions = {
 
           <!-- Graphs -->
           <div class="graphs">
-            <!-- Max Weight Over Time -->
-            <div class="graph">
-              <div class="graph-header">
-                <h3>{{ $t("exercises.graphs.maxWeight") }}</h3>
-                <div class="graph-controls">
-                  <div class="range-selector">
-                    <button
-                      v-for="range in [30, 60, 90, 365, 0]"
-                      :key="range"
-                      :class="['range-btn', { active: getGraphFilter(ex.id).maxWeight.range === range }]"
-                      @click="getGraphFilter(ex.id).maxWeight.range = range as GraphRange"
-                    >
-                      {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
-                    </button>
-                  </div>
-                  <div class="type-selector">
-                    <button
-                      :class="['type-btn', { active: getGraphFilter(ex.id).maxWeight.type === 'line' }]"
-                      @click="getGraphFilter(ex.id).maxWeight.type = 'line'"
-                      title="Line chart"
-                    >📈</button>
-                    <button
-                      :class="['type-btn', { active: getGraphFilter(ex.id).maxWeight.type === 'bar' }]"
-                      @click="getGraphFilter(ex.id).maxWeight.type = 'bar'"
-                      title="Bar chart"
-                    >📊</button>
+            <!-- Cardio Graphs: Distance and Duration -->
+            <template v-if="ex.exerciseType === 'cardio'">
+              <!-- Distance Over Time -->
+              <div class="graph">
+                <div class="graph-header">
+                  <h3>{{ $t("global.distance") }} Over Time</h3>
+                  <div class="graph-controls">
+                    <div class="range-selector">
+                      <button
+                        v-for="range in [30, 60, 90, 365, 0]"
+                        :key="range"
+                        :class="['range-btn', { active: getGraphFilter(ex.id).maxWeight.range === range }]"
+                        @click="getGraphFilter(ex.id).maxWeight.range = range as GraphRange"
+                      >
+                        {{ range === 0 ? "All" : range === 365 ? "1Y" : `${range}D` }}
+                      </button>
+                    </div>
+                    <div class="type-selector">
+                      <button
+                        :class="['type-btn', { active: getGraphFilter(ex.id).maxWeight.type === 'line' }]"
+                        @click="getGraphFilter(ex.id).maxWeight.type = 'line'"
+                        title="Line chart"
+                      >📈</button>
+                      <button
+                        :class="['type-btn', { active: getGraphFilter(ex.id).maxWeight.type === 'bar' }]"
+                        @click="getGraphFilter(ex.id).maxWeight.type = 'bar'"
+                        title="Bar chart"
+                      >📊</button>
+                    </div>
                   </div>
                 </div>
+                <div class="graph-grid chart-container">
+                  <Line
+                    v-if="getGraphFilter(ex.id).maxWeight.type === 'line'"
+                    :data="getDistanceOverTimeChartData(ex, getGraphFilter(ex.id).maxWeight.range)"
+                    :options="lineChartOptions"
+                  />
+                  <Bar
+                    v-else
+                    :data="getDistanceOverTimeChartData(ex, getGraphFilter(ex.id).maxWeight.range)"
+                    :options="barChartOptions"
+                  />
+                </div>
               </div>
-              <div class="graph-grid chart-container">
-                <Line
-                  v-if="getGraphFilter(ex.id).maxWeight.type === 'line'"
-                  :data="getMaxWeightOverTimeChartData(ex, getGraphFilter(ex.id).maxWeight.range)"
-                  :options="lineChartOptions"
-                />
-                <Bar
-                  v-else
-                  :data="getMaxWeightOverTimeChartData(ex, getGraphFilter(ex.id).maxWeight.range)"
-                  :options="barChartOptions"
-                />
-              </div>
-            </div>
 
-            <!-- Average Volume Per Set -->
-            <div class="graph">
-              <div class="graph-header">
-                <h3>{{ $t("exercises.graphs.avgVolume") }}</h3>
-                <div class="graph-controls">
-                  <div class="range-selector">
-                    <button
-                      v-for="range in [30, 60, 90, 365, 0]"
-                      :key="range"
-                      :class="['range-btn', { active: getGraphFilter(ex.id).avgVolume.range === range }]"
-                      @click="getGraphFilter(ex.id).avgVolume.range = range as GraphRange"
-                    >
-                      {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
-                    </button>
-                  </div>
-                  <div class="type-selector">
-                    <button
-                      :class="['type-btn', { active: getGraphFilter(ex.id).avgVolume.type === 'line' }]"
-                      @click="getGraphFilter(ex.id).avgVolume.type = 'line'"
-                      title="Line chart"
-                    >📈</button>
-                    <button
-                      :class="['type-btn', { active: getGraphFilter(ex.id).avgVolume.type === 'bar' }]"
-                      @click="getGraphFilter(ex.id).avgVolume.type = 'bar'"
-                      title="Bar chart"
-                    >📊</button>
+              <!-- Duration Over Time -->
+              <div class="graph">
+                <div class="graph-header">
+                  <h3>{{ $t("global.duration") }} Over Time</h3>
+                  <div class="graph-controls">
+                    <div class="range-selector">
+                      <button
+                        v-for="range in [30, 60, 90, 365, 0]"
+                        :key="range"
+                        :class="['range-btn', { active: getGraphFilter(ex.id).avgVolume.range === range }]"
+                        @click="getGraphFilter(ex.id).avgVolume.range = range as GraphRange"
+                      >
+                        {{ range === 0 ? "All" : range === 365 ? "1Y" : `${range}D` }}
+                      </button>
+                    </div>
+                    <div class="type-selector">
+                      <button
+                        :class="['type-btn', { active: getGraphFilter(ex.id).avgVolume.type === 'line' }]"
+                        @click="getGraphFilter(ex.id).avgVolume.type = 'line'"
+                        title="Line chart"
+                      >📈</button>
+                      <button
+                        :class="['type-btn', { active: getGraphFilter(ex.id).avgVolume.type === 'bar' }]"
+                        @click="getGraphFilter(ex.id).avgVolume.type = 'bar'"
+                        title="Bar chart"
+                      >📊</button>
+                    </div>
                   </div>
                 </div>
+                <div class="graph-grid chart-container">
+                  <Line
+                    v-if="getGraphFilter(ex.id).avgVolume.type === 'line'"
+                    :data="getDurationOverTimeChartData(ex, getGraphFilter(ex.id).avgVolume.range)"
+                    :options="lineChartOptions"
+                  />
+                  <Bar
+                    v-else
+                    :data="getDurationOverTimeChartData(ex, getGraphFilter(ex.id).avgVolume.range)"
+                    :options="barChartOptions"
+                  />
+                </div>
               </div>
-              <div class="graph-grid chart-container">
-                <Line
-                  v-if="getGraphFilter(ex.id).avgVolume.type === 'line'"
-                  :data="getAvgVolumePerSetChartData(ex, getGraphFilter(ex.id).avgVolume.range)"
-                  :options="lineChartOptions"
-                />
-                <Bar
-                  v-else
-                  :data="getAvgVolumePerSetChartData(ex, getGraphFilter(ex.id).avgVolume.range)"
-                  :options="barChartOptions"
-                />
-              </div>
-            </div>
+            </template>
 
-            <!-- Weight vs Reps Scatter -->
-            <div class="graph">
-              <div class="graph-header">
-                <h3>{{ $t("exercises.graphs.weightVsReps") }}</h3>
-                <div class="graph-controls">
-                  <div class="range-selector">
-                    <button
-                      v-for="range in [30, 60, 90, 365, 0]"
-                      :key="range"
-                      :class="['range-btn', { active: getGraphFilter(ex.id).weightVsReps.range === range }]"
-                      @click="getGraphFilter(ex.id).weightVsReps.range = range as GraphRange"
-                    >
-                      {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
-                    </button>
+            <!-- Strength Graphs: Weight, Volume, Reps -->
+            <template v-else>
+              <!-- Max Weight Over Time -->
+              <div class="graph">
+                <div class="graph-header">
+                  <h3>{{ $t("exercises.graphs.maxWeight") }}</h3>
+                  <div class="graph-controls">
+                    <div class="range-selector">
+                      <button
+                        v-for="range in [30, 60, 90, 365, 0]"
+                        :key="range"
+                        :class="['range-btn', { active: getGraphFilter(ex.id).maxWeight.range === range }]"
+                        @click="getGraphFilter(ex.id).maxWeight.range = range as GraphRange"
+                      >
+                        {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
+                      </button>
+                    </div>
+                    <div class="type-selector">
+                      <button
+                        :class="['type-btn', { active: getGraphFilter(ex.id).maxWeight.type === 'line' }]"
+                        @click="getGraphFilter(ex.id).maxWeight.type = 'line'"
+                        title="Line chart"
+                      >📈</button>
+                      <button
+                        :class="['type-btn', { active: getGraphFilter(ex.id).maxWeight.type === 'bar' }]"
+                        @click="getGraphFilter(ex.id).maxWeight.type = 'bar'"
+                        title="Bar chart"
+                      >📊</button>
+                    </div>
                   </div>
                 </div>
+                <div class="graph-grid chart-container">
+                  <Line
+                    v-if="getGraphFilter(ex.id).maxWeight.type === 'line'"
+                    :data="getMaxWeightOverTimeChartData(ex, getGraphFilter(ex.id).maxWeight.range)"
+                    :options="lineChartOptions"
+                  />
+                  <Bar
+                    v-else
+                    :data="getMaxWeightOverTimeChartData(ex, getGraphFilter(ex.id).maxWeight.range)"
+                    :options="barChartOptions"
+                  />
+                </div>
               </div>
-              <div class="graph-grid chart-container">
-                <Scatter :data="getWeightVsRepsChartData(ex, getGraphFilter(ex.id).weightVsReps.range)" :options="scatterChartOptions" />
-              </div>
-            </div>
 
-            <!-- Volume Per Session -->
-            <div class="graph">
-              <div class="graph-header">
-                <h3>{{ $t("exercises.graphs.volumeSession") }}</h3>
-                <div class="graph-controls">
-                  <div class="range-selector">
-                    <button
-                      v-for="range in [30, 60, 90, 365, 0]"
-                      :key="range"
-                      :class="['range-btn', { active: getGraphFilter(ex.id).volumeSession.range === range }]"
-                      @click="getGraphFilter(ex.id).volumeSession.range = range as GraphRange"
-                    >
-                      {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
-                    </button>
-                  </div>
-                  <div class="type-selector">
-                    <button
-                      :class="['type-btn', { active: getGraphFilter(ex.id).volumeSession.type === 'bar' }]"
-                      @click="getGraphFilter(ex.id).volumeSession.type = 'bar'"
-                      title="Bar chart"
-                    >📊</button>
-                    <button
-                      :class="['type-btn', { active: getGraphFilter(ex.id).volumeSession.type === 'line' }]"
-                      @click="getGraphFilter(ex.id).volumeSession.type = 'line'"
-                      title="Line chart"
-                    >📈</button>
+              <!-- Average Volume Per Set -->
+              <div class="graph">
+                <div class="graph-header">
+                  <h3>{{ $t("exercises.graphs.avgVolume") }}</h3>
+                  <div class="graph-controls">
+                    <div class="range-selector">
+                      <button
+                        v-for="range in [30, 60, 90, 365, 0]"
+                        :key="range"
+                        :class="['range-btn', { active: getGraphFilter(ex.id).avgVolume.range === range }]"
+                        @click="getGraphFilter(ex.id).avgVolume.range = range as GraphRange"
+                      >
+                        {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
+                      </button>
+                    </div>
+                    <div class="type-selector">
+                      <button
+                        :class="['type-btn', { active: getGraphFilter(ex.id).avgVolume.type === 'line' }]"
+                        @click="getGraphFilter(ex.id).avgVolume.type = 'line'"
+                        title="Line chart"
+                      >📈</button>
+                      <button
+                        :class="['type-btn', { active: getGraphFilter(ex.id).avgVolume.type === 'bar' }]"
+                        @click="getGraphFilter(ex.id).avgVolume.type = 'bar'"
+                        title="Bar chart"
+                      >📊</button>
+                    </div>
                   </div>
                 </div>
+                <div class="graph-grid chart-container">
+                  <Line
+                    v-if="getGraphFilter(ex.id).avgVolume.type === 'line'"
+                    :data="getAvgVolumePerSetChartData(ex, getGraphFilter(ex.id).avgVolume.range)"
+                    :options="lineChartOptions"
+                  />
+                  <Bar
+                    v-else
+                    :data="getAvgVolumePerSetChartData(ex, getGraphFilter(ex.id).avgVolume.range)"
+                    :options="barChartOptions"
+                  />
+                </div>
               </div>
-              <div class="graph-grid chart-container">
-                <Bar
-                  v-if="getGraphFilter(ex.id).volumeSession.type === 'bar'"
-                  :data="getVolumeChartData(ex, getGraphFilter(ex.id).volumeSession.range)"
-                  :options="barChartOptions"
-                />
-                <Line
-                  v-else
-                  :data="getVolumeChartData(ex, getGraphFilter(ex.id).volumeSession.range)"
-                  :options="lineChartOptions"
-                />
+
+              <!-- Weight vs Reps Scatter -->
+              <div class="graph">
+                <div class="graph-header">
+                  <h3>{{ $t("exercises.graphs.weightVsReps") }}</h3>
+                  <div class="graph-controls">
+                    <div class="range-selector">
+                      <button
+                        v-for="range in [30, 60, 90, 365, 0]"
+                        :key="range"
+                        :class="['range-btn', { active: getGraphFilter(ex.id).weightVsReps.range === range }]"
+                        @click="getGraphFilter(ex.id).weightVsReps.range = range as GraphRange"
+                      >
+                        {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="graph-grid chart-container">
+                  <Scatter :data="getWeightVsRepsChartData(ex, getGraphFilter(ex.id).weightVsReps.range)" :options="scatterChartOptions" />
+                </div>
               </div>
-            </div>
+
+              <!-- Volume Per Session -->
+              <div class="graph">
+                <div class="graph-header">
+                  <h3>{{ $t("exercises.graphs.volumeSession") }}</h3>
+                  <div class="graph-controls">
+                    <div class="range-selector">
+                      <button
+                        v-for="range in [30, 60, 90, 365, 0]"
+                        :key="range"
+                        :class="['range-btn', { active: getGraphFilter(ex.id).volumeSession.range === range }]"
+                        @click="getGraphFilter(ex.id).volumeSession.range = range as GraphRange"
+                      >
+                        {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
+                      </button>
+                    </div>
+                    <div class="type-selector">
+                      <button
+                        :class="['type-btn', { active: getGraphFilter(ex.id).volumeSession.type === 'bar' }]"
+                        @click="getGraphFilter(ex.id).volumeSession.type = 'bar'"
+                        title="Bar chart"
+                      >📊</button>
+                      <button
+                        :class="['type-btn', { active: getGraphFilter(ex.id).volumeSession.type === 'line' }]"
+                        @click="getGraphFilter(ex.id).volumeSession.type = 'line'"
+                        title="Line chart"
+                      >📈</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="graph-grid chart-container">
+                  <Bar
+                    v-if="getGraphFilter(ex.id).volumeSession.type === 'bar'"
+                    :data="getVolumeChartData(ex, getGraphFilter(ex.id).volumeSession.range)"
+                    :options="barChartOptions"
+                  />
+                  <Line
+                    v-else
+                    :data="getVolumeChartData(ex, getGraphFilter(ex.id).volumeSession.range)"
+                    :options="lineChartOptions"
+                  />
+                </div>
+              </div>
+            </template>
           </div>
         </div>
       </div>
