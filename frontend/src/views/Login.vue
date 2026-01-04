@@ -11,7 +11,7 @@ const { t } = useI18n();
 const store = useHevyCache();
 
 // Mode selection
-type LoginMode = "credentials" | "csv";
+type LoginMode = "credentials" | "apikey" | "csv";
 const loginMode = ref<LoginMode>("credentials");
 
 // Credentials login
@@ -19,6 +19,11 @@ const emailOrUsername = ref("");
 const password = ref("");
 const loading = ref(false);
 const error = ref("");
+
+// API Key login
+const apiKey = ref("");
+const apiKeyLoading = ref(false);
+const apiKeyError = ref("");
 
 // CSV upload
 const csvFile = ref<File | null>(null);
@@ -50,6 +55,34 @@ const handleLogin = async () => {
     error.value = err.response?.data?.detail || t("login.api.errors.invalidCredentials");
   } finally {
     loading.value = false;
+  }
+};
+
+const handleApiKeyLogin = async () => {
+  if (!apiKey.value) {
+    apiKeyError.value = t("login.apikey.errors.emptyKey");
+    return;
+  }
+
+  apiKeyLoading.value = true;
+  apiKeyError.value = "";
+
+  // Attempt to validate API key
+  try {
+    const result = await authService.validateApiKey(apiKey.value);
+    
+    if (result.valid) {
+      localStorage.setItem("hevy_api_key", apiKey.value);
+      localStorage.setItem("hevy_auth_token", "api_key_mode");
+      await store.switchToAPIMode();
+      router.push("/dashboard");
+    } else {
+      apiKeyError.value = result.error || t("login.apikey.errors.invalidKey");
+    }
+  } catch (err: any) {
+    apiKeyError.value = err.response?.data?.detail || t("login.apikey.errors.validationFailed");
+  } finally {
+    apiKeyLoading.value = false;
   }
 };
 
@@ -201,6 +234,13 @@ const removeFile = () => {
             />
           </div>
 
+          <!-- API Key Link -->
+          <div class="api-key-link-container">
+            <button type="button" class="api-key-link" @click="loginMode = 'apikey'">
+              {{ t('login.apikey.linkText') }}
+            </button>
+          </div>
+
           <!-- Error Message -->
           <transition name="fade">
             <div v-if="error" class="error-alert">
@@ -217,6 +257,50 @@ const removeFile = () => {
             <span v-else class="button-loading">
               <span class="loading-spinner"></span>
               <span>{{ t('login.api.loggingIn') }}</span>
+            </span>
+          </button>
+        </form>
+
+        <!-- API Key Login Form -->
+        <form v-else-if="loginMode === 'apikey'" @submit.prevent="handleApiKeyLogin" class="login-form">
+          <div class="upload-info">
+            <span class="info-icon">ℹ️</span>
+            <p class="info-text">{{ t("login.apikey.description") }}</p>
+          </div>
+
+          <div class="input-group">
+            <label for="apikey" class="input-label">
+              <span class="label-icon">🔐</span>
+              {{ t('login.apikey.label') }}
+            </label>
+            <input
+              id="apikey"
+              v-model="apiKey"
+              type="text"
+              class="input-field"
+              :placeholder="t('login.apikey.placeholder')"
+              required
+              :disabled="apiKeyLoading"
+              autocomplete="off"
+            />
+          </div>
+
+          <!-- Error Message -->
+          <transition name="fade">
+            <div v-if="apiKeyError" class="error-alert">
+              <span class="error-icon">⚠️</span>
+              <span class="error-text">{{ apiKeyError }}</span>
+            </div>
+          </transition>
+
+          <!-- Submit Button -->
+          <button type="submit" class="submit-button" :disabled="apiKeyLoading">
+            <span v-if="!apiKeyLoading" class="button-content">
+              <span class="button-text">{{ t('login.apikey.loginButton') }}</span>
+            </span>
+            <span v-else class="button-loading">
+              <span class="loading-spinner"></span>
+              <span>{{ t('login.apikey.validating') }}</span>
             </span>
           </button>
         </form>
@@ -647,6 +731,37 @@ const removeFile = () => {
   background: rgba(15, 15, 25, 0.8);
   border-radius: 16px;
   margin-bottom: 2rem;
+}
+
+/* API Key Link */
+.api-key-link-container {
+  text-align: left;
+  margin-bottom: -1.5rem;
+}
+
+.api-key-link {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.api-key-link:hover {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.api-key-link .link-icon {
+  font-size: 0.9rem;
+  opacity: 0.8;
 }
 
 .mode-button {
