@@ -58,13 +58,13 @@ class HevyConfig:
 class HevyClient:
     """Main API client class for interacting with Hevy services."""
 
-    def __init__(self, auth_token: Optional[str] = None, pro_api_key: Optional[str] = None, config: Optional[HevyConfig] = None):
+    def __init__(self, auth_token: Optional[str] = None, api_key: Optional[str] = None, config: Optional[HevyConfig] = None):
         self.auth_token = auth_token # Username/Password auth token
-        self.pro_api_key = pro_api_key  # Hevy PRO API key
+        self.api_key = api_key  # Hevy PRO API key
         self.config = config or HevyConfig()
         self.session = requests.Session()
 
-        if auth_token or pro_api_key:
+        if auth_token or api_key:
             self._update_headers()
 
     def _update_headers(self) -> None:
@@ -74,8 +74,8 @@ class HevyClient:
         }
         
         ### Use PRO API key if available, otherwise use auth token
-        if self.pro_api_key:
-            headers["api-key"] = self.pro_api_key
+        if self.api_key:
+            headers["api-key"] = self.api_key
         elif self.auth_token:
             headers["x-api-key"] = self.config.x_api_key
             headers["auth-token"] = self.auth_token
@@ -273,7 +273,7 @@ class HevyClient:
         """
         logging.debug(f"Fetching PRO workouts ({page=}, {page_size=})")
 
-        if not self.pro_api_key:
+        if not self.api_key:
             raise HevyError("No PRO API key available. Please use a Hevy PRO API key.")
 
         params = {"page": page, "pageSize": page_size}
@@ -355,7 +355,7 @@ class HevyClient:
         """
         logging.debug("Validating PRO API key...")
 
-        if not self.pro_api_key:
+        if not self.api_key:
             logging.warning("No API key to validate")
             return False
 

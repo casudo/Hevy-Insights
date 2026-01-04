@@ -76,23 +76,23 @@ class HealthResponse(BaseModel):
 
 
 ### Helper function to get client with either auth token or PRO API key
-def get_hevy_client(auth_token: Optional[str] = None, pro_api_key: Optional[str] = None) -> HevyClient:
+def get_hevy_client(auth_token: Optional[str] = None, api_key: Optional[str] = None) -> HevyClient:
     """Creates a HevyClient with either auth token or API key.
 
     Args:
         auth_token (Optional[str]): The auth-token header value.
-        pro_api_key (Optional[str]): The pro-api-key header value.
+        api_key (Optional[str]): The pro-api-key header value.
 
     Raises:
-        HTTPException: If neither auth_token nor pro_api_key header is provided.
+        HTTPException: If neither auth_token nor api_key header is provided.
 
     Returns:
         HevyClient: Configured Hevy client.
     """
-    if not auth_token and not pro_api_key:
+    if not auth_token and not api_key:
         raise HTTPException(status_code=401, detail="Missing authentication: provide either auth-token or pro-api-key header")
 
-    return HevyClient(auth_token=auth_token, pro_api_key=pro_api_key)
+    return HevyClient(auth_token=auth_token, api_key=api_key)
 
 
 ### ===============================================================================
@@ -154,7 +154,7 @@ def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
     Returns validation status.
     """
     try:
-        client = HevyClient(pro_api_key=key_data.api_key)
+        client = HevyClient(api_key=key_data.api_key)
         is_valid = client.validate_api_key()
 
         return ValidateApiKeyResponse(valid=is_valid)
