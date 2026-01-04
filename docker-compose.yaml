@@ -11,6 +11,7 @@ services:
     #  - 5000:5000
     environment:
       - X_API_KEY=klean_kanteen_insulated
+      - LOG_LEVEL=INFO
     hostname: hevy_backend
     networks:
       - YOUR_EXISTING_NETWORK

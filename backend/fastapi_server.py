@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from hevy_api import HevyClient, HevyError
 from dotenv import load_dotenv
+from os import getenv
 import logging
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -11,16 +12,16 @@ from slowapi.errors import RateLimitExceeded
 
 ### ===============================================================================
 
-### Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] - %(message)s", datefmt="%d.%m.%Y %H:%M:%S")
-
 ### Load environment variables from .env file
 load_dotenv()
+
+### Configure logging
+logging.basicConfig(level=getenv("LOG_LEVEL", "INFO"), format="%(asctime)s [%(levelname)s] - %(message)s", datefmt="%d.%m.%Y %H:%M:%S")
 
 app = FastAPI(
     title="Hevy Insights API",
     description="Backend API for Hevy Insights",
-    version="1.1.0",
+    version="1.2.0",
     docs_url="/api/docs",  # Swagger
 )
 ### Initialize rate limiter
