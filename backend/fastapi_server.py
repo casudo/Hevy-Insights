@@ -75,23 +75,24 @@ class HealthResponse(BaseModel):
     status: str
 
 
-### Helper function to extract auth token from header
-def get_auth_token(auth_token: Optional[str]) -> str:
-    """Extracts the auth token from the auth-token header.
+### Helper function to get client with either auth token or PRO API key
+def get_hevy_client(auth_token: Optional[str] = None, pro_api_key: Optional[str] = None) -> HevyClient:
+    """Creates a HevyClient with either auth token or API key.
 
     Args:
         auth_token (Optional[str]): The auth-token header value.
+        pro_api_key (Optional[str]): The pro-api-key header value.
 
     Raises:
-        HTTPException: If the auth-token header is missing.
+        HTTPException: If neither auth_token nor pro_api_key header is provided.
 
     Returns:
-        str: The auth token.
+        HevyClient: Configured Hevy client.
     """
-    if not auth_token:
-        raise HTTPException(status_code=401, detail="Missing auth-token header")
+    if not auth_token and not pro_api_key:
+        raise HTTPException(status_code=401, detail="Missing authentication: provide either auth-token or pro-api-key header")
 
-    return auth_token
+    return HevyClient(auth_token=auth_token, pro_api_key=pro_api_key)
 
 
 ### ===============================================================================
