@@ -153,11 +153,12 @@ Clone/download the repository and follow these steps:
 
 # Future Goals
 
-- Display time on Workout cards like "1h 15m" instead of "75 minutes"
 - Better logging
 - Replace localStorage with HTTP cookie
 - Handle exercises with time (planks, jogging)
 - CSV upload: PRs not shown and muscle regions missing
+- Contribution Graph: Fix timeline (still shows 2025 + 2026 data). Only show current year.
+- Enable/configure settings for date format, time format, week start day
 
 ---
 
