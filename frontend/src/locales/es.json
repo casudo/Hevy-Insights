@@ -56,8 +56,8 @@
     },
     "stats": {
       "totalWorkouts": "Entrenamientos Totales",
-      "totalVolume": "Volumen Total (kg)",
-      "avgVolume": "Volumen Prom. (kg)",
+      "totalVolume": "Volumen Total",
+      "avgVolume": "Volumen Prom.",
       "totalHoursTrained": "Horas Totales de Entrenamiento",
       "workoutStreak": "Racha de Entrenamientos (Semanas)",
       "mostTrainedExercise": "Ejercicio Más Entrenado",
@@ -114,9 +114,9 @@
       "insufficientBadge": "Nuevo",
       "inactiveBadge": "Inactivo",
       "maintainingBadge": "Manteniendo",
-      "plateau": "Tu serie máxima se ha mantenido alrededor de {weight}kg por {repsMin}-{repsMax} reps. ¡Intenta agregar más peso o reps!",
-      "gaining": "¡Has aumentado {weightChange}kg o {repsChange} reps en tus últimas sesiones!",
-      "losing": "Rendimiento disminuyó {weightChange}kg o {repsChange} reps. Considera descanso o revisar técnica.",
+      "plateau": "Tu serie máxima se ha mantenido alrededor de {weight} por {repsMin}-{repsMax} reps. ¡Intenta agregar más peso o reps!",
+      "gaining": "¡Has aumentado {weightChange} o {repsChange} reps en tus últimas sesiones!",
+      "losing": "Rendimiento disminuyó {weightChange} o {repsChange} reps. Considera descanso o revisar técnica.",
       "insufficient": "Datos insuficientes aún. Se necesitan al menos {needed} sesiones, actualmente tienes {sessions}.",
       "inactive": "No entrenado en {days} días. ¡Reanuda el entrenamiento para seguir tu progreso!",
       "maintaining": "Rendimiento estable. Estás manteniendo tu nivel de fuerza actual."
@@ -128,10 +128,7 @@
       "volumeSession": "Volumen (Sesión - todas las series ese día)",
       "labels": {
         "maxWeight": "Peso Máx.",
-        "avgVolume": "Volumen Prom. por Serie",
-        "reps": "Repeticiones",
-        "date": "Fecha",
-        "volume": "Volumen (kg)"
+        "avgVolume": "Volumen Prom. por Serie"
       },
       "axis": {
         "weightVsReps": {
@@ -165,6 +162,16 @@
       "description": "Personaliza cómo se muestran las fechas y horas",
       "dateFormat": "Formato de Fecha",
       "graphAxisFormat": "Formato de Eje de Gráfico"
+    },
+    "weightUnit": {
+      "title": "Unidad de Peso",
+      "description": "Elige tu unidad de peso preferida para la visualización"
+    },
+    "plateauDetection": {
+      "title": "Detección de Mesetas",
+      "description": "Personaliza cuántos de tus últimos entrenamientos se deben usar para detectar mesetas",
+      "sessionsLabel": "Número de sesiones a analizar:",
+      "hint": "Analiza las últimas N sesiones para detectar mesetas (mínimo 3, máximo 100). El valor predeterminado es 5."
     },
     "dataManagement": {
       "title": "Gestión de Datos",

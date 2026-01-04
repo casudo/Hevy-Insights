@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useHevyCache } from "../stores/hevy_cache";
 import { calculateCSVStats, calculatePRsGrouped, calculateMuscleDistribution } from "../utils/csvCalculator";
+import { formatDuration, formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
 import { Line, Doughnut, Radar, Bar } from "vue-chartjs";
 import {
   Chart as ChartJS,
@@ -230,7 +231,10 @@ const volumeProgression_Data = computed(() => {
   const agg = aggregateByPeriod(volumeProgression_Range.value, volumeProgression_Display.value, filtered);
   return {
     labels: agg.map(w => formatPeriodLabel(w.period, volumeProgression_Display.value)),
-    data: agg.map(w => Math.round(w.volumeKg ?? 0))
+    data: agg.map(w => {
+      const kg = w.volumeKg ?? 0;
+      return Math.round(store.weightUnit === "lbs" ? kg * 2.20462 : kg);
+    })
   };
 });
 
@@ -636,14 +640,15 @@ const processChartData = () => {
   workouts.value.forEach((workout) => {
     const date = new Date(workout.start_time * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" });
     dates.push(date);
-    volumes.push(workout.estimated_volume_kg || 0);
+    const kg = workout.estimated_volume_kg || 0;
+    volumes.push(store.weightUnit === "lbs" ? kg * 2.20462 : kg);
   });
 
   chartData.value = {
     labels: dates.reverse(),
     datasets: [
       {
-        label: "Volume (kg)",
+        label: "Volume (" + getWeightUnit() + ")",
         backgroundColor: "rgba(16, 185, 129, 0.2)",
         borderColor: "#10b981",
         borderWidth: 2,
@@ -841,7 +846,7 @@ onMounted(() => {
         
         <div class="kpi-card">
           <div class="kpi-icon">💪</div>
-          <div class="kpi-value">{{ totalVolume.toLocaleString() }}</div>
+          <div class="kpi-value">{{ formatWeight(totalVolume) }} {{ getWeightUnit() }}</div>
           <div class="kpi-label">{{ $t("dashboard.stats.totalVolume") }}</div>
         </div>
         
@@ -881,7 +886,7 @@ onMounted(() => {
                 <div class="plateau-icon">⏸️</div>
                 <div class="plateau-content">
                   <div class="plateau-title">{{ plateau.localizedTitle }}</div>
-                  <div class="plateau-meta">{{ plateau.avgWeight.toFixed(1) }} kg × {{ plateau.avgReps }} reps</div>
+                  <div class="plateau-meta">{{ formatWeight(plateau.avgWeight) }} {{ getWeightUnit() }} × {{ plateau.avgReps }} reps</div>
                 </div>
               </div>
             </div>
@@ -912,7 +917,7 @@ onMounted(() => {
                 <div class="pr-content">
                   <div class="pr-exercise">{{ pr.exercise }}</div>
                   <div class="pr-type">{{ pr.type }}</div>
-                  <div class="pr-value">{{ pr.value }}</div>
+                  <div class="pr-value">{{ formatPRValue(pr.type, pr.value) }}</div>
                 </div>
                 <div class="pr-date">{{ new Date(pr.date).toLocaleDateString() }}</div>
               </div>
@@ -1005,7 +1010,7 @@ onMounted(() => {
                     :data="{ 
                       labels: volumeProgression_Data.labels, 
                       datasets: [{ 
-                        label: $t('global.volume') + ' (kg)', 
+                        label: $t('global.volume') + ` (${getWeightUnit()})`, 
                         data: volumeProgression_Data.data, 
                         borderColor: secondaryColor, 
                         backgroundColor: secondaryColor + '33', 
@@ -1171,7 +1176,7 @@ onMounted(() => {
                 <div class="insight-icon">⏱️</div>
                 <div class="insight-content">
                   <div class="insight-label">{{ $t('dashboard.stats.longestWorkout') }}</div>
-                  <div class="insight-value">{{ longestWorkout.minutes }} min</div>
+                  <div class="insight-value">{{ formatDuration(longestWorkout.minutes) }}</div>
                 </div>
               </div>
 
@@ -1180,7 +1185,7 @@ onMounted(() => {
                 <div class="insight-icon">📊</div>
                 <div class="insight-content">
                   <div class="insight-label">{{ $t('dashboard.stats.avgVolume') }}</div>
-                  <div class="insight-value">{{ avgVolume.toLocaleString() }} kg</div>
+                  <div class="insight-value">{{ formatWeight(avgVolume) }} {{ getWeightUnit() }}</div>
                   <div class="insight-meta">per workout</div>
                 </div>
               </div>

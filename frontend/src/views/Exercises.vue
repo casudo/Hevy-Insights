@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
+import { formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
 import { Scatter, Bar, Line } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
 import {
@@ -125,13 +126,14 @@ function analyzeStrengthProgress(ex: any) {
     };
   }
   
-  // Check for insufficient data - need at least 5 sessions
-  if (days.length < 5) {
+  // Check for insufficient data - need at least the configured number of sessions
+  const minSessions = store.plateauDetectionSessions;
+  if (days.length < minSessions) {
     return {
       type: "insufficient",
       message: t("exercises.insights.insufficient", {
         sessions: days.length,
-        needed: 5
+        needed: minSessions
       })
     };
   }
@@ -141,21 +143,21 @@ function analyzeStrengthProgress(ex: any) {
   cutoffDate.setDate(cutoffDate.getDate() - 60);
   const recentDays = days.filter(d => new Date(d) >= cutoffDate);
   
-  // Need at least 5 recent sessions for analysis
-  if (recentDays.length < 5) {
+  // Need at least the configured number of recent sessions for analysis
+  if (recentDays.length < minSessions) {
     return {
       type: "insufficient",
       message: t("exercises.insights.insufficient", {
         sessions: recentDays.length,
-        needed: 5
+        needed: minSessions
       })
     };
   }
   
-  // Get last 5 recent sessions
-  const last5Days = recentDays.slice(-5);
+  // Get last N recent sessions (based on setting)
+  const lastNDays = recentDays.slice(-minSessions);
   
-  const sessions = last5Days.map(d => ({
+  const sessions = lastNDays.map(d => ({
     day: d,
     maxWeight: ex.byDay[d]?.maxWeight || 0,
     repsAtMax: ex.byDay[d]?.repsAtMax || 0,
@@ -174,7 +176,7 @@ function analyzeStrengthProgress(ex: any) {
     return {
       type: "plateau",
       message: t("exercises.insights.plateau", {
-        weight: avgWeight.toFixed(1),
+        weight: `${formatWeight(avgWeight)} ${getWeightUnit()}`,
         repsMin: Math.min(...reps),
         repsMax: Math.max(...reps)
       })
@@ -200,7 +202,7 @@ function analyzeStrengthProgress(ex: any) {
     return {
       type: "gaining",
       message: t("exercises.insights.gaining", {
-        weightChange: Math.abs(weightChange).toFixed(1),
+        weightChange: `${formatWeight(Math.abs(weightChange))} ${getWeightUnit()}`,
         repsChange: Math.abs(repsChange).toFixed(0)
       })
     };
@@ -211,7 +213,7 @@ function analyzeStrengthProgress(ex: any) {
     return {
       type: "losing",
       message: t("exercises.insights.losing", {
-        weightChange: Math.abs(weightChange).toFixed(1),
+        weightChange: `${formatWeight(Math.abs(weightChange))} ${getWeightUnit()}`,
         repsChange: Math.abs(repsChange).toFixed(0)
       })
     };
@@ -300,8 +302,14 @@ const exercises = computed(() => {
         vMax = Math.max(vMax, v.volume);
       }
     }
-    // top 3 best sets by weight across ALL workouts
-    ex.topSets = [...ex.sets].sort((a,b) => (Number(b.weight)||0) - (Number(a.weight)||0)).slice(0,3);
+    // top 3 best sets by weight × reps (total work) across ALL workouts
+    ex.topSets = [...ex.sets]
+      .sort((a,b) => {
+        const workA = (Number(a.weight)||0) * (Number(a.reps)||0);
+        const workB = (Number(b.weight)||0) * (Number(b.reps)||0);
+        return workB - workA;
+      })
+      .slice(0,3);
     // distinct PRs - keep only the best value for each PR type
     const prMap: Record<string, { type: string; value: number; day: string }> = {};
     for (const pr of ex.prs) {
@@ -317,7 +325,7 @@ const exercises = computed(() => {
     const days = Object.keys(byDay).sort();
     ex.lastTrainedDate = days.length > 0 ? days[days.length - 1] : null;
     
-    // Analyze last 5 sessions for plateaus and strength changes
+    // Analyze last N sessions for plateaus and strength changes (based on setting)
     ex.strengthInsight = analyzeStrengthProgress(ex);
   }
   // Initialize collapsed state for new items
@@ -421,7 +429,7 @@ function getWeightVsRepsChartData(ex: any, graphRange: GraphRange = 0) {
     const dateLabel = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
     return {
       x: ex.byDay[d]?.repsAtMax || 0,
-      y: ex.byDay[d]?.maxWeight || 0,
+      y: store.weightUnit === "lbs" ? (ex.byDay[d]?.maxWeight || 0) * 2.20462 : (ex.byDay[d]?.maxWeight || 0),
       label: dateLabel,
     };
   });
@@ -446,13 +454,16 @@ function getMaxWeightOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
     const date = new Date(d);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   });
-  const weightData = days.map((d) => (ex.byDay[d]?.maxWeight || 0));
+  const weightData = days.map((d) => {
+    const kg = ex.byDay[d]?.maxWeight || 0;
+    return store.weightUnit === "lbs" ? kg * 2.20462 : kg;
+  });
   
   return {
     labels,
     datasets: [
       {
-        label: `${t("exercises.graphs.labels.maxWeight")} (kg)`,
+        label: `${t("exercises.graphs.labels.maxWeight")} (${getWeightUnit()})`,
         data: weightData,
         backgroundColor: primaryColor.value + "33",
         borderColor: primaryColor.value,
@@ -470,13 +481,16 @@ function getAvgVolumePerSetChartData(ex: any, graphRange: GraphRange = 0) {
     const date = new Date(d);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   });
-  const avgVolData = days.map((d) => Math.round(ex.byDay[d]?.avgVolumePerSet || 0));
+  const avgVolData = days.map((d) => {
+    const kg = ex.byDay[d]?.avgVolumePerSet || 0;
+    return Math.round(store.weightUnit === "lbs" ? kg * 2.20462 : kg);
+  });
   
   return {
     labels,
     datasets: [
       {
-        label: `${t("exercises.graphs.labels.avgVolume")} (kg)`,
+        label: `${t("exercises.graphs.labels.avgVolume")} (${getWeightUnit()})`,
         data: avgVolData,
         backgroundColor: secondaryColor.value + "33",
         borderColor: secondaryColor.value,
@@ -494,13 +508,16 @@ function getVolumeChartData(ex: any, graphRange: GraphRange = 0) {
     const date = new Date(d);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   });
-  const volData = days.map((d) => (ex.byDay[d]?.volume || 0));
+  const volData = days.map((d) => {
+    const kg = ex.byDay[d]?.volume || 0;
+    return store.weightUnit === "lbs" ? kg * 2.20462 : kg;
+  });
   
   return {
     labels,
     datasets: [
       {
-        label: `${t("global.volume")} (kg)`,
+        label: `${t("global.volume")} (${getWeightUnit()})`,
         data: volData,
         backgroundColor: primaryColor.value + "33",
         borderColor: primaryColor.value,
@@ -519,7 +536,7 @@ const scatterChartOptions = {
       callbacks: {
         label: (context: any) => {
           const point = context.raw;
-          return `${point.label}: ${point.y} kg × ${point.x} reps`;
+          return `${point.label}: ${formatWeight(point.y)} ${getWeightUnit()} × ${point.x} reps`;
         },
       },
     },
@@ -530,7 +547,7 @@ const scatterChartOptions = {
       ticks: { color: "#9A9A9A" },
       title: {
         display: true,
-        text: t("exercises.graphs.axis.weightVsReps.y") + " (kg)",
+        text: t("exercises.graphs.axis.weightVsReps.y") + ` (${getWeightUnit()})`,
         color: "#9A9A9A",
       },
     },
@@ -576,7 +593,7 @@ const barChartOptions = {
       ticks: { color: "#9A9A9A" },
       title: {
         display: true,
-        text: `${t("exercises.graphs.axis.volumeSession.y")} (kg)`,
+        text: `${t("exercises.graphs.axis.volumeSession.y")} (${getWeightUnit()})`,
         color: "#9A9A9A",
       },
     },
@@ -733,14 +750,14 @@ const barChartOptions = {
                 <thead>
                   <tr>
                     <th>{{ $t("global.day") }}</th>
-                    <th>kg</th>
+                    <th>{{ getWeightUnit() }}</th>
                     <th>Reps</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="s in ex.topSets" :key="`${ex.id}-${s.day}-${s.index}`">
                     <td>{{ s.day }}</td>
-                    <td>{{ s.weight || '-' }}</td>
+                    <td>{{ s.weight ? formatWeight(s.weight) : '-' }}</td>
                     <td>{{ s.reps || '-' }}</td>
                   </tr>
                 </tbody>
@@ -752,7 +769,7 @@ const barChartOptions = {
               <div class="pr-list" v-if="ex.prDistinct && ex.prDistinct.length">
                 <h3>{{ $t("exercises.personalRecords") }}</h3>
                 <div class="pr-chips">
-                  <span v-for="(pr,i) in ex.prDistinct" :key="i" class="pr-chip">{{ (pr.type||'').split('_').join(' ') }}: <strong>{{ pr.value }}</strong></span>
+                  <span v-for="(pr,i) in ex.prDistinct" :key="i" class="pr-chip">{{ (pr.type||'').split('_').join(' ') }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
                 </div>
               </div>
               <!-- Stats -->
