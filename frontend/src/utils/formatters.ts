@@ -1,4 +1,4 @@
-import { useHevyCache } from '../stores/hevy_cache';
+import { useHevyCache } from "../stores/hevy_cache";
 
 /**
  * Convert weight from kg to the user's preferred unit
@@ -21,6 +21,15 @@ export function formatWeight(weightKg: number): string {
 export function getWeightUnit(): string {
   const store = useHevyCache();
   return store.weightUnit;
+}
+
+/**
+ * Get the distance unit label based on weight unit preference
+ * @returns "km" or "mi" based on user preference (lbs → mi, kg → km)
+**/
+export function getDistanceUnit(): string {
+  const store = useHevyCache();
+  return store.weightUnit === "lbs" ? "mi" : "km";
 }
 
 /**

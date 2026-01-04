@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
-import { formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
+import { formatWeight, getWeightUnit, getDistanceUnit, formatPRValue } from "../utils/formatters";
 import { detectExerciseType, formatDurationSeconds, formatDistance } from "../utils/exerciseTypeDetector";
 import { Scatter, Bar, Line } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
@@ -666,7 +666,7 @@ function getDistanceOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
     labels,
     datasets: [
       {
-        label: `${t("global.distance")} (km)`,
+        label: `${t("global.distance")} (${getDistanceUnit()})`,
         data: distanceData,
         backgroundColor: primaryColor.value + "33",
         borderColor: primaryColor.value,
