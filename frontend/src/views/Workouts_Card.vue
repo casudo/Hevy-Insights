@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
 import { formatDurationFromTimestamps, formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
+import { detectExerciseType, formatDurationSeconds, formatDistance } from "../utils/exerciseTypeDetector";
 
 const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
@@ -227,16 +228,30 @@ onMounted(async () => {
                   <thead>
                     <tr>
                       <th>Set</th>
-                      <th>{{ $t('global.weight') }} ({{ getWeightUnit() }})</th>
-                      <th>Reps</th>
+                      <!-- Dynamic headers based on exercise type -->
+                      <template v-if="detectExerciseType(exercise) === 'cardio'">
+                        <th>{{ $t('global.distance') }}</th>
+                        <th>{{ $t('global.duration') }}</th>
+                      </template>
+                      <template v-else>
+                        <th>{{ $t('global.weight') }} ({{ getWeightUnit() }})</th>
+                        <th>Reps</th>
+                      </template>
                       <th>RPE</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="set in exercise.sets" :key="set.id">
                       <td>{{ set.index + 1 }}</td>
-                      <td>{{ set.weight_kg ? formatWeight(set.weight_kg) : "-" }}</td>
-                      <td>{{ set.reps || "-" }}</td>
+                      <!-- Dynamic data based on exercise type -->
+                      <template v-if="detectExerciseType(exercise) === 'cardio'">
+                        <td>{{ formatDistance(set.distance_km) }}</td>
+                        <td>{{ formatDurationSeconds(set.duration_seconds) }}</td>
+                      </template>
+                      <template v-else>
+                        <td>{{ set.weight_kg ? formatWeight(set.weight_kg) : "-" }}</td>
+                        <td>{{ set.reps || "-" }}</td>
+                      </template>
                       <td>{{ set.rpe || "-" }}</td>
                     </tr>
                   </tbody>
