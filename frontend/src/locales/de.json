@@ -115,8 +115,11 @@
       "inactiveBadge": "Inaktiv",
       "maintainingBadge": "Stabil",
       "plateau": "Ihr bester Satz liegt bei etwa {weight} für {repsMin}-{repsMax} Wdh. Versuchen Sie, mehr Gewicht oder Wiederholungen hinzuzufügen!",
+      "plateauCardio": "Ihre Leistung stagniert bei etwa {metric}. Versuchen Sie, Distanz oder Tempo zu erhöhen!",
       "gaining": "Sie haben um {weightChange} oder {repsChange} Wdh. in den letzten Einheiten zugelegt!",
+      "gainingCardio": "Toller Fortschritt! Sie haben sich in den letzten Einheiten um {change}% verbessert!",
       "losing": "Leistung sank um {weightChange} oder {repsChange} Wdh. Erwägen Sie Erholung oder Formüberprüfung.",
+      "losingCardio": "Leistung sank um {change}%. Erwägen Sie Erholung oder überprüfen Sie Ihr Training.",
       "insufficient": "Noch nicht genug Daten. Benötigt mindestens {needed} Einheiten, aktuell {sessions}.",
       "inactive": "Seit {days} Tagen nicht trainiert. Nehmen Sie das Training wieder auf!",
       "maintaining": "Leistung ist stabil. Sie halten Ihr aktuelles Kraftniveau."

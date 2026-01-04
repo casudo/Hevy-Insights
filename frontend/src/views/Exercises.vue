@@ -2,6 +2,7 @@
 import { computed, ref, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
 import { formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
+import { detectExerciseType, formatDurationSeconds, formatDistance } from "../utils/exerciseTypeDetector";
 import { Scatter, Bar, Line } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
 import {
@@ -105,7 +106,7 @@ function getLocalizedTitle(exercise: any): string {
   return exercise.title || "Unknown Exercise";
 }
 
-// Analyze strength progress based on last 5 sessions
+// Analyze strength progress based on last N sessions (as set in settings)
 function analyzeStrengthProgress(ex: any) {
   const days = Object.keys(ex.byDay || {}).sort();
   
@@ -157,73 +158,137 @@ function analyzeStrengthProgress(ex: any) {
   // Get last N recent sessions (based on setting)
   const lastNDays = recentDays.slice(-minSessions);
   
-  const sessions = lastNDays.map(d => ({
-    day: d,
-    maxWeight: ex.byDay[d]?.maxWeight || 0,
-    repsAtMax: ex.byDay[d]?.repsAtMax || 0,
-  }));
+  // Handle cardio vs strength exercises differently
+  const isCardio = ex.exerciseType === "cardio";
   
-  // Check for plateau: weight and reps staying within small ranges
-  const weights = sessions.map(s => s.maxWeight);
-  const reps = sessions.map(s => s.repsAtMax);
-  
-  const weightRange = Math.max(...weights) - Math.min(...weights);
-  const repsRange = Math.max(...reps) - Math.min(...reps);
-  const avgWeight = weights.reduce((a, b) => a + b, 0) / weights.length;
-  
-  // Plateau detection: weight within 0.5kg and reps within 1
-  if (weightRange <= 0.5 && repsRange <= 1) {
+  if (isCardio) {
+    // Cardio analysis: distance and duration improvements
+    const sessions = lastNDays.map(d => ({
+      day: d,
+      totalDistance: ex.byDay[d]?.totalDistance || 0,
+      totalDuration: ex.byDay[d]?.totalDuration || 0,
+      maxDistance: ex.byDay[d]?.maxDistance || 0,
+    }));
+    
+    const distances = sessions.map(s => s.maxDistance).filter(d => d > 0);
+    const durations = sessions.map(s => s.totalDuration).filter(d => d > 0);
+    
+    // If no distance/duration data, return null
+    if (distances.length === 0 && durations.length === 0) return null;
+    
+    // Use distance if available, otherwise duration
+    const metric = distances.length > 0 ? distances : durations;
+    const metricRange = Math.max(...metric) - Math.min(...metric);
+    const avgMetric = metric.reduce((a, b) => a + b, 0) / metric.length;
+    
+    // Plateau: metric staying within 5% range
+    if (metricRange <= avgMetric * 0.05) {
+      return {
+        type: "plateau",
+        message: distances.length > 0 
+          ? t("exercises.insights.plateauCardio", { metric: `${avgMetric.toFixed(2)} km` })
+          : t("exercises.insights.plateauCardio", { metric: formatDurationSeconds(avgMetric) })
+      };
+    }
+    
+    // Compare first half vs second half
+    const midpoint = Math.floor(sessions.length / 2);
+    const firstHalf = metric.slice(0, midpoint);
+    const secondHalf = metric.slice(midpoint);
+    
+    const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+    const change = ((secondAvg - firstAvg) / firstAvg) * 100;
+    
+    if (change > 5) {
+      return {
+        type: "gaining",
+        message: t("exercises.insights.gainingCardio", { change: change.toFixed(1) })
+      };
+    }
+    
+    if (change < -5) {
+      return {
+        type: "losing",
+        message: t("exercises.insights.losingCardio", { change: Math.abs(change).toFixed(1) })
+      };
+    }
+    
     return {
-      type: "plateau",
-      message: t("exercises.insights.plateau", {
-        weight: `${formatWeight(avgWeight)} ${getWeightUnit()}`,
-        repsMin: Math.min(...reps),
-        repsMax: Math.max(...reps)
-      })
+      type: "maintaining",
+      message: t("exercises.insights.maintaining")
+    };
+    
+  } else {
+    // Strength analysis: weight and reps
+    const sessions = lastNDays.map(d => ({
+      day: d,
+      maxWeight: ex.byDay[d]?.maxWeight || 0,
+      repsAtMax: ex.byDay[d]?.repsAtMax || 0,
+    }));
+    
+    // Check for plateau: weight and reps staying within small ranges
+    const weights = sessions.map(s => s.maxWeight);
+    const reps = sessions.map(s => s.repsAtMax);
+    
+    const weightRange = Math.max(...weights) - Math.min(...weights);
+    const repsRange = Math.max(...reps) - Math.min(...reps);
+    const avgWeight = weights.reduce((a, b) => a + b, 0) / weights.length;
+    
+    // Plateau detection: weight within 0.5kg and reps within 1
+    if (weightRange <= 0.5 && repsRange <= 1) {
+      return {
+        type: "plateau",
+        message: t("exercises.insights.plateau", {
+          weight: `${formatWeight(avgWeight)} ${getWeightUnit()}`,
+          repsMin: Math.min(...reps),
+          repsMax: Math.max(...reps)
+        })
+      };
+    }
+    
+    // Check for strength gain/loss by comparing first half vs second half
+    const midpoint = Math.floor(sessions.length / 2);
+    const firstHalf = sessions.slice(0, midpoint);
+    const secondHalf = sessions.slice(midpoint);
+    
+    const firstAvgWeight = firstHalf.reduce((a, b) => a + b.maxWeight, 0) / firstHalf.length;
+    const secondAvgWeight = secondHalf.reduce((a, b) => a + b.maxWeight, 0) / secondHalf.length;
+    
+    const firstAvgReps = firstHalf.reduce((a, b) => a + b.repsAtMax, 0) / firstHalf.length;
+    const secondAvgReps = secondHalf.reduce((a, b) => a + b.repsAtMax, 0) / secondHalf.length;
+    
+    const weightChange = secondAvgWeight - firstAvgWeight;
+    const repsChange = secondAvgReps - firstAvgReps;
+    
+    // Strength gain: weight increase >2kg or reps increase >2 with stable weight
+    if (weightChange > 2 || (repsChange > 2 && weightChange >= -0.5)) {
+      return {
+        type: "gaining",
+        message: t("exercises.insights.gaining", {
+          weightChange: `${formatWeight(Math.abs(weightChange))} ${getWeightUnit()}`,
+          repsChange: Math.abs(repsChange).toFixed(0)
+        })
+      };
+    }
+    
+    // Strength loss: weight decrease >2kg or reps decrease >2 with stable weight
+    if (weightChange < -2 || (repsChange < -2 && weightChange <= 0.5)) {
+      return {
+        type: "losing",
+        message: t("exercises.insights.losing", {
+          weightChange: `${formatWeight(Math.abs(weightChange))} ${getWeightUnit()}`,
+          repsChange: Math.abs(repsChange).toFixed(0)
+        })
+      };
+    }
+    
+    // Default: maintaining (no significant change detected)
+    return {
+      type: "maintaining",
+      message: t("exercises.insights.maintaining")
     };
   }
-  
-  // Check for strength gain/loss by comparing first half vs second half
-  const midpoint = Math.floor(sessions.length / 2);
-  const firstHalf = sessions.slice(0, midpoint);
-  const secondHalf = sessions.slice(midpoint);
-  
-  const firstAvgWeight = firstHalf.reduce((a, b) => a + b.maxWeight, 0) / firstHalf.length;
-  const secondAvgWeight = secondHalf.reduce((a, b) => a + b.maxWeight, 0) / secondHalf.length;
-  
-  const firstAvgReps = firstHalf.reduce((a, b) => a + b.repsAtMax, 0) / firstHalf.length;
-  const secondAvgReps = secondHalf.reduce((a, b) => a + b.repsAtMax, 0) / secondHalf.length;
-  
-  const weightChange = secondAvgWeight - firstAvgWeight;
-  const repsChange = secondAvgReps - firstAvgReps;
-  
-  // Strength gain: weight increased by >2kg OR reps increased by >2 with stable/increasing weight
-  if (weightChange > 2 || (repsChange > 2 && weightChange >= -0.5)) {
-    return {
-      type: "gaining",
-      message: t("exercises.insights.gaining", {
-        weightChange: `${formatWeight(Math.abs(weightChange))} ${getWeightUnit()}`,
-        repsChange: Math.abs(repsChange).toFixed(0)
-      })
-    };
-  }
-  
-  // Strength loss: weight decreased by >2kg OR reps decreased by >2 with stable/decreasing weight
-  if (weightChange < -2 || (repsChange < -2 && weightChange <= 0.5)) {
-    return {
-      type: "losing",
-      message: t("exercises.insights.losing", {
-        weightChange: `${formatWeight(Math.abs(weightChange))} ${getWeightUnit()}`,
-        repsChange: Math.abs(repsChange).toFixed(0)
-      })
-    };
-  }
-  
-  // Default: maintaining (no significant change detected)
-  return {
-    type: "maintaining",
-    message: t("exercises.insights.maintaining")
-  };
 }
 
 // Build exercise aggregates across all workouts
@@ -250,10 +315,14 @@ const exercises = computed(() => {
       for (const s of (ex.sets || [])) {
         const weight = Number((s as any).weight_kg ?? (s as any).weight ?? 0);
         const reps = Number((s as any).reps ?? 0);
+        const distance = Number((s as any).distance_km ?? 0);
+        const duration = Number((s as any).duration_seconds ?? 0);
         entry.sets.push({
           day: dayKey,
           weight,
           reps,
+          distance_km: distance,
+          duration_seconds: duration,
           rpe: s.rpe,
           index: s.index,
         });
@@ -268,12 +337,40 @@ const exercises = computed(() => {
   // derive computed metrics per exercise
   const list = Object.values(map);
   for (const ex of list) {
-    const byDay: Record<string, { maxWeight: number; repsAtMax: number; volume: number; setCount: number; avgVolumePerSet: number }> = {};
+    // Detect exercise type for appropriate metric tracking
+    const exerciseType = detectExerciseType({ sets: ex.sets });
+    ex.exerciseType = exerciseType;
+    
+    const byDay: Record<string, { 
+      maxWeight: number; 
+      repsAtMax: number; 
+      volume: number; 
+      setCount: number; 
+      avgVolumePerSet: number;
+      totalDistance: number;
+      totalDuration: number;
+      maxDistance: number;
+      maxDuration: number;
+    }> = {};
+    
     for (const s of ex.sets) {
-      const cur = (byDay[s.day] ||= { maxWeight: 0, repsAtMax: 0, volume: 0, setCount: 0, avgVolumePerSet: 0 });
+      const cur = (byDay[s.day] ||= { 
+        maxWeight: 0, 
+        repsAtMax: 0, 
+        volume: 0, 
+        setCount: 0, 
+        avgVolumePerSet: 0,
+        totalDistance: 0,
+        totalDuration: 0,
+        maxDistance: 0,
+        maxDuration: 0
+      });
+      
+      // Strength metrics
       const setVolume = (Number(s.weight) || 0) * (Number(s.reps) || 0);
       cur.volume += setVolume;
       cur.setCount += 1;
+      
       if ((Number(s.weight) || 0) > cur.maxWeight) {
         cur.maxWeight = Number(s.weight) || 0;
         cur.repsAtMax = Number(s.reps) || 0;
@@ -281,7 +378,16 @@ const exercises = computed(() => {
         // If same max weight, keep the highest reps
         cur.repsAtMax = Math.max(cur.repsAtMax, Number(s.reps) || 0);
       }
+      
+      // Cardio metrics
+      const distance = Number(s.distance_km) || 0;
+      const duration = Number(s.duration_seconds) || 0;
+      cur.totalDistance += distance;
+      cur.totalDuration += duration;
+      cur.maxDistance = Math.max(cur.maxDistance, distance);
+      cur.maxDuration = Math.max(cur.maxDuration, duration);
     }
+    
     // Calculate avg volume per set for each day
     for (const day of Object.keys(byDay)) {
       const dayData = byDay[day];
@@ -302,14 +408,32 @@ const exercises = computed(() => {
         vMax = Math.max(vMax, v.volume);
       }
     }
-    // top 3 best sets by weight × reps (total work) across ALL workouts
-    ex.topSets = [...ex.sets]
-      .sort((a,b) => {
-        const workA = (Number(a.weight)||0) * (Number(a.reps)||0);
-        const workB = (Number(b.weight)||0) * (Number(b.reps)||0);
-        return workB - workA;
-      })
-      .slice(0,3);
+    // top 3 best sets - different logic for cardio vs strength
+    if (exerciseType === "cardio") {
+      // For cardio: sort by distance (primary) or duration (secondary)
+      ex.topSets = [...ex.sets]
+        .sort((a,b) => {
+          const distA = Number(a.distance_km) || 0;
+          const distB = Number(b.distance_km) || 0;
+          const durA = Number(a.duration_seconds) || 0;
+          const durB = Number(b.duration_seconds) || 0;
+          
+          // If both have distance, sort by distance
+          if (distA > 0 && distB > 0) return distB - distA;
+          // Otherwise sort by duration
+          return durB - durA;
+        })
+        .slice(0,3);
+    } else {
+      // For strength: sort by weight × reps (total work)
+      ex.topSets = [...ex.sets]
+        .sort((a,b) => {
+          const workA = (Number(a.weight)||0) * (Number(a.reps)||0);
+          const workB = (Number(b.weight)||0) * (Number(b.reps)||0);
+          return workB - workA;
+        })
+        .slice(0,3);
+    }
     // distinct PRs - keep only the best value for each PR type
     const prMap: Record<string, { type: string; value: number; day: string }> = {};
     for (const pr of ex.prs) {
@@ -750,15 +874,27 @@ const barChartOptions = {
                 <thead>
                   <tr>
                     <th>{{ $t("global.day") }}</th>
-                    <th>{{ getWeightUnit() }}</th>
-                    <th>Reps</th>
+                    <template v-if="ex.exerciseType === 'cardio'">
+                      <th>{{ $t("global.distance") }}</th>
+                      <th>{{ $t("global.duration") }}</th>
+                    </template>
+                    <template v-else>
+                      <th>{{ getWeightUnit() }}</th>
+                      <th>Reps</th>
+                    </template>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="s in ex.topSets" :key="`${ex.id}-${s.day}-${s.index}`">
                     <td>{{ s.day }}</td>
-                    <td>{{ s.weight ? formatWeight(s.weight) : '-' }}</td>
-                    <td>{{ s.reps || '-' }}</td>
+                    <template v-if="ex.exerciseType === 'cardio'">
+                      <td>{{ s.distance_km ? formatDistance(s.distance_km) : '-' }}</td>
+                      <td>{{ s.duration_seconds ? formatDurationSeconds(s.duration_seconds) : '-' }}</td>
+                    </template>
+                    <template v-else>
+                      <td>{{ s.weight ? formatWeight(s.weight) : '-' }}</td>
+                      <td>{{ s.reps || '-' }}</td>
+                    </template>
                   </tr>
                 </tbody>
               </table>
