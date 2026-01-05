@@ -179,7 +179,6 @@ Clone/download the repository and follow these steps:
 
 # Future Goals
 
-- Display time on Workout cards like "1h 15m" instead of "75 minutes"
 - Better logging
 - Replace localStorage with HTTP cookie
 - Handle exercises with time (planks, jogging)
@@ -194,6 +193,8 @@ Clone/download the repository and follow these steps:
 - Dashboard: Top stats: Display them more in rows instead of big "buttons". Maybe like "🏋️ 25 Total Workouts * 💪 282.741,5 kg Total Volume * ⏱️ 34h 15m Total Time Trained"
 - PRs on Dashboard: Showing hardcoded english "title" of exercise, not localized
 - CSV upload: PRs not shown and muscle regions missing
+- Contribution Graph: Fix timeline (still shows 2025 + 2026 data). Only show current year.
+- Enable/configure settings for date format, time format, week start day
 
 ---
 
