@@ -35,10 +35,10 @@ const { t } = useI18n();
 
 // Get theme colors from CSS variables
 const primaryColor = computed(() => {
-  return getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#10b981';
+  return getComputedStyle(document.documentElement).getPropertyValue("--color-primary").trim() || "#10b981";
 });
 const secondaryColor = computed(() => {
-  return getComputedStyle(document.documentElement).getPropertyValue('--color-secondary').trim() || '#06b6d4';
+  return getComputedStyle(document.documentElement).getPropertyValue("--color-secondary").trim() || "#06b6d4";
 });
 
 // Collapsed state per exercise (default collapsed)
@@ -750,10 +750,20 @@ const lineChartOptions = {
     y: {
       grid: { color: "#2b3553" },
       ticks: { color: "#9A9A9A" },
+      title: {
+        display: true,
+        text: `${t("exercises.graphs.labels.maxWeight")} (${getWeightUnit()})`,
+        color: "#9A9A9A",
+      },
     },
     x: {
       grid: { display: false },
       ticks: { color: "#9A9A9A", maxRotation: 45, minRotation: 45 },
+      title: {
+        display: true,
+        text: t("exercises.graphs.axis.volumeSession.x"),
+        color: "#9A9A9A",
+      },
     },
   },
 };
