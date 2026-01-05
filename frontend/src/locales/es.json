@@ -30,6 +30,19 @@
         "uploadFailed": "Error al subir CSV. Por favor verifica el formato del archivo."
       }
     },
+    "apikey": {
+      "linkText": "Ingresar clave API de Hevy PRO",
+      "description": "Ingresa tu clave API de Hevy PRO. Puedes obtenerla en https://hevy.com/settings?developer",
+      "label": "Clave API",
+      "placeholder": "Ingresa tu clave API de Hevy PRO",
+      "loginButton": "Validar e Iniciar sesión",
+      "validating": "Validando...",
+      "errors": {
+        "emptyKey": "Por favor ingresa tu clave API",
+        "invalidKey": "Clave API inválida. Por favor verifica e intenta de nuevo.",
+        "validationFailed": "Error al validar la clave API. Por favor intenta de nuevo."
+      }
+    },
     "madeBy": "Hecho por",
     "tagline": "Sigue tu viaje fitness"
   },

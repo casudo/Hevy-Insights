@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from hevy_api import HevyClient, HevyError
 from dotenv import load_dotenv
+from os import getenv
 import logging
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -11,16 +12,16 @@ from slowapi.errors import RateLimitExceeded
 
 ### ===============================================================================
 
-### Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] - %(message)s", datefmt="%d.%m.%Y %H:%M:%S")
-
 ### Load environment variables from .env file
 load_dotenv()
+
+### Configure logging
+logging.basicConfig(level=getenv("LOG_LEVEL", "INFO"), format="%(asctime)s [%(levelname)s] - %(message)s", datefmt="%d.%m.%Y %H:%M:%S")
 
 app = FastAPI(
     title="Hevy Insights API",
     description="Backend API for Hevy Insights",
-    version="1.1.0",
+    version="1.2.0",
     docs_url="/api/docs",  # Swagger
 )
 ### Initialize rate limiter
@@ -62,27 +63,37 @@ class ValidateTokenResponse(BaseModel):
     error: Optional[str] = None
 
 
+class ValidateApiKeyRequest(BaseModel):
+    api_key: str
+
+
+class ValidateApiKeyResponse(BaseModel):
+    valid: bool
+    error: Optional[str] = None
+
+
 class HealthResponse(BaseModel):
     status: str
 
 
-### Helper function to extract auth token from header
-def get_auth_token(auth_token: Optional[str]) -> str:
-    """Extracts the auth token from the auth-token header.
+### Helper function to get client with either auth token or PRO API key
+def get_hevy_client(auth_token: Optional[str] = None, api_key: Optional[str] = None) -> HevyClient:
+    """Creates a HevyClient with either auth token or API key.
 
     Args:
         auth_token (Optional[str]): The auth-token header value.
+        api_key (Optional[str]): The pro-api-key header value.
 
     Raises:
-        HTTPException: If the auth-token header is missing.
+        HTTPException: If neither auth_token nor api_key header is provided.
 
     Returns:
-        str: The auth token.
+        HevyClient: Configured Hevy client.
     """
-    if not auth_token:
-        raise HTTPException(status_code=401, detail="Missing auth-token header")
+    if not auth_token and not api_key:
+        raise HTTPException(status_code=401, detail="Missing authentication: provide either auth-token or pro-api-key header")
 
-    return auth_token
+    return HevyClient(auth_token=auth_token, api_key=api_key)
 
 
 ### ===============================================================================
@@ -114,7 +125,7 @@ def login(credentials: LoginRequest, request: Request) -> LoginResponse:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/api/validate", response_model=ValidateTokenResponse, tags=["Authentication"])
+@app.post("/api/validate-auth-token", response_model=ValidateTokenResponse, tags=["Authentication"])
 def validate_token(token_data: ValidateTokenRequest) -> ValidateTokenResponse:
     """
     Validate an authentication token.
@@ -134,17 +145,38 @@ def validate_token(token_data: ValidateTokenRequest) -> ValidateTokenResponse:
         return ValidateTokenResponse(valid=False, error=str(e))
 
 
+@app.post("/api/validate-api-key", response_model=ValidateApiKeyResponse, tags=["Authentication"])
+def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
+    """
+    Validate a Hevy PRO API key.
+
+    - **api_key**: The API key to validate
+
+    Returns validation status.
+    """
+    try:
+        client = HevyClient(api_key=key_data.api_key)
+        is_valid = client.validate_api_key()
+
+        return ValidateApiKeyResponse(valid=is_valid)
+
+    except HevyError as e:
+        logging.error(f"API key validation error: {e}")
+        return ValidateApiKeyResponse(valid=False, error=str(e))
+
+
 @app.get("/api/user/account", tags=["User"])
-def get_user_account(auth_token: str = Header(..., alias="auth-token")) -> dict:
+def get_user_account(
+    auth_token: Optional[str] = Header(None, alias="auth-token"),
+    api_key: Optional[str] = Header(None, alias="api-key")
+) -> dict:
     """
     Get authenticated user's account information.
 
-    Requires auth-token header.
+    Requires either auth-token or api-key header.
     """
-    token = auth_token
-
     try:
-        client = HevyClient(token)
+        client = get_hevy_client(auth_token=auth_token, api_key=api_key)
         account = client.get_user_account()
 
         return account
@@ -157,24 +189,37 @@ def get_user_account(auth_token: str = Header(..., alias="auth-token")) -> dict:
 
 @app.get("/api/workouts", tags=["Workouts"])
 def get_workouts(
-    auth_token: str = Header(..., alias="auth-token"),
-    offset: int = Query(0, ge=0, description="Pagination offset (increments of 5)"),
-    username: str = Query(..., description="Filter by username"),
+    auth_token: Optional[str] = Header(None, alias="auth-token"),
+    api_key: Optional[str] = Header(None, alias="api-key"),
+    offset: int = Query(0, ge=0, description="Pagination offset (increments of 5) - for auth-token mode"),
+    username: Optional[str] = Query(None, description="Filter by username - for auth-token mode"),
+    page: int = Query(1, ge=1, description="Page number - for api-key mode"),
+    page_size: int = Query(10, ge=1, le=50, description="Page size - for api-key mode"),
 ):
     """
     Get paginated workout history.
 
+    **Auth-token mode:**
     - **offset**: Pagination offset (0, 5, 10, 15, ...)
-    - **username**: Username filter
+    - **username**: Username filter (required)
 
-    Requires auth-token header.
+    **API-key mode:**
+    - **page**: Page number (default: 1)
+    - **page_size**: Number of workouts per page (default: 10)
+
+    Requires either auth-token or api-key header.
     """
-    token = auth_token
-
     try:
-        client = HevyClient(token)
+        client = get_hevy_client(auth_token=auth_token, api_key=api_key)
 
-        workouts = client.get_workouts(username=username, offset=offset)
+        ### Use PRO API if API key is provided
+        if api_key:
+            workouts = client.get_pro_workouts(page=page, page_size=page_size)
+        else:
+            ### Use free API with auth token
+            if not username:
+                raise HTTPException(status_code=400, detail="username parameter is required for auth-token mode")
+            workouts = client.get_workouts(username=username, offset=offset)
 
         return workouts
 

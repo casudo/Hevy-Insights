@@ -30,6 +30,19 @@
         "uploadFailed": "CSV-Upload fehlgeschlagen. Bitte überprüfen Sie das Dateiformat."
       }
     },
+    "apikey": {
+      "linkText": "Hevy PRO API-Schlüssel eingeben",
+      "description": "Geben Sie Ihren Hevy PRO API-Schlüssel ein. Sie können ihn unter https://hevy.com/settings?developer abrufen",
+      "label": "API-Schlüssel",
+      "placeholder": "Geben Sie Ihren Hevy PRO API-Schlüssel ein",
+      "loginButton": "Validieren & Anmelden",
+      "validating": "Wird validiert...",
+      "errors": {
+        "emptyKey": "Bitte geben Sie Ihren API-Schlüssel ein",
+        "invalidKey": "Ungültiger API-Schlüssel. Bitte überprüfen Sie ihn und versuchen Sie es erneut.",
+        "validationFailed": "API-Schlüssel konnte nicht validiert werden. Bitte versuchen Sie es erneut."
+      }
+    },
     "madeBy": "Erstellt von",
     "tagline": "Verfolgen Sie Ihre Fitness-Reise"
   },

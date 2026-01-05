@@ -31,6 +31,10 @@ export const useHevyCache = defineStore("hevyCache", {
       if (state.dataSource === "csv") {
         return "CSV User";
       }
+      // For PRO API, username is not available
+      if (localStorage.getItem("hevy_api_key")) {
+        return state.userAccount?.username || "PRO User";
+      }
       return state.userAccount?.username || null;
     },
     hasWorkouts: (state) => state.workouts.length > 0,
@@ -57,11 +61,24 @@ export const useHevyCache = defineStore("hevyCache", {
         return this.userAccount;
       }
 
+      // In API key mode, create a mock user account (no username endpoint in PRO API)
+      const isApiKeyMode = !!localStorage.getItem("hevy_api_key");
+      if (isApiKeyMode) {
+        if (!this.userAccount || force) {
+          this.userAccount = {
+            username: "PRO User",
+            email: "pro@hevy.app",
+          };
+        }
+        return this.userAccount;
+      }
+
       if (this.userAccount && !force) return this.userAccount;
       
       this.isLoadingUser = true;
       this.error = null;
       
+      // Fetch user account from free API
       try {
         this.userAccount = await userService.getAccount();
         return this.userAccount;
@@ -109,38 +126,59 @@ export const useHevyCache = defineStore("hevyCache", {
       this.error = null;
 
       try {
-        // Ensure we have username for API mode
-        if (!this.username) {
-          await this.fetchUserAccount();
-        }
-
-        // Safety check: username must exist for API calls
-        if (!this.username) {
-          throw new Error("Username not available for API requests");
-        }
-
         const allWorkouts: Workout[] = [];
+        const isProMode = !!localStorage.getItem("hevy_api_key");
 
-        // Fetch workouts in batches of 5 (username required) until exhausted
-        let offset = 0;
-        const pageSize = 5;
-        // Loop until API returns no more workouts
-        // Safeguard with a hard cap to avoid infinite loops in case of API issues
-        const maxPages = 2000; // allows up to 10,000 workouts
-        let pagesFetched = 0;
-        while (pagesFetched < maxPages) {
-          if (import.meta.env.DEV) {
-            console.debug("[hevyCache] Fetching workouts page:", { offset });
+        if (isProMode) {
+          // PRO API: page-based pagination
+          let page = 1;
+          const pageSize = 10;
+          const maxPages = 2000;
+          
+          while (page <= maxPages) {
+            if (import.meta.env.DEV) {
+              console.debug("[hevyCache] Fetching PRO workouts page:", { page });
+            }
+            const result = await workoutService.getWorkouts("", (page - 1) * pageSize);
+            const batch = result.workouts || [];
+            if (import.meta.env.DEV) {
+              console.debug("[hevyCache] Received PRO batch:", { page, size: batch.length });
+            }
+            if (batch.length === 0) break;
+            allWorkouts.push(...batch);
+            page += 1;
           }
-          const result = await workoutService.getWorkouts(this.username!, offset);
-          const batch = result.workouts || [];
-          if (import.meta.env.DEV) {
-            console.debug("[hevyCache] Received batch:", { offset, size: batch.length });
+        } else {
+          // Free API: offset-based pagination
+          // Ensure we have username for API mode
+          if (!this.username) {
+            await this.fetchUserAccount();
           }
-          if (batch.length === 0) break;
-          allWorkouts.push(...batch);
-          offset += pageSize;
-          pagesFetched += 1;
+
+          // Safety check: username must exist for API calls
+          if (!this.username) {
+            throw new Error("Username not available for API requests");
+          }
+
+          let offset = 0;
+          const pageSize = 5;
+          const maxPages = 2000;
+          let pagesFetched = 0;
+          
+          while (pagesFetched < maxPages) {
+            if (import.meta.env.DEV) {
+              console.debug("[hevyCache] Fetching workouts page:", { offset });
+            }
+            const result = await workoutService.getWorkouts(this.username!, offset);
+            const batch = result.workouts || [];
+            if (import.meta.env.DEV) {
+              console.debug("[hevyCache] Received batch:", { offset, size: batch.length });
+            }
+            if (batch.length === 0) break;
+            allWorkouts.push(...batch);
+            offset += pageSize;
+            pagesFetched += 1;
+          }
         }
 
         this.workouts = allWorkouts;
@@ -148,7 +186,7 @@ export const useHevyCache = defineStore("hevyCache", {
         if (import.meta.env.DEV) {
           console.debug("[hevyCache] Finished fetching workouts:", {
             total: this.workouts.length,
-            pagesFetched,
+            mode: isProMode ? "PRO" : "free",
           });
         }
 

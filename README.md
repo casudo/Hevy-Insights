@@ -25,6 +25,7 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 - [Features](#features)
   - [Plateau \& Strength Detection](#plateau--strength-detection)
 - [Screenshots](#screenshots)
+- [Login Comparison](#login-comparison)
 - [Usage](#usage)
   - [Hosted Online](#hosted-online)
   - [Local Setup](#local-setup)
@@ -43,7 +44,11 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 
 # Features
 
-- **Authentication**: Either login with Hevy credentials (no Hevy PRO membership required! Credentials are stored in your browser's local storage **only**) or upload your exported workout CSV file from Hevy.
+- **Authentication**: Multiple login options for flexibility:
+  - **Hevy Credentials**: Login with your Hevy username/email and password (no PRO membership required)
+  - **Hevy PRO API Key**: Use your revokable Hevy PRO API key from [hevy.com/settings?developer](https://hevy.com/settings?developer)
+  - **CSV Upload**: Upload your exported workout CSV file from the Hevy app
+  - All credentials are stored in your browser's local storage **only**
 - **Dashboard**: Interactive charts and statistics of your workouts, including volume, muscle distribution and hours trained.
 - **Workout History**: Workout logs with detailed exercise information up to the date of account creation - card or list design.
 - **Exercises**: View all exercises with video thumbnails and detailed stats.
@@ -102,6 +107,27 @@ This feature helps you identify when it's time to:
 
 *Workouts Page - List Design*
 ![Workouts Page - List Design](/readme_images/workout_page_list.png)
+
+---
+
+# Login Comparison
+
+You can decide based on your needs which login method suits you best:
+
+> [!TIP]
+> I recommed using the **Hevy Credentials Login** for the best experience since it shows the most data.
+
+| Feature                      | Hevy Credentials Login       | Hevy PRO API Key Login       | CSV Upload                   |
+| ---------------------------- | ----------------------------- | ----------------------------- | ---------------------------- |
+| Requires Hevy PRO Membership | ✅ No                         | ❌ Yes                        | ✅ No                         |
+| Data Freshness               | ✅ Live data from Hevy API    | ✅ Live data from Hevy API    | ❌ Static data from CSV file  |
+| Data Range                   | ✅ Full history from Hevy API | ✅ Full history from Hevy API | ✅ Full history from CSV file |
+| Personal Record Tracking     | ✅ Yes                        | ❌ No                         | ⚠️ Yes, but not in detail     |
+| Muscle Distribution Data     | ✅ Yes                        | ❌ No                         | ⚠️ Not everything             |
+| Media (Images/GIFs)          | ✅ Yes                        | ❌ No                         | ❌ No                         |
+| Plateu Detection             | ✅ Yes                        | ✅ Yes                        | ✅ Yes                        |
+| Workout Streaks              | ✅ Yes                        | ✅ Yes                        | ❌ No                         |
+| Calories & Heart Rate Data   | ✅ Yes                        | ❌ No                         | ❌ No                         |
 
 # Usage
 

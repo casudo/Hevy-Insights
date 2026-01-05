@@ -16,7 +16,7 @@
       }
     },
     "csv": {
-      "modeButton": "Upload CSV Instead",
+      "modeButton": "Upload CSV",
       "description": "Before exporting your data from the Hevy app, ensure that your app language is set to English and that the weight unit is KG.",
       "selectFile": "Select CSV File",
       "dragDrop": "or drag and drop here",
@@ -28,6 +28,19 @@
         "invalidFile": "Invalid file. Please select a valid CSV file (max 10MB)",
         "emptyFile": "CSV file is empty or contains no workout data",
         "uploadFailed": "Failed to upload CSV. Please check the file format."
+      }
+    },
+    "apikey": {
+      "linkText": "Enter Hevy PRO API Key",
+      "description": "Enter your Hevy PRO API key. You can get it from https://hevy.com/settings?developer",
+      "label": "API Key",
+      "placeholder": "Enter your Hevy PRO API key",
+      "loginButton": "Validate & Login",
+      "validating": "Validating...",
+      "errors": {
+        "emptyKey": "Please enter your API key",
+        "invalidKey": "Invalid API key. Please check and try again.",
+        "validationFailed": "Failed to validate API key. Please try again."
       }
     },
     "madeBy": "Made by",
