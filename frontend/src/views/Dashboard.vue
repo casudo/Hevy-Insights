@@ -149,6 +149,23 @@ function groupMuscles(muscleGroup: string): string {
   // Default: return original
   return muscleGroup;
 }
+// Get localized range filter label
+function getRangeLabel(range: Range): string {
+  if (range === "all") return t("dashboard.filters.all");
+  if (range === "1y") return t("dashboard.filters.oneYear");
+  if (range === "6m") return t("dashboard.filters.sixMonths");
+  if (range === "3m") return t("dashboard.filters.threeMonths");
+  if (range === "1m") return t("dashboard.filters.oneMonth");
+  return range;
+}
+
+// Get localized display style label
+function getDisplayLabel(display: DisplayStyle): string {
+  if (display === "mo") return t("dashboard.filters.monthly");
+  if (display === "wk") return t("dashboard.filters.weekly");
+  return display;
+}
+
 
 // Get calendar week number (ISO 8601)
 const getWeekNumber = (d: Date): number => {
@@ -726,6 +743,25 @@ const doughnutOptions = {
   },
 };
 
+// Reusable filter definitions (single source of truth)
+const rangeFilters = [
+  { value: "all" as Range, label: () => getRangeLabel("all") },
+  { value: "1y" as Range, label: () => getRangeLabel("1y") },
+  { value: "6m" as Range, label: () => getRangeLabel("6m") },
+  { value: "3m" as Range, label: () => getRangeLabel("3m") },
+  { value: "1m" as Range, label: () => getRangeLabel("1m") }
+];
+
+const displayFilters = [
+  { value: "mo" as DisplayStyle, label: () => getDisplayLabel("mo") },
+  { value: "wk" as DisplayStyle, label: () => getDisplayLabel("wk") }
+];
+
+const groupingFilters = [
+  { value: "groups" as "groups" | "muscles", label: () => t("dashboard.charts.muscleFilters.groups") },
+  { value: "muscles" as "groups" | "muscles", label: () => t("dashboard.charts.muscleFilters.muscles") }
+];
+
 const radarOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -959,15 +995,10 @@ onMounted(() => {
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="hoursTrained_Range = 'all'" :class="['filter-btn', { active: hoursTrained_Range === 'all' }]" title="All Time">{{ $t('dashboard.filters.all') }}</button>
-                      <button @click="hoursTrained_Range = '1y'" :class="['filter-btn', { active: hoursTrained_Range === '1y' }]" title="1 Year">{{ $t('dashboard.filters.oneYear') }}</button>
-                      <button @click="hoursTrained_Range = '6m'" :class="['filter-btn', { active: hoursTrained_Range === '6m' }]" title="6 Months">{{ $t('dashboard.filters.sixMonths') }}</button>
-                      <button @click="hoursTrained_Range = '3m'" :class="['filter-btn', { active: hoursTrained_Range === '3m' }]" title="3 Months">{{ $t('dashboard.filters.threeMonths') }}</button>
-                      <button @click="hoursTrained_Range = '1m'" :class="['filter-btn', { active: hoursTrained_Range === '1m' }]" title="1 Month">{{ $t('dashboard.filters.oneMonth') }}</button>
+                      <button v-for="filter in rangeFilters" :key="filter.value" @click="hoursTrained_Range = filter.value" :class="['filter-btn', { active: hoursTrained_Range === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="hoursTrained_Display = 'mo'" :class="['filter-btn', { active: hoursTrained_Display === 'mo' }]" title="Monthly">{{ $t('dashboard.filters.monthly') }}</button>
-                      <button @click="hoursTrained_Display = 'wk'" :class="['filter-btn', { active: hoursTrained_Display === 'wk' }]" title="Weekly">{{ $t('dashboard.filters.weekly') }}</button>
+                      <button v-for="filter in displayFilters" :key="filter.value" @click="hoursTrained_Display = filter.value" :class="['filter-btn', { active: hoursTrained_Display === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                   </div>
                 </div>
@@ -1002,15 +1033,10 @@ onMounted(() => {
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="volumeProgression_Range = 'all'" :class="['filter-btn', { active: volumeProgression_Range === 'all' }]">{{ $t('dashboard.filters.all') }}</button>
-                      <button @click="volumeProgression_Range = '1y'" :class="['filter-btn', { active: volumeProgression_Range === '1y' }]">{{ $t('dashboard.filters.oneYear') }}</button>
-                      <button @click="volumeProgression_Range = '6m'" :class="['filter-btn', { active: volumeProgression_Range === '6m' }]">{{ $t('dashboard.filters.sixMonths') }}</button>
-                      <button @click="volumeProgression_Range = '3m'" :class="['filter-btn', { active: volumeProgression_Range === '3m' }]">{{ $t('dashboard.filters.threeMonths') }}</button>
-                      <button @click="volumeProgression_Range = '1m'" :class="['filter-btn', { active: volumeProgression_Range === '1m' }]">{{ $t('dashboard.filters.oneMonth') }}</button>
+                      <button v-for="filter in rangeFilters" :key="filter.value" @click="volumeProgression_Range = filter.value" :class="['filter-btn', { active: volumeProgression_Range === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="volumeProgression_Display = 'mo'" :class="['filter-btn', { active: volumeProgression_Display === 'mo' }]">{{ $t('dashboard.filters.monthly') }}</button>
-                      <button @click="volumeProgression_Display = 'wk'" :class="['filter-btn', { active: volumeProgression_Display === 'wk' }]">{{ $t('dashboard.filters.weekly') }}</button>
+                      <button v-for="filter in displayFilters" :key="filter.value" @click="volumeProgression_Display = filter.value" :class="['filter-btn', { active: volumeProgression_Display === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                   </div>
                 </div>
@@ -1045,15 +1071,10 @@ onMounted(() => {
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="repsAndSets_Range = 'all'" :class="['filter-btn', { active: repsAndSets_Range === 'all' }]">{{ $t('dashboard.filters.all') }}</button>
-                      <button @click="repsAndSets_Range = '1y'" :class="['filter-btn', { active: repsAndSets_Range === '1y' }]">{{ $t('dashboard.filters.oneYear') }}</button>
-                      <button @click="repsAndSets_Range = '6m'" :class="['filter-btn', { active: repsAndSets_Range === '6m' }]">{{ $t('dashboard.filters.sixMonths') }}</button>
-                      <button @click="repsAndSets_Range = '3m'" :class="['filter-btn', { active: repsAndSets_Range === '3m' }]">{{ $t('dashboard.filters.threeMonths') }}</button>
-                      <button @click="repsAndSets_Range = '1m'" :class="['filter-btn', { active: repsAndSets_Range === '1m' }]">{{ $t('dashboard.filters.oneMonth') }}</button>
+                      <button v-for="filter in rangeFilters" :key="filter.value" @click="repsAndSets_Range = filter.value" :class="['filter-btn', { active: repsAndSets_Range === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="repsAndSets_Display = 'mo'" :class="['filter-btn', { active: repsAndSets_Display === 'mo' }]">{{ $t('dashboard.filters.monthly') }}</button>
-                      <button @click="repsAndSets_Display = 'wk'" :class="['filter-btn', { active: repsAndSets_Display === 'wk' }]">{{ $t('dashboard.filters.weekly') }}</button>
+                      <button v-for="filter in displayFilters" :key="filter.value" @click="repsAndSets_Display = filter.value" :class="['filter-btn', { active: repsAndSets_Display === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                   </div>
                 </div>
@@ -1118,15 +1139,10 @@ onMounted(() => {
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="prsOverTime_Range = 'all'" :class="['filter-btn', { active: prsOverTime_Range === 'all' }]">{{ $t('dashboard.filters.all') }}</button>
-                      <button @click="prsOverTime_Range = '1y'" :class="['filter-btn', { active: prsOverTime_Range === '1y' }]">{{ $t('dashboard.filters.oneYear') }}</button>
-                      <button @click="prsOverTime_Range = '6m'" :class="['filter-btn', { active: prsOverTime_Range === '6m' }]">{{ $t('dashboard.filters.sixMonths') }}</button>
-                      <button @click="prsOverTime_Range = '3m'" :class="['filter-btn', { active: prsOverTime_Range === '3m' }]">{{ $t('dashboard.filters.threeMonths') }}</button>
-                      <button @click="prsOverTime_Range = '1m'" :class="['filter-btn', { active: prsOverTime_Range === '1m' }]">{{ $t('dashboard.filters.oneMonth') }}</button>
+                      <button v-for="filter in rangeFilters" :key="filter.value" @click="prsOverTime_Range = filter.value" :class="['filter-btn', { active: prsOverTime_Range === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="prsOverTime_Display = 'mo'" :class="['filter-btn', { active: prsOverTime_Display === 'mo' }]">{{ $t('dashboard.filters.monthly') }}</button>
-                      <button @click="prsOverTime_Display = 'wk'" :class="['filter-btn', { active: prsOverTime_Display === 'wk' }]">{{ $t('dashboard.filters.weekly') }}</button>
+                      <button v-for="filter in displayFilters" :key="filter.value" @click="prsOverTime_Display = filter.value" :class="['filter-btn', { active: prsOverTime_Display === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                   </div>
                 </div>
@@ -1275,15 +1291,10 @@ onMounted(() => {
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="muscleDistribution_Range = 'all'" :class="['filter-btn', { active: muscleDistribution_Range === 'all' }]">{{ $t('dashboard.filters.all') }}</button>
-                      <button @click="muscleDistribution_Range = '1y'" :class="['filter-btn', { active: muscleDistribution_Range === '1y' }]">{{ $t('dashboard.filters.oneYear') }}</button>
-                      <button @click="muscleDistribution_Range = '6m'" :class="['filter-btn', { active: muscleDistribution_Range === '6m' }]">{{ $t('dashboard.filters.sixMonths') }}</button>
-                      <button @click="muscleDistribution_Range = '3m'" :class="['filter-btn', { active: muscleDistribution_Range === '3m' }]">{{ $t('dashboard.filters.threeMonths') }}</button>
-                      <button @click="muscleDistribution_Range = '1m'" :class="['filter-btn', { active: muscleDistribution_Range === '1m' }]">{{ $t('dashboard.filters.oneMonth') }}</button>
+                      <button v-for="filter in rangeFilters" :key="filter.value" @click="muscleDistribution_Range = filter.value" :class="['filter-btn', { active: muscleDistribution_Range === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="muscleDistribution_Grouping = 'groups'" :class="['filter-btn', { active: muscleDistribution_Grouping === 'groups' }]" title="Muscle Groups">{{ $t('dashboard.charts.muscleFilters.groups') }}</button>
-                      <button @click="muscleDistribution_Grouping = 'muscles'" :class="['filter-btn', { active: muscleDistribution_Grouping === 'muscles' }]" title="Individual Muscles">{{ $t('dashboard.charts.muscleFilters.muscles') }}</button>
+                      <button v-for="filter in groupingFilters" :key="filter.value" @click="muscleDistribution_Grouping = filter.value" :class="['filter-btn', { active: muscleDistribution_Grouping === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                   </div>
                 </div>
@@ -1312,18 +1323,13 @@ onMounted(() => {
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="muscleRegions_Range = 'all'" :class="['filter-btn', { active: muscleRegions_Range === 'all' }]">All</button>
-                      <button @click="muscleRegions_Range = '1y'" :class="['filter-btn', { active: muscleRegions_Range === '1y' }]">1Y</button>
-                      <button @click="muscleRegions_Range = '6m'" :class="['filter-btn', { active: muscleRegions_Range === '6m' }]">6M</button>
-                      <button @click="muscleRegions_Range = '3m'" :class="['filter-btn', { active: muscleRegions_Range === '3m' }]">3M</button>
+                      <button v-for="filter in rangeFilters" :key="filter.value" @click="muscleRegions_Range = filter.value" :class="['filter-btn', { active: muscleRegions_Range === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="muscleRegions_Display = 'mo'" :class="['filter-btn', { active: muscleRegions_Display === 'mo' }]">Mo</button>
-                      <button @click="muscleRegions_Display = 'wk'" :class="['filter-btn', { active: muscleRegions_Display === 'wk' }]">Wk</button>
+                      <button v-for="filter in displayFilters" :key="filter.value" @click="muscleRegions_Display = filter.value" :class="['filter-btn', { active: muscleRegions_Display === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="muscleRegions_Grouping = 'groups'" :class="['filter-btn', { active: muscleRegions_Grouping === 'groups' }]" title="Muscle Groups">Groups</button>
-                      <button @click="muscleRegions_Grouping = 'muscles'" :class="['filter-btn', { active: muscleRegions_Grouping === 'muscles' }]" title="Individual Muscles">Muscles</button>
+                      <button v-for="filter in groupingFilters" :key="filter.value" @click="muscleRegions_Grouping = filter.value" :class="['filter-btn', { active: muscleRegions_Grouping === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                   </div>
                 </div>
