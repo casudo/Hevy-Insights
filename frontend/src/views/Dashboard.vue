@@ -626,6 +626,13 @@ const totalMinutesAll = computed(() => {
 });
 const totalHoursAll = computed(() => Number((totalMinutesAll.value / 60).toFixed(2)));
 
+// Average workout duration
+const avgWorkoutMinutes = computed(() => {
+  if (totalWorkouts.value === 0) return "0m";
+  const minutes = Math.round(totalMinutesAll.value / totalWorkouts.value);
+  return formatDuration(minutes);
+});
+
 // Get exercises with plateaus - show most recent 5
 const plateauExercises = computed(() => {
   const locale = localStorage.getItem("language") || "en";
@@ -1047,6 +1054,12 @@ onMounted(() => {
           <div class="kpi-icon">⏳</div>
           <div class="kpi-value">{{ totalHoursAll }}</div>
           <div class="kpi-label">{{ $t("dashboard.stats.totalHoursTrained") }}</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon">⏱️</div>
+          <div class="kpi-value">{{ avgWorkoutMinutes }}</div>
+          <div class="kpi-label">{{ $t("dashboard.stats.avgWorkoutTime") }}</div>
         </div>
 
         <div class="kpi-card">

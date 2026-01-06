@@ -81,6 +81,7 @@
       "totalVolume": "Gesamtvolumen",
       "avgVolume": "Durchschnittsvolumen",
       "totalHoursTrained": "Trainingsstunden gesamt",
+      "avgWorkoutTime": "Durchschn. Workout-Zeit",
       "workoutStreak": "Workout-Streak (Wochen)",
       "mostTrainedExercise": "Häufigste Übung",
       "longestWorkout": "Längstes Workout",

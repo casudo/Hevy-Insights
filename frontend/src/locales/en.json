@@ -81,6 +81,7 @@
       "totalVolume": "Total Volume",
       "avgVolume": "Avg Volume",
       "totalHoursTrained": "Total Hours Trained",
+      "avgWorkoutTime": "Avg Workout Time",
       "workoutStreak": "Workout Streak (Weeks)",
       "mostTrainedExercise": "Most Trained Exercise",
       "longestWorkout": "Longest Workout",
