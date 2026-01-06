@@ -221,14 +221,14 @@ function analyzeStrengthProgress(ex: any) {
     if (change > 5) {
       return {
         type: "gaining",
-        message: t("exercises.insights.gainingCardio", { change: change.toFixed(1) })
+        message: t("exercises.insights.gainingCardio", { change: change.toFixed(1), sessions: minSessions })
       };
     }
     
     if (change < -5) {
       return {
         type: "losing",
-        message: t("exercises.insights.losingCardio", { change: Math.abs(change).toFixed(1) })
+        message: t("exercises.insights.losingCardio", { change: Math.abs(change).toFixed(1), sessions: minSessions })
       };
     }
     
@@ -285,7 +285,8 @@ function analyzeStrengthProgress(ex: any) {
         type: "gaining",
         message: t("exercises.insights.gaining", {
           weightChange: `${formatWeight(Math.abs(weightChange))} ${getWeightUnit()}`,
-          repsChange: Math.abs(repsChange).toFixed(0)
+          repsChange: Math.abs(repsChange).toFixed(0),
+          sessions: minSessions
         })
       };
     }
@@ -296,7 +297,8 @@ function analyzeStrengthProgress(ex: any) {
         type: "losing",
         message: t("exercises.insights.losing", {
           weightChange: `${formatWeight(Math.abs(weightChange))} ${getWeightUnit()}`,
-          repsChange: Math.abs(repsChange).toFixed(0)
+          repsChange: Math.abs(repsChange).toFixed(0),
+          sessions: minSessions
         })
       };
     }
