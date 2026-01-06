@@ -7,6 +7,7 @@ const store = useHevyCache();
 const { locale, t } = useI18n();
 const userAccount = computed(() => store.userAccount);
 const dataSource = computed(() => store.dataSource);
+const isUsingApiKey = computed(() => !!localStorage.getItem("hevy_api_key"));
 
 // Color theme presets
 const colorThemes = [
@@ -319,7 +320,11 @@ const resetSettings = () => {
           <div class="data-info-row">
             <span class="data-label">{{ t('settings.dataManagement.dataSource') }}</span>
             <span class="data-value" :class="dataSource">
-              {{ dataSource === "csv" ? "CSV Upload" : "Hevy API" }}
+              {{ 
+                dataSource === "csv" 
+                  ? "CSV Upload" 
+                  : (isUsingApiKey ? "Hevy PRO API" : "Hevy API")
+              }}
             </span>
           </div>
           <p v-if="dataSource === 'csv'" class="data-note">
