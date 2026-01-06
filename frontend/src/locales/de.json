@@ -87,6 +87,15 @@
       "sessions": "Sitzungen",
       "perWorkout": "pro Workout"
     },
+    "prTypes": {
+      "best_weight": "Gewicht",
+      "best_max": "Max",
+      "best_1rm": "1RM",
+      "best_volume": "Volumen",
+      "best_reps": "Wiederholungen",
+      "distance": "Distanz",
+      "duration": "Dauer"
+    },
     "charts": {
       "hoursTrained": "Trainingsstunden",
       "hoursTrainedDescription": "Trainingsdauer im Zeitverlauf",

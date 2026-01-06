@@ -108,6 +108,14 @@ const exercisePRs = (exercise: any): PRItem[] => {
 const exerciseHasPR = (exercise: any) => exercisePRs(exercise).length > 0;
 // Note: set-level highlighting reverted per request; keep extractor for future use if needed
 
+// Translate PR type names using i18n keys
+function getLocalizedPRType(prType: string): string {
+  const key = `dashboard.prTypes.${prType}`;
+  const translation = t(key);
+  if (translation === key) return prType.split("_").join(" ");
+  return translation;
+}
+
 const toggleExercise = (exerciseId: string) => {
   // Create a new object to ensure reactivity
   expandedExercises.value = {
@@ -224,7 +232,7 @@ onMounted(async () => {
 
               <div v-show="expandedExercises[exercise.id]" class="exercise-content">
                 <div v-if="exerciseHasPR(exercise)" class="pr-summary">
-                  <span v-for="(pr, i) in exercisePRs(exercise)" :key="i" class="pr-chip">{{ (pr.type || '').split('_').join(' ') }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
+                  <span v-for="(pr, i) in exercisePRs(exercise)" :key="i" class="pr-chip">{{ getLocalizedPRType(pr.type) }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
                 </div>
                 <table class="sets-table">
                   <thead>

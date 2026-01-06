@@ -81,6 +81,14 @@ function getRangeLabel(range: GraphRange): string {
   return `${range}d`;
 }
 
+// Translate PR type names using i18n keys
+function getLocalizedPRType(prType: string): string {
+  const key = `dashboard.prTypes.${prType}`;
+  const translation = t(key);
+  if (translation === key) return prType.split("_").join(" ");
+  return translation;
+}
+
 const allWorkouts = computed(() => store.workouts || []);
 
 onMounted(async () => {
@@ -978,7 +986,7 @@ const barChartOptions = {
               <div class="pr-list" v-if="ex.prDistinct && ex.prDistinct.length">
                 <h3>{{ $t("exercises.personalRecords") }}</h3>
                 <div class="pr-chips">
-                  <span v-for="(pr,i) in ex.prDistinct" :key="i" class="pr-chip">{{ (pr.type||'').split('_').join(' ') }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
+                  <span v-for="(pr,i) in ex.prDistinct" :key="i" class="pr-chip">{{ getLocalizedPRType(pr.type) }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
                 </div>
               </div>
               <!-- Stats -->

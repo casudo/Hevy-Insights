@@ -87,6 +87,15 @@
       "sessions": "sesiones",
       "perWorkout": "por entreno"
     },
+    "prTypes": {
+      "best_weight": "Peso",
+      "best_max": "Máx",
+      "best_1rm": "1RM",
+      "best_volume": "Volumen",
+      "best_reps": "Repeticiones",
+      "distance": "Distancia",
+      "duration": "Duración"
+    },
     "charts": {
       "hoursTrained": "Horas Entrenadas",
       "hoursTrainedDescription": "Duración del entreno a lo largo del tiempo",

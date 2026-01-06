@@ -87,6 +87,15 @@
       "sessions": "sessions",
       "perWorkout": "per workout"
     },
+    "prTypes": {
+      "best_weight": "Most Weight",
+      "best_max": "Best Max",
+      "best_1rm": "1RM",
+      "best_volume": "Best Volume",
+      "best_reps": "Most Reps",
+      "distance": "Distance",
+      "duration": "Duration"
+    },
     "charts": {
       "hoursTrained": "Hours Trained",
       "hoursTrainedDescription": "Training duration over time",

@@ -162,22 +162,10 @@ function getLocalizedMuscleName(muscleName: string): string {
 
 // Localize PR type name
 function getLocalizedPRType(prType: string): string {
-  // Convert underscores to spaces and lowercase
-  const normalizedType = prType.replace(/_/g, ' ').toLowerCase().trim();
-  
-  // Check for common PR types
-  const prTypeMap: Record<string, string> = {
-    'weight': t('dashboard.prTypes.weight'),
-    'max': t('dashboard.prTypes.max'),
-    '1rm': t('dashboard.prTypes.1rm'),
-    'volume': t('dashboard.prTypes.volume'),
-    'reps': t('dashboard.prTypes.reps'),
-    'distance': t('dashboard.prTypes.distance'),
-    'duration': t('dashboard.prTypes.duration')
-  };
-  
-  // Return translated if available, otherwise capitalize original
-  return prTypeMap[normalizedType] || prType.replace(/_/g, ' ');
+  const key = `dashboard.prTypes.${prType}`;
+  const translation = t(key);
+  if (translation === key) return prType.split("_").join(" ");
+  return translation;
 }
 
 // Get localized range filter label
@@ -740,7 +728,8 @@ const plateauExercises = computed(() => {
 
 // Get recent PRs - show last 5 PRs achieved
 const recentPRs = computed(() => {
-  const prsMap = new Map<string, { exercise: string; type: string; value: number; date: string }>();
+  const locale = localStorage.getItem("language") || "en";
+  const prsMap = new Map<string, { exercise: string; localizedExercise: string; type: string; localizedType: string; value: number; date: string }>();
   
   for (const w of workouts.value) {
     const date = new Date((w.start_time || 0) * 1000);
@@ -749,12 +738,21 @@ const recentPRs = computed(() => {
     for (const ex of (w.exercises || [])) {
       const exerciseName = ex.title || "Unknown Exercise";
       
+      // Get localized exercise title
+      let localizedExercise = exerciseName;
+      if (locale === "de" && ex.de_title) {
+        localizedExercise = ex.de_title;
+      } else if (locale === "es" && ex.es_title) {
+        localizedExercise = ex.es_title;
+      }
+      
       for (const s of (ex.sets || [])) {
         const prsArr = Array.isArray(s?.prs) ? s.prs : (s?.prs ? [s.prs] : []);
         const personalArr = Array.isArray(s?.personalRecords) ? s.personalRecords : (s?.personalRecords ? [s.personalRecords] : []);
         
         for (const pr of [...prsArr, ...personalArr].filter(Boolean)) {
-          const type = String(pr.type || '').replace(/_/g, ' ');
+          const type = String(pr.type || "");
+          const localizedType = getLocalizedPRType(type);
           const value = pr.value || 0;
           
           // Create unique key: exercise + type + value to avoid duplicates
@@ -765,7 +763,9 @@ const recentPRs = computed(() => {
           if (!existing || new Date(dateStr) > new Date(existing.date)) {
             prsMap.set(key, {
               exercise: exerciseName,
+              localizedExercise,
               type,
+              localizedType,
               value,
               date: dateStr
             });
@@ -1129,8 +1129,8 @@ onMounted(() => {
               >
                 <div class="pr-icon">🏆</div>
                 <div class="pr-content">
-                  <div class="pr-exercise">{{ pr.exercise }}</div>
-                  <div class="pr-type">{{ getLocalizedPRType(pr.type) }}</div>
+                  <div class="pr-exercise">{{ pr.localizedExercise }}</div>
+                  <div class="pr-type">{{ pr.localizedType }}</div>
                   <div class="pr-value">{{ formatPRValue(pr.type, pr.value) }}</div>
                 </div>
                 <div class="pr-date">{{ new Date(pr.date).toLocaleDateString() }}</div>

@@ -119,6 +119,14 @@ const workoutPRCount = (workout: any) => {
   return count;
 };
 
+// Translate PR type names using i18n keys
+function getLocalizedPRType(prType: string): string {
+  const key = `dashboard.prTypes.${prType}`;
+  const translation = t(key);
+  if (translation === key) return prType.split("_").join(" ");
+  return translation;
+}
+
 // Contribution graph (heatmap) data by day
 const workoutsByDay = computed(() => {
   const map: Record<string, any[]> = {};
@@ -309,7 +317,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
                   <div class="exercise-title">{{ exercise.title || "Unknown Exercise" }}</div>
                 </div>
               <div v-if="exercisePRs(exercise).length" class="pr-summary">
-                <span v-for="(pr, i) in exercisePRs(exercise)" :key="i" class="pr-chip">{{ (pr.type || '').split('_').join(' ') }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
+                <span v-for="(pr, i) in exercisePRs(exercise)" :key="i" class="pr-chip">{{ getLocalizedPRType(pr.type) }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
               </div>
               <table class="sets-table">
                 <thead>
