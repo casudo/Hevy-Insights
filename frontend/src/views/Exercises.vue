@@ -1557,7 +1557,7 @@ const barChartOptions = {
 .card-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); color: var(--text-primary); border: none; padding: 0.6rem 0.75rem; cursor: pointer; border-radius: 8px; }
 .toggle-left { display: flex; align-items: center; gap: 1rem; flex: 1; }
 .exercise-title-container { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; }
-.exercise-title { font-size: 1rem; font-weight: 600; }
+.exercise-title { font-size: 1rem; font-weight: 600; text-align: left; }
 .last-trained-date { font-size: 0.75rem; color: var(--text-secondary); font-weight: 400; }
 .insight-badge-container { display: flex; align-items: center; }
 .insight-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; transition: all 0.2s ease; }
