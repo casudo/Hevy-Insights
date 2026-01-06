@@ -181,20 +181,40 @@ Clone/download the repository and follow these steps:
 
 - Better logging
 - Replace localStorage with HTTP cookie
-- Handle exercises with time (planks, jogging)
-- Move contribution graph to Dashboard
-- Add a better visual line between months in the contribution graph
 - Add visual representation of trained muscle groups (body heatmap)
-- Add i18n variables to pagination localization (specifically footer)
 - Add calendar filter
 - In-depth muscle analysis page
 - Remove emojis, use icons instead
 - Resort/group CSS styles better
 - Dashboard: Top stats: Display them more in rows instead of big "buttons". Maybe like "🏋️ 25 Total Workouts * 💪 282.741,5 kg Total Volume * ⏱️ 34h 15m Total Time Trained"
-- PRs on Dashboard: Showing hardcoded english "title" of exercise, not localized
 - CSV upload: PRs not shown and muscle regions missing
-- Contribution Graph: Fix timeline (still shows 2025 + 2026 data). Only show current year.
 - Enable/configure settings for date format, time format, week start day
+- [Debounce typeahead search boxes](https://github.com/casudo/Hevy-Insights/issues/29)
+- Localization string fixes
+  - Workouts List
+    - "03:13 PM" time format in workout list
+- Date formatting inconsistencies
+  - Dashboard
+    - PRs achieved date: "DD.MM.YYYY"
+    - Graph X-Axis: "YYYY-MM"
+    - Workout Calender: "YYYY-MM-DD"
+  - Workouts (Card)
+    - Workout date: "DD.MM.YYYY, HH:MM:SS"
+  - Workouts (List)
+    - Workout date: "MM/DD/YYYY"
+  - Exercises
+    - Top 3 Best Sets date: YYYY-MM-DD
+    - Graph X-Axis: "Dec 1, 2025"
+    - Max weight vs reps graph hover over: "Dec 1, 2025"
+- Data Source: Add Hevy PRO API
+- Gaining text: "you have increased over your last N sessions" add the amount of N configured in settings
+- Mobile: workout details not filling out whole exercise container (Same for list and card)
+- Dashboard: Detected plateaus showing exercises which are marked as „New“ in Exercises.vue page
+- New stat: Average Workout time
+- On mobile: Fix padding and margin for "workouts-card-header", "workouts-list-header" and "exercises-header" (too big, blank space). Also decrease it for Dashboard.vue and Exercises.vue pages to gain more space on mobile
+- - To get more space on mobile: Dashboard charts: Remove Description and Filters. Add a „i“ button which shows the desc and a filter button so the user can switch filters
+- Exercises: Some exercise names start left, some in the middle
+- Exercises.vue: On mobile reduce padding to the side so that the graphs appear bigger (just like on Dashboard.vue)
 
 ---
 
