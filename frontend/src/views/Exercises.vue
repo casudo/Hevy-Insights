@@ -71,6 +71,16 @@ function getGraphFilter(exerciseId: string) {
   return graphFilters.value[exerciseId];
 }
 
+// Get localized range label
+function getRangeLabel(range: GraphRange): string {
+  if (range === 0) return t("exercises.filters.allTime");
+  if (range === 30) return t("exercises.filters.30days");
+  if (range === 60) return t("exercises.filters.60days");
+  if (range === 90) return t("exercises.filters.90days");
+  if (range === 365) return t("exercises.filters.1year");
+  return `${range}d`;
+}
+
 const allWorkouts = computed(() => store.workouts || []);
 
 onMounted(async () => {
@@ -1089,7 +1099,7 @@ const barChartOptions = {
                         :class="['range-btn', { active: getGraphFilter(ex.id).maxWeight.range === range }]"
                         @click="getGraphFilter(ex.id).maxWeight.range = range as GraphRange"
                       >
-                        {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
+                        {{ getRangeLabel(range as GraphRange) }}
                       </button>
                     </div>
                     <div class="type-selector">
@@ -1132,7 +1142,7 @@ const barChartOptions = {
                         :class="['range-btn', { active: getGraphFilter(ex.id).avgVolume.range === range }]"
                         @click="getGraphFilter(ex.id).avgVolume.range = range as GraphRange"
                       >
-                        {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
+                        {{ getRangeLabel(range as GraphRange) }}
                       </button>
                     </div>
                     <div class="type-selector">
@@ -1175,7 +1185,7 @@ const barChartOptions = {
                         :class="['range-btn', { active: getGraphFilter(ex.id).weightVsReps.range === range }]"
                         @click="getGraphFilter(ex.id).weightVsReps.range = range as GraphRange"
                       >
-                        {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
+                        {{ getRangeLabel(range as GraphRange) }}
                       </button>
                     </div>
                   </div>
@@ -1197,7 +1207,7 @@ const barChartOptions = {
                         :class="['range-btn', { active: getGraphFilter(ex.id).volumeSession.range === range }]"
                         @click="getGraphFilter(ex.id).volumeSession.range = range as GraphRange"
                       >
-                        {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
+                        {{ getRangeLabel(range as GraphRange) }}
                       </button>
                     </div>
                     <div class="type-selector">

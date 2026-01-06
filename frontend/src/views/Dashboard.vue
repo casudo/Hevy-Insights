@@ -5,6 +5,7 @@ import { useHevyCache } from "../stores/hevy_cache";
 import { calculateCSVStats, calculatePRsGrouped, calculateMuscleDistribution } from "../utils/csvCalculator";
 import { formatDuration, formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
 import { Line, Doughnut, Radar, Bar } from "vue-chartjs";
+import { useI18n } from "vue-i18n";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,6 +33,7 @@ ChartJS.register(
   Legend
 );
 
+const { t } = useI18n();
 const store = useHevyCache();
 const router = useRouter();
 const chartData = ref<any>(null);
@@ -163,7 +165,7 @@ const formatPeriodLabel = (period: string, displayStyle: DisplayStyle): string =
   if (displayStyle === "wk") {
     const date = new Date(period);
     const weekNum = getWeekNumber(date);
-    return `CW ${weekNum}`;
+    return `${t("dashboard.charts.calendarWeek")} ${weekNum}`;
   }
   return period; // Monthly: keep as "YYYY-MM"
 };
@@ -292,7 +294,15 @@ const prsOverTime_Data = computed(() => {
 
 // Weekly Rhythm - Distribution across days of week
 const weeklyRhythm_Data = computed(() => {
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const days = [
+    t("global.days.mondayLong"),
+    t("global.days.tuesdayLong"),
+    t("global.days.wednesdayLong"),
+    t("global.days.thursdayLong"),
+    t("global.days.fridayLong"),
+    t("global.days.saturdayLong"),
+    t("global.days.sundayLong")
+  ];
   const counts = [0, 0, 0, 0, 0, 0, 0];
   
   for (const w of workouts.value) {
@@ -949,15 +959,15 @@ onMounted(() => {
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="hoursTrained_Range = 'all'" :class="['filter-btn', { active: hoursTrained_Range === 'all' }]" title="All Time">All</button>
-                      <button @click="hoursTrained_Range = '1y'" :class="['filter-btn', { active: hoursTrained_Range === '1y' }]" title="1 Year">1Y</button>
-                      <button @click="hoursTrained_Range = '6m'" :class="['filter-btn', { active: hoursTrained_Range === '6m' }]" title="6 Months">6M</button>
-                      <button @click="hoursTrained_Range = '3m'" :class="['filter-btn', { active: hoursTrained_Range === '3m' }]" title="3 Months">3M</button>
-                      <button @click="hoursTrained_Range = '1m'" :class="['filter-btn', { active: hoursTrained_Range === '1m' }]" title="1 Month">1M</button>
+                      <button @click="hoursTrained_Range = 'all'" :class="['filter-btn', { active: hoursTrained_Range === 'all' }]" title="All Time">{{ $t('dashboard.filters.all') }}</button>
+                      <button @click="hoursTrained_Range = '1y'" :class="['filter-btn', { active: hoursTrained_Range === '1y' }]" title="1 Year">{{ $t('dashboard.filters.oneYear') }}</button>
+                      <button @click="hoursTrained_Range = '6m'" :class="['filter-btn', { active: hoursTrained_Range === '6m' }]" title="6 Months">{{ $t('dashboard.filters.sixMonths') }}</button>
+                      <button @click="hoursTrained_Range = '3m'" :class="['filter-btn', { active: hoursTrained_Range === '3m' }]" title="3 Months">{{ $t('dashboard.filters.threeMonths') }}</button>
+                      <button @click="hoursTrained_Range = '1m'" :class="['filter-btn', { active: hoursTrained_Range === '1m' }]" title="1 Month">{{ $t('dashboard.filters.oneMonth') }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="hoursTrained_Display = 'mo'" :class="['filter-btn', { active: hoursTrained_Display === 'mo' }]" title="Monthly">Mo</button>
-                      <button @click="hoursTrained_Display = 'wk'" :class="['filter-btn', { active: hoursTrained_Display === 'wk' }]" title="Weekly">Wk</button>
+                      <button @click="hoursTrained_Display = 'mo'" :class="['filter-btn', { active: hoursTrained_Display === 'mo' }]" title="Monthly">{{ $t('dashboard.filters.monthly') }}</button>
+                      <button @click="hoursTrained_Display = 'wk'" :class="['filter-btn', { active: hoursTrained_Display === 'wk' }]" title="Weekly">{{ $t('dashboard.filters.weekly') }}</button>
                     </div>
                   </div>
                 </div>
@@ -992,15 +1002,15 @@ onMounted(() => {
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="volumeProgression_Range = 'all'" :class="['filter-btn', { active: volumeProgression_Range === 'all' }]">All</button>
-                      <button @click="volumeProgression_Range = '1y'" :class="['filter-btn', { active: volumeProgression_Range === '1y' }]">1Y</button>
-                      <button @click="volumeProgression_Range = '6m'" :class="['filter-btn', { active: volumeProgression_Range === '6m' }]">6M</button>
-                      <button @click="volumeProgression_Range = '3m'" :class="['filter-btn', { active: volumeProgression_Range === '3m' }]">3M</button>
-                      <button @click="volumeProgression_Range = '1m'" :class="['filter-btn', { active: volumeProgression_Range === '1m' }]">1M</button>
+                      <button @click="volumeProgression_Range = 'all'" :class="['filter-btn', { active: volumeProgression_Range === 'all' }]">{{ $t('dashboard.filters.all') }}</button>
+                      <button @click="volumeProgression_Range = '1y'" :class="['filter-btn', { active: volumeProgression_Range === '1y' }]">{{ $t('dashboard.filters.oneYear') }}</button>
+                      <button @click="volumeProgression_Range = '6m'" :class="['filter-btn', { active: volumeProgression_Range === '6m' }]">{{ $t('dashboard.filters.sixMonths') }}</button>
+                      <button @click="volumeProgression_Range = '3m'" :class="['filter-btn', { active: volumeProgression_Range === '3m' }]">{{ $t('dashboard.filters.threeMonths') }}</button>
+                      <button @click="volumeProgression_Range = '1m'" :class="['filter-btn', { active: volumeProgression_Range === '1m' }]">{{ $t('dashboard.filters.oneMonth') }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="volumeProgression_Display = 'mo'" :class="['filter-btn', { active: volumeProgression_Display === 'mo' }]">Mo</button>
-                      <button @click="volumeProgression_Display = 'wk'" :class="['filter-btn', { active: volumeProgression_Display === 'wk' }]">Wk</button>
+                      <button @click="volumeProgression_Display = 'mo'" :class="['filter-btn', { active: volumeProgression_Display === 'mo' }]">{{ $t('dashboard.filters.monthly') }}</button>
+                      <button @click="volumeProgression_Display = 'wk'" :class="['filter-btn', { active: volumeProgression_Display === 'wk' }]">{{ $t('dashboard.filters.weekly') }}</button>
                     </div>
                   </div>
                 </div>
@@ -1035,15 +1045,15 @@ onMounted(() => {
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="repsAndSets_Range = 'all'" :class="['filter-btn', { active: repsAndSets_Range === 'all' }]">All</button>
-                      <button @click="repsAndSets_Range = '1y'" :class="['filter-btn', { active: repsAndSets_Range === '1y' }]">1Y</button>
-                      <button @click="repsAndSets_Range = '6m'" :class="['filter-btn', { active: repsAndSets_Range === '6m' }]">6M</button>
-                      <button @click="repsAndSets_Range = '3m'" :class="['filter-btn', { active: repsAndSets_Range === '3m' }]">3M</button>
-                      <button @click="repsAndSets_Range = '1m'" :class="['filter-btn', { active: repsAndSets_Range === '1m' }]">1M</button>
+                      <button @click="repsAndSets_Range = 'all'" :class="['filter-btn', { active: repsAndSets_Range === 'all' }]">{{ $t('dashboard.filters.all') }}</button>
+                      <button @click="repsAndSets_Range = '1y'" :class="['filter-btn', { active: repsAndSets_Range === '1y' }]">{{ $t('dashboard.filters.oneYear') }}</button>
+                      <button @click="repsAndSets_Range = '6m'" :class="['filter-btn', { active: repsAndSets_Range === '6m' }]">{{ $t('dashboard.filters.sixMonths') }}</button>
+                      <button @click="repsAndSets_Range = '3m'" :class="['filter-btn', { active: repsAndSets_Range === '3m' }]">{{ $t('dashboard.filters.threeMonths') }}</button>
+                      <button @click="repsAndSets_Range = '1m'" :class="['filter-btn', { active: repsAndSets_Range === '1m' }]">{{ $t('dashboard.filters.oneMonth') }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="repsAndSets_Display = 'mo'" :class="['filter-btn', { active: repsAndSets_Display === 'mo' }]">Mo</button>
-                      <button @click="repsAndSets_Display = 'wk'" :class="['filter-btn', { active: repsAndSets_Display === 'wk' }]">Wk</button>
+                      <button @click="repsAndSets_Display = 'mo'" :class="['filter-btn', { active: repsAndSets_Display === 'mo' }]">{{ $t('dashboard.filters.monthly') }}</button>
+                      <button @click="repsAndSets_Display = 'wk'" :class="['filter-btn', { active: repsAndSets_Display === 'wk' }]">{{ $t('dashboard.filters.weekly') }}</button>
                     </div>
                   </div>
                 </div>
@@ -1108,15 +1118,15 @@ onMounted(() => {
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="prsOverTime_Range = 'all'" :class="['filter-btn', { active: prsOverTime_Range === 'all' }]">All</button>
-                      <button @click="prsOverTime_Range = '1y'" :class="['filter-btn', { active: prsOverTime_Range === '1y' }]">1Y</button>
-                      <button @click="prsOverTime_Range = '6m'" :class="['filter-btn', { active: prsOverTime_Range === '6m' }]">6M</button>
-                      <button @click="prsOverTime_Range = '3m'" :class="['filter-btn', { active: prsOverTime_Range === '3m' }]">3M</button>
-                      <button @click="prsOverTime_Range = '1m'" :class="['filter-btn', { active: prsOverTime_Range === '1m' }]">1M</button>
+                      <button @click="prsOverTime_Range = 'all'" :class="['filter-btn', { active: prsOverTime_Range === 'all' }]">{{ $t('dashboard.filters.all') }}</button>
+                      <button @click="prsOverTime_Range = '1y'" :class="['filter-btn', { active: prsOverTime_Range === '1y' }]">{{ $t('dashboard.filters.oneYear') }}</button>
+                      <button @click="prsOverTime_Range = '6m'" :class="['filter-btn', { active: prsOverTime_Range === '6m' }]">{{ $t('dashboard.filters.sixMonths') }}</button>
+                      <button @click="prsOverTime_Range = '3m'" :class="['filter-btn', { active: prsOverTime_Range === '3m' }]">{{ $t('dashboard.filters.threeMonths') }}</button>
+                      <button @click="prsOverTime_Range = '1m'" :class="['filter-btn', { active: prsOverTime_Range === '1m' }]">{{ $t('dashboard.filters.oneMonth') }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="prsOverTime_Display = 'mo'" :class="['filter-btn', { active: prsOverTime_Display === 'mo' }]">Mo</button>
-                      <button @click="prsOverTime_Display = 'wk'" :class="['filter-btn', { active: prsOverTime_Display === 'wk' }]">Wk</button>
+                      <button @click="prsOverTime_Display = 'mo'" :class="['filter-btn', { active: prsOverTime_Display === 'mo' }]">{{ $t('dashboard.filters.monthly') }}</button>
+                      <button @click="prsOverTime_Display = 'wk'" :class="['filter-btn', { active: prsOverTime_Display === 'wk' }]">{{ $t('dashboard.filters.weekly') }}</button>
                     </div>
                   </div>
                 </div>
@@ -1167,7 +1177,7 @@ onMounted(() => {
                 <div class="insight-content">
                   <div class="insight-label">{{ $t('dashboard.stats.mostTrainedExercise') }}</div>
                   <div class="insight-value">{{ mostTrainedExercise.name }}</div>
-                  <div class="insight-meta">{{ mostTrainedExercise.count }} sessions</div>
+                  <div class="insight-meta">{{ mostTrainedExercise.count }} {{ $t('dashboard.stats.sessions') }}</div>
                 </div>
               </div>
 
@@ -1186,7 +1196,7 @@ onMounted(() => {
                 <div class="insight-content">
                   <div class="insight-label">{{ $t('dashboard.stats.avgVolume') }}</div>
                   <div class="insight-value">{{ formatWeight(avgVolume) }} {{ getWeightUnit() }}</div>
-                  <div class="insight-meta">per workout</div>
+                  <div class="insight-meta">{{ $t('dashboard.stats.perWorkout') }}</div>
                 </div>
               </div>
             </div>
@@ -1265,15 +1275,15 @@ onMounted(() => {
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="muscleDistribution_Range = 'all'" :class="['filter-btn', { active: muscleDistribution_Range === 'all' }]">All</button>
-                      <button @click="muscleDistribution_Range = '1y'" :class="['filter-btn', { active: muscleDistribution_Range === '1y' }]">1Y</button>
-                      <button @click="muscleDistribution_Range = '6m'" :class="['filter-btn', { active: muscleDistribution_Range === '6m' }]">6M</button>
-                      <button @click="muscleDistribution_Range = '3m'" :class="['filter-btn', { active: muscleDistribution_Range === '3m' }]">3M</button>
-                      <button @click="muscleDistribution_Range = '1m'" :class="['filter-btn', { active: muscleDistribution_Range === '1m' }]">1M</button>
+                      <button @click="muscleDistribution_Range = 'all'" :class="['filter-btn', { active: muscleDistribution_Range === 'all' }]">{{ $t('dashboard.filters.all') }}</button>
+                      <button @click="muscleDistribution_Range = '1y'" :class="['filter-btn', { active: muscleDistribution_Range === '1y' }]">{{ $t('dashboard.filters.oneYear') }}</button>
+                      <button @click="muscleDistribution_Range = '6m'" :class="['filter-btn', { active: muscleDistribution_Range === '6m' }]">{{ $t('dashboard.filters.sixMonths') }}</button>
+                      <button @click="muscleDistribution_Range = '3m'" :class="['filter-btn', { active: muscleDistribution_Range === '3m' }]">{{ $t('dashboard.filters.threeMonths') }}</button>
+                      <button @click="muscleDistribution_Range = '1m'" :class="['filter-btn', { active: muscleDistribution_Range === '1m' }]">{{ $t('dashboard.filters.oneMonth') }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="muscleDistribution_Grouping = 'groups'" :class="['filter-btn', { active: muscleDistribution_Grouping === 'groups' }]" title="Muscle Groups">Groups</button>
-                      <button @click="muscleDistribution_Grouping = 'muscles'" :class="['filter-btn', { active: muscleDistribution_Grouping === 'muscles' }]" title="Individual Muscles">Muscles</button>
+                      <button @click="muscleDistribution_Grouping = 'groups'" :class="['filter-btn', { active: muscleDistribution_Grouping === 'groups' }]" title="Muscle Groups">{{ $t('dashboard.charts.muscleFilters.groups') }}</button>
+                      <button @click="muscleDistribution_Grouping = 'muscles'" :class="['filter-btn', { active: muscleDistribution_Grouping === 'muscles' }]" title="Individual Muscles">{{ $t('dashboard.charts.muscleFilters.muscles') }}</button>
                     </div>
                   </div>
                 </div>

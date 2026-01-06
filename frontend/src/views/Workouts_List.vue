@@ -70,7 +70,7 @@ const filteredAndSearchedWorkouts = computed(() => {
 // Helpers
 const formatDateFull = (timestamp: number) => {
   const d = new Date(timestamp * 1000);
-  const days = [t("global.sunday"), t("global.monday"), t("global.tuesday"), t("global.wednesday"), t("global.thursday"), t("global.friday"), t("global.saturday")];
+  const days = [t("global.days.sundayLong"), t("global.days.mondayLong"), t("global.days.tuesdayLong"), t("global.days.wednesdayLong"), t("global.days.thursdayLong"), t("global.days.fridayLong"), t("global.days.saturdayLong")];
   const dayName = days[d.getDay()];
   const usDate = d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }); // MM/DD/YYYY
   const time = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
@@ -194,8 +194,8 @@ onMounted(async () => { await store.fetchWorkouts(); });
     <div class="workouts-list-header">
       <div class="header-content">
         <div class="title-section">
-          <h1>{{ $t('workouts.workoutsListTitle') }}</h1>
-          <p class="subtitle">{{ $t('workouts.workoutsListSubtitle') }}</p>
+          <h1>{{ $t('workouts.list.title') }}</h1>
+          <p class="subtitle">{{ $t('workouts.list.subtitle') }}</p>
         </div>
 
         <div class="header-actions">
@@ -314,7 +314,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
               <table class="sets-table">
                 <thead>
                   <tr>
-                    <th>Set</th>
+                    <th>{{ $t('workouts.list.set') }}</th>
                     <!-- Dynamic headers based on exercise type -->
                     <template v-if="detectExerciseType(exercise) === 'cardio'">
                       <th>{{ $t('global.distance') }}</th>
@@ -322,7 +322,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
                     </template>
                     <template v-else>
                       <th>{{ $t('global.weight') }} ({{ getWeightUnit() }})</th>
-                      <th>Reps</th>
+                      <th>{{ $t('workouts.list.reps') }}</th>
                     </template>
                     <th>RPE</th>
                   </tr>

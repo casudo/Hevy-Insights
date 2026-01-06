@@ -106,10 +106,10 @@ watch(selectedGraphAxisFormat, (newFormat) => {
 });
 
 // Weight unit settings
-const weightUnits = [
-  { label: "Kilograms (kg)", value: "kg" },
-  { label: "Pounds (lbs)", value: "lbs" },
-];
+const weightUnits = computed(() => [
+  { label: `${t('settings.weightUnit.kg')} (kg)`, value: "kg" },
+  { label: `${t('settings.weightUnit.lbs')} (lbs)`, value: "lbs" },
+]);
 
 const selectedWeightUnit = ref<string>(store.weightUnit);
 

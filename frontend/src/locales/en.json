@@ -67,6 +67,15 @@
       "calendarViews": "Calendar Views",
       "muscleDistribution": "Muscle Distribution"
     },
+    "filters": {
+      "all": "All",
+      "oneYear": "1Y",
+      "sixMonths": "6M",
+      "threeMonths": "3M",
+      "oneMonth": "1M",
+      "monthly": "Mo",
+      "weekly": "Wk"
+    },
     "stats": {
       "totalWorkouts": "Total Workouts",
       "totalVolume": "Total Volume",
@@ -74,7 +83,9 @@
       "totalHoursTrained": "Total Hours Trained",
       "workoutStreak": "Workout Streak (Weeks)",
       "mostTrainedExercise": "Most Trained Exercise",
-      "longestWorkout": "Longest Workout"
+      "longestWorkout": "Longest Workout",
+      "sessions": "sessions",
+      "perWorkout": "per workout"
     },
     "charts": {
       "hoursTrained": "Hours Trained",
@@ -85,19 +96,36 @@
       "repsAndSetsDescription": "Training volume breakdown",
       "PRsOverTime": "PRs Over Time",
       "PRsOverTimeDescription": "Personal records achieved",
+      "workoutCalender": "Workout Calendar",
+      "workoutCalenderDescription": "Workout consistency over the 12 months",
       "weeklyRhythm": "Weekly Rhythm",
       "weeklyRhythmDescription": "Training frequency by day",
       "muscleDistribution": "Muscle Distribution",
       "muscleDistributionDescription": "Sets by muscle group",
       "muscleRegions": "Muscle Regions",
-      "muscleRegionsDescription": "Stacked breakdown by period"
+      "muscleRegionsDescription": "Stacked breakdown by period",
+      "calendarWeek": "CW",
+      "muscleFilters": {
+        "groups": "GROUPS",
+        "muscles": "MUSCLE"
+      }
     }
   },
   "workouts": {
-    "workoutsCardTitle": "Workouts (Card)",
-    "workoutsCardSubtitle": "Browse your workouts in a card design.",
-    "workoutsListTitle": "Workouts (List)",
-    "workoutsListSubtitle": "Browse your workouts in a detailed list format with contribution calendar."
+    "card": {
+      "title": "Workouts (Card)",
+      "subtitle": "Browse your workouts in a card design.",
+      "totalSets": "Total Sets",
+      "set": "Set",
+      "reps": "Reps"
+    },
+    "list": {
+      "title": "Workouts (List)",
+      "subtitle": "Browse your workouts in a detailed list format with contribution calendar.",
+      "searchPlaceholder": "Search by workout number or exercise name...",
+      "set": "Set",
+      "reps": "Reps"
+    }
   },
   "exercises": {
     "title": "Exercises",
@@ -105,6 +133,13 @@
     "searchFilter": "Search exercises by name...",
     "personalRecords": "Personal Records",
     "neverTrained": "Never trained",
+    "filters": {
+      "30days": "30d",
+      "60days": "60d",
+      "90days": "90d",
+      "1year": "1year",
+      "allTime": "All"
+    },
     "summary": {
       "total": "Total",
       "active": "Active"
@@ -181,7 +216,9 @@
     },
     "weightUnit": {
       "title": "Weight Unit",
-      "description": "Choose your preferred weight unit for display"
+      "description": "Choose your preferred weight unit for display",
+      "kg": "Kilogram",
+      "lbs": "Pound"
     },
     "plateauDetection": {
       "title": "Plateau Detection",
@@ -208,27 +245,77 @@
     "weight": "Weight",
     "notes": "Notes",
     "description": "Description",
-    "monday": "Monday",
-    "tuesday": "Tuesday",
-    "wednesday": "Wednesday",
-    "thursday": "Thursday",
-    "friday": "Friday",
-    "saturday": "Saturday",
-    "sunday": "Sunday",
+    "muscles": "Muscles",
+    "groups": "Groups",
+    "days": {
+      "mondayLong": "Monday",
+      "tuesdayLong": "Tuesday",
+      "wednesdayLong": "Wednesday",
+      "thursdayLong": "Thursday",
+      "fridayLong": "Friday",
+      "saturdayLong": "Saturday",
+      "sundayLong": "Sunday",
+      "mondayShort": "Mon",
+      "tuesdayShort": "Tue",
+      "wednesdayShort": "Wed",
+      "thursdayShort": "Thu",
+      "fridayShort": "Fri",
+      "saturdayShort": "Sat",
+      "sundayShort": "Sun"
+    },
+    "months": {
+      "januaryLong": "January",
+      "februaryLong": "February",
+      "marchLong": "March",
+      "aprilLong": "April",
+      "mayLong": "May",
+      "juneLong": "June",
+      "julyLong": "July",
+      "augustLong": "August",
+      "septemberLong": "September",
+      "octoberLong": "October",
+      "novemberLong": "November",
+      "decemberLong": "December",
+      "januaryShort": "Jan",
+      "februaryShort": "Feb",
+      "marchShort": "Mar",
+      "aprilShort": "Apr",
+      "mayShort": "May",
+      "juneShort": "Jun",
+      "julyShort": "Jul",
+      "augustShort": "Aug",
+      "septemberShort": "Sep",
+      "octoberShort": "Oct",
+      "novemberShort": "Nov",
+      "decemberShort": "Dec"
+    },
+    "bodymuscles": {
+      "chest": "Chest",
+      "back": "Back",
+      "shoulders": "Shoulders",
+      "arms": "Arms",
+      "core": "Core",
+      "legs": "Legs",
+      "abdominals": "Abdominals",
+      "abductors": "Abductors",
+      "adductors": "Adductors",
+      "biceps": "Biceps",
+      "calves": "Calves",
+      "glutes": "Glutes",
+      "hamstrings": "Hamstrings",
+      "lats": "Lats",
+      "lowerBack": "Lower Back",
+      "quadriceps": "Quadriceps",
+      "triceps": "Triceps",
+      "upperBack": "Upper Back"
+    },
     "day": "Day",
-    "arms": "Arms",
-    "back": "Back",
-    "chest": "Chest",
-    "core": "Core",
-    "legs": "Legs",
-    "shoulders": "Shoulders",
     "pagination": {
       "first": "First",
       "previous": "Previous",
       "next": "Next",
       "last": "Last",
-      "page": "Page",
-      "pageOf": "of"
+      "indicator": "Page {current} of {total}"
     },
     "searchFilter": {
       "byNumber": "By Number",

@@ -132,8 +132,8 @@ onMounted(async () => {
     <div class="workouts-card-header">
       <div class="header-content">
         <div class="title-section">
-          <h1>{{ $t('workouts.workoutsCardTitle') }}</h1>
-          <p class="subtitle">{{ $t('workouts.workoutsCardSubtitle') }}</p>
+          <h1>{{ $t('workouts.card.title') }}</h1>
+          <p class="subtitle">{{ $t('workouts.card.subtitle') }}</p>
         </div>
 
         <div class="header-actions">
@@ -166,7 +166,7 @@ onMounted(async () => {
         <div class="pagination-controls">
           <button @click="firstPage" :disabled="!hasPrev" class="pagination-btn">《 {{ $t('global.pagination.first') }}</button>
           <button @click="prevPage" :disabled="!hasPrev" class="pagination-btn">← {{ $t('global.pagination.previous') }}</button>
-          <span class="page-info">{{ $t('global.pagination.page') }} {{ currentPage }} {{ $t('global.pagination.pageOf') }} {{ totalPages }}</span>
+          <span class="page-info">{{ $t('global.pagination.indicator', { current: currentPage, total: totalPages }) }}</span>
           <button @click="nextPage" :disabled="!hasMore" class="pagination-btn">{{ $t('global.pagination.next') }} →</button>
           <button @click="lastPage" :disabled="!hasMore" class="pagination-btn">{{ $t('global.pagination.last') }} 》</button>
         </div>
@@ -204,7 +204,7 @@ onMounted(async () => {
             <div class="stat"><strong>{{ formatWeight(workout.estimated_volume_kg || 0) }} {{ getWeightUnit() }}</strong><span>{{ $t('global.volume') }}</span></div>
             <div class="stat"><strong>{{ formatDurationFromTimestamps(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.duration') }}</span></div>
             <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.exercises') }}</span></div>
-            <div class="stat"><strong>{{ totalSets(workout) }}</strong><span>Total Sets</span></div>
+            <div class="stat"><strong>{{ totalSets(workout) }}</strong><span>{{ $t('workouts.card.totalSets') }}</span></div>
           </div>
 
           <div v-if="workout.description" class="workout-description">
@@ -227,7 +227,7 @@ onMounted(async () => {
                 <table class="sets-table">
                   <thead>
                     <tr>
-                      <th>Set</th>
+                      <th>{{ $t('workouts.card.set') }}</th>
                       <!-- Dynamic headers based on exercise type -->
                       <template v-if="detectExerciseType(exercise) === 'cardio'">
                         <th>{{ $t('global.distance') }}</th>
@@ -235,7 +235,7 @@ onMounted(async () => {
                       </template>
                       <template v-else>
                         <th>{{ $t('global.weight') }} ({{ getWeightUnit() }})</th>
-                        <th>Reps</th>
+                        <th>{{ $t('workouts.card.reps') }}</th>
                       </template>
                       <th>RPE</th>
                     </tr>
