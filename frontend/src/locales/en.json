@@ -306,10 +306,10 @@
       "glutes": "Glutes",
       "hamstrings": "Hamstrings",
       "lats": "Lats",
-      "lowerBack": "Lower Back",
+      "lower_back": "Lower Back",
       "quadriceps": "Quadriceps",
       "triceps": "Triceps",
-      "upperBack": "Upper Back"
+      "upper_back": "Upper Back"
     },
     "pagination": {
       "first": "First",

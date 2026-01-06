@@ -306,10 +306,10 @@
       "glutes": "Glúteos",
       "hamstrings": "Isquios",
       "lats": "Dorsales",
-      "lowerBack": "Lumbar",
+      "lower_back": "Lumbar",
       "quadriceps": "Cuádriceps",
       "triceps": "Tríceps",
-      "upperBack": "Espalda Superior"
+      "upper_back": "Espalda Superior"
     },
     "pagination": {
       "first": "Primero",

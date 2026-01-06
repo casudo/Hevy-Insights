@@ -149,6 +149,37 @@ function groupMuscles(muscleGroup: string): string {
   // Default: return original
   return muscleGroup;
 }
+
+// Localize muscle name
+function getLocalizedMuscleName(muscleName: string): string {
+  const key = muscleName.toLowerCase().replace(/\s+/g, "");
+  // Check if we have a direct translation
+  const translationKey = `global.bodymuscles.${key}`;
+  const translated = t(translationKey);
+  // If translation exists and is different from the key, use it
+  return translated !== translationKey ? translated : muscleName;
+}
+
+// Localize PR type name
+function getLocalizedPRType(prType: string): string {
+  // Convert underscores to spaces and lowercase
+  const normalizedType = prType.replace(/_/g, ' ').toLowerCase().trim();
+  
+  // Check for common PR types
+  const prTypeMap: Record<string, string> = {
+    'weight': t('dashboard.prTypes.weight'),
+    'max': t('dashboard.prTypes.max'),
+    '1rm': t('dashboard.prTypes.1rm'),
+    'volume': t('dashboard.prTypes.volume'),
+    'reps': t('dashboard.prTypes.reps'),
+    'distance': t('dashboard.prTypes.distance'),
+    'duration': t('dashboard.prTypes.duration')
+  };
+  
+  // Return translated if available, otherwise capitalize original
+  return prTypeMap[normalizedType] || prType.replace(/_/g, ' ');
+}
+
 // Get localized range filter label
 function getRangeLabel(range: Range): string {
   if (range === "all") return t("dashboard.filters.all");
@@ -335,6 +366,120 @@ const weeklyRhythm_Data = computed(() => {
   };
 });
 
+// ========== CALENDAR HEATMAP (12-Month Contribution Graph) ==========
+
+// Group workouts by date (YYYY-MM-DD)
+const workoutsByDay = computed(() => {
+  const map: Record<string, number> = {};
+  for (const w of workouts.value) {
+    const date = new Date((w.start_time || 0) * 1000);
+    const dayKey = date.toISOString().slice(0, 10);
+    map[dayKey] = (map[dayKey] || 0) + 1;
+  }
+  return map;
+});
+
+// Generate calendar data for the last 12 months (grouped by month)
+const calendarData = computed(() => {
+  const monthNames = [
+    t("global.months.januaryShort"), 
+    t("global.months.februaryShort"),
+    t("global.months.marchShort"),
+    t("global.months.aprilShort"),
+    t("global.months.mayShort"),
+    t("global.months.juneShort"),
+    t("global.months.julyShort"),
+    t("global.months.augustShort"),
+    t("global.months.septemberShort"),
+    t("global.months.octoberShort"),
+    t("global.months.novemberShort"),
+    t("global.months.decemberShort")
+  ];
+  
+  // Calculate date range: last 12 months (current month + 11 previous)
+  const today = new Date();
+  const months: Array<{ label: string; year: number; weeks: Array<Array<{ date: Date; dateStr: string; count: number } | null>> }> = [];
+  
+  // Iterate 12 times backwards to get the last 12 months
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const year = d.getFullYear();
+    const monthIndex = d.getMonth();
+    const monthLabel = monthNames[monthIndex];
+    
+    // Get all days in this month
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    const monthWeeks: Array<Array<{ date: Date; dateStr: string; count: number } | null>> = [];
+    let currentWeek: Array<{ date: Date; dateStr: string; count: number } | null> = [];
+    
+    // Pad start of first week
+    // getDay(): 0=Sun, 1=Mon... 6=Sat. We want Mon=0...Sun=6
+    let firstDayOfWeek = new Date(year, monthIndex, 1).getDay();
+    // Convert to Mon-start (0=Mon, 6=Sun)
+    firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+    
+    for (let j = 0; j < firstDayOfWeek; j++) {
+      currentWeek.push(null);
+    }
+    
+    // Fill days
+    for (let day = 1; day <= daysInMonth; day++) {
+      // Use string construction to avoid timezone issues
+      const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const date = new Date(year, monthIndex, day);
+      const count = workoutsByDay.value[dateStr] || 0;
+      
+      currentWeek.push({ date, dateStr, count });
+      
+      if (currentWeek.length === 7) {
+        monthWeeks.push(currentWeek);
+        currentWeek = [];
+      }
+    }
+    
+    // Pad end of last week if needed
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) {
+        currentWeek.push(null);
+      }
+      monthWeeks.push(currentWeek);
+    }
+    
+    months.push({
+      label: monthLabel || "",
+      year,
+      weeks: monthWeeks
+    });
+  }
+  
+  return months;
+});
+
+// Color intensity based on workout count
+const getCellColor = (count: number) => {
+  if (count === 0) return "var(--bg-secondary)";
+  const primary = getComputedStyle(document.documentElement)
+    .getPropertyValue("--color-primary")
+    .trim() || "#10b981";
+  
+  // Intensity levels - increased opacity for better visibility
+  if (count === 1) return primary + "66"; // ~40%
+  // 40% = 66
+  // 60% = 99
+  // 80% = CC
+  // 100% = FF
+  
+  if (count === 1) return primary + "99"; // 60%
+  if (count === 2) return primary + "CC"; // 80%
+  if (count >= 3) return primary;         // 100%
+  return primary;
+};
+
+// Navigate to workouts list for a specific day
+const scrollToDay = (day: string) => {
+  router.push({ path: "/workouts-list", query: { day } });
+};
+
 // Muscle Distribution
 const muscleDistribution_Data = computed(() => {
   const filtered = filterByRange(muscleDistribution_Range.value);
@@ -364,7 +509,7 @@ const muscleDistribution_Data = computed(() => {
   }
   
   return {
-    labels: Object.keys(muscleGroups),
+    labels: Object.keys(muscleGroups).map(m => getLocalizedMuscleName(m)),
     data: Object.values(muscleGroups)
   };
 });
@@ -408,7 +553,7 @@ const muscleRegions_Data = computed(() => {
   const datasets = muscleGroups.map((muscle, index) => {
     const colors = generateGradientColors(muscleGroups.length);
     return {
-      label: muscle,
+      label: getLocalizedMuscleName(muscle),
       data: periods.map(period => (periodMuscleData[period] || {})[muscle] || 0),
       backgroundColor: colors[index],
       borderColor: colors[index],
@@ -909,6 +1054,29 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Compact KPI Row for Mobile -->
+      <div class="kpi-compact-row" style="display: none;">
+        <div class="kpi-compact-item">
+          <span class="kpi-icon">🏋️</span>
+          <span class="kpi-value">{{ totalWorkouts }} workouts</span>
+        </div>
+        <span>•</span>
+        <div class="kpi-compact-item">
+          <span class="kpi-icon">💪</span>
+          <span class="kpi-value">{{ totalVolume.toLocaleString() }}kg lifted</span>
+        </div>
+        <span>•</span>
+        <div class="kpi-compact-item">
+          <span class="kpi-icon">⏳</span>
+          <span class="kpi-value">{{ totalHoursAll }} hours trained</span>
+        </div>
+        <span>•</span>
+        <div class="kpi-compact-item">
+          <span class="kpi-icon">🔥</span>
+          <span class="kpi-value">{{ workoutStreakWeeks }} weeks streak</span>
+        </div>
+      </div>
+
       <!-- Plateau Alerts (if any) -->
       <div v-if="plateauExercises.length > 0" class="dashboard-section plateau-section">
         <div class="section-header" @click="toggleSection('plateaus')">
@@ -962,7 +1130,7 @@ onMounted(() => {
                 <div class="pr-icon">🏆</div>
                 <div class="pr-content">
                   <div class="pr-exercise">{{ pr.exercise }}</div>
-                  <div class="pr-type">{{ pr.type }}</div>
+                  <div class="pr-type">{{ getLocalizedPRType(pr.type) }}</div>
                   <div class="pr-value">{{ formatPRValue(pr.type, pr.value) }}</div>
                 </div>
                 <div class="pr-date">{{ new Date(pr.date).toLocaleDateString() }}</div>
@@ -1234,6 +1402,52 @@ onMounted(() => {
         <transition name="expand">
           <div v-if="expandedSections.calendarViews" class="section-content">
             <div class="charts-grid">
+              <!-- Calendar Heatmap Chart -->
+              <div class="chart-container">
+                <div class="chart-header">
+                  <div class="chart-title-section">
+                    <h3>📅 Workout Calendar (Last 12 Months)</h3>
+                    <span class="chart-subtitle">Your workout consistency over the past year</span>
+                  </div>
+                </div>
+                <div class="chart-body">
+                  <div class="calendar-heatmap">
+                    <div class="calendar-grid-container">
+                      <!-- Months Container -->
+                      <div class="calendar-months-container">
+                        <div 
+                          v-for="(month, mIdx) in calendarData" 
+                          :key="'m-' + mIdx" 
+                          class="calendar-month-block"
+                        >
+                          <!-- Month Label -->
+                          <div class="calendar-month-label">{{ month.label }}</div>
+                          
+                          <!-- Month Weeks Grid -->
+                          <div class="calendar-month-weeks">
+                            <div 
+                              v-for="(week, wIdx) in month.weeks" 
+                              :key="'w-' + mIdx + '-' + wIdx" 
+                              class="calendar-week"
+                            >
+                              <div 
+                                v-for="(day, dIdx) in week" 
+                                :key="'d-' + mIdx + '-' + wIdx + '-' + dIdx"
+                                class="calendar-day"
+                                :class="{ 'empty': !day, 'has-workout': day && day.count > 0 }"
+                                :style="day ? { backgroundColor: getCellColor(day.count) } : {}"
+                                @click="day && day.count > 0 && scrollToDay(day.dateStr)"
+                                :title="day ? `${day.dateStr}: ${day.count} workout${day.count !== 1 ? 's' : ''}` : ''"
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            
               <!-- Weekly Rhythm Radar Chart -->
               <div class="chart-container">
                 <div class="chart-header">
@@ -2085,6 +2299,112 @@ onMounted(() => {
   }
 }
 
+/* ========== Calendar Heatmap Styles ========== */
+.calendar-heatmap {
+  width: 100%;
+  padding: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.calendar-grid-container {
+  display: flex;
+  gap: 12px;
+}
+
+.calendar-months-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px; /* Space between months */
+  flex: 1;
+  justify-content: space-between;
+}
+
+.calendar-month-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03); /* Slightly lighter than bg-primary */
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08); /* Subtle border */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.calendar-month-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  height: 16px;
+}
+
+.calendar-month-weeks {
+  display: flex;
+  gap: 4px;
+}
+
+.calendar-week {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calendar-day {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  cursor: default;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.15s ease;
+  background-color: rgba(255, 255, 255, 0.02); /* Default empty color */
+}
+
+.calendar-day.has-workout {
+  cursor: pointer;
+}
+
+.calendar-day.empty {
+  background-color: transparent;
+  border: none;
+  cursor: default;
+}
+
+.calendar-day.has-workout:hover {
+  transform: scale(1.3);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  z-index: 10;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .calendar-heatmap {
+    overflow-x: scroll;
+    padding: 0.5rem;
+  }
+  
+  .calendar-grid-container {
+    gap: 8px;
+  }
+  
+  .calendar-months-container {
+    gap: 12px;
+    flex-wrap: nowrap; /* Keep horizontal scroll on mobile */
+    justify-content: flex-start;
+  }
+  
+  .calendar-day {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .calendar-month-label {
+    font-size: 0.75rem;
+  }
+}
+
+/* Reverted forcing canvas sizing — allow chart library to manage canvas sizing for accurate axes */
+
 @media (max-width: 768px) {
   .user-badge {
     display: none;
@@ -2106,6 +2426,44 @@ onMounted(() => {
   .plateau-section .plateau-section-title:not(),
   .pr-section .pr-section-title:not() {
     display: none;
+  }
+  
+  /* Compact KPI Row for Mobile */
+  .stats-grid,
+  .kpi-grid {
+    display: none; /* Hide card grid on mobile */
+  }
+  
+  .kpi-compact-row {
+    display: flex !important; /* Show compact row on mobile */
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1rem;
+    /* background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); */
+    
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  
+  .kpi-compact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+  
+  .kpi-compact-item .kpi-icon {
+    font-size: 1rem;
+  }
+  
+  .kpi-compact-item .kpi-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #f8fafc;
   }
   
   .stats-grid {

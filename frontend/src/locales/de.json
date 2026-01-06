@@ -306,10 +306,10 @@
       "glutes": "Gesäß",
       "hamstrings": "Beinbeuger",
       "lats": "Latissimus",
-      "lowerBack": "Unterer Rücken",
+      "lower_back": "Unterer Rücken",
       "quadriceps": "Quadrizeps",
       "triceps": "Trizeps",
-      "upperBack": "Oberer Rücken"
+      "upper_back": "Oberer Rücken"
     },
     "pagination": {
       "first": "Erste",
