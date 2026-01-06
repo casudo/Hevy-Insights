@@ -629,6 +629,7 @@ const totalHoursAll = computed(() => Number((totalMinutesAll.value / 60).toFixed
 // Get exercises with plateaus - show most recent 5
 const plateauExercises = computed(() => {
   const locale = localStorage.getItem("language") || "en";
+  const minSessions = store.plateauDetectionSessions;
   
   // Build exercise map similar to Exercises.vue
   const exerciseMap: Record<string, any> = {};
@@ -674,7 +675,8 @@ const plateauExercises = computed(() => {
   
   for (const ex of Object.values(exerciseMap)) {
     const days = Object.keys(ex.byDay).sort();
-    if (days.length < 5) continue;
+    // Filter out exercises with insufficient data (use configured minimum sessions)
+    if (days.length < minSessions) continue;
     
     // Check if active (trained in last 60 days)
     const lastDay = days[days.length - 1];
