@@ -128,54 +128,7 @@ function getLocalizedPRType(prType: string): string {
 }
 
 // Contribution graph (heatmap) data by day
-const workoutsByDay = computed(() => {
-  const map: Record<string, any[]> = {};
-  for (const w of filteredAndSearchedWorkouts.value) {
-    const dayKey = new Date((w.start_time || 0) * 1000).toISOString().slice(0,10); // YYYY-MM-DD
-    (map[dayKey] ||= []).push(w);
-  }
-  return map;
-});
-
-// Build weeks for a GitHub-like calendar: 52 columns (weeks) x 7 rows (Mon-Sun)
-const weeks = computed(() => {
-  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const end = new Date();
-  const start = new Date(end);
-  // Go back ~12 months and snap to Monday of the first visible week
-  start.setMonth(end.getMonth() - 11);
-  start.setDate(1);
-  const day = start.getDay(); // 0=Sun,1=Mon
-  const offsetToMonday = (day === 0 ? 6 : day - 1);
-  start.setDate(start.getDate() - offsetToMonday);
-
-  // Build daily cells first
-  const daily: { date: string; count: number; dateObj: Date }[] = [];
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const key = d.toISOString().slice(0,10);
-    daily.push({ date: key, count: (workoutsByDay.value[key] || []).length, dateObj: new Date(d) });
-  }
-
-  // Group into weeks (chunks of 7 days starting Monday)
-  const cols: Array<{ days: typeof daily; monthLabel?: string } > = [];
-  for (let i = 0; i < daily.length; i += 7) {
-    const chunk = daily.slice(i, i + 7);
-    if (chunk.length < 7) break;
-    // Month label on the first column that starts a new month (near beginning)
-    const firstItem = chunk[0] as { dateObj: Date; date: string };
-    const first = firstItem.dateObj ?? new Date(firstItem.date);
-    const isFirstWeekOfMonth = first.getDate() <= 7;
-    const monthLabel = isFirstWeekOfMonth ? monthNames[first.getMonth()] : undefined;
-    cols.push({ days: chunk, monthLabel });
-  }
-  return cols;
-});
-
-const cellColor = (count: number) => {
-  const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#10b981';
-  return count > 0 ? primary : "var(--bg-secondary)"; // single color for days with workouts
-};
-
+// Auto-expand and scroll to workouts on a given day
 const scrollToDay = async (day: string) => {
   // Auto-expand all workouts on that day
   const workouts = workoutsByDay.value[day] || [];
