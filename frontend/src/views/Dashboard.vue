@@ -1406,8 +1406,8 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>📅 Workout Calendar (Last 12 Months)</h3>
-                    <span class="chart-subtitle">Your workout consistency over the past year</span>
+                    <h3>📅 {{$t("dashboard.charts.workoutCalendar")}}</h3>
+                    <span class="chart-subtitle">{{$t("dashboard.charts.workoutCalendarDescription")}}</span>
                   </div>
                 </div>
                 <div class="chart-body">
