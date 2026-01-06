@@ -131,7 +131,7 @@
     "list": {
       "title": "Workouts (List)",
       "subtitle": "Browse your workouts in a detailed list format with contribution calendar.",
-      "searchPlaceholder": "Search by workout number or exercise name...",
+      "searchContains": "Contains…",
       "set": "Set",
       "reps": "Reps"
     }

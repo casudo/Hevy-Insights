@@ -131,7 +131,7 @@
     "list": {
       "title": "Entrenamientos (Lista)",
       "subtitle": "Explora tus entrenos en formato de lista detallada con calendario.",
-      "searchPlaceholder": "Buscar por número o nombre de ejercicio...",
+      "searchContains": "Contiene…",
       "set": "Serie",
       "reps": "Reps"
     }

@@ -131,7 +131,7 @@
     "list": {
       "title": "Workouts (Liste)",
       "subtitle": "Durchsuche deine Workouts im Listenformat mit Aktivitätskalender.",
-      "searchPlaceholder": "Suche nach Workout-Nummer oder Übung...",
+      "searchContains": "Enthält…",
       "set": "Satz",
       "reps": "Wdh."
     }
