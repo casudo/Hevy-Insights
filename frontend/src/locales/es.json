@@ -237,16 +237,18 @@
   },
   "global": {
     "loadingSpinnerText": "Cargando tus datos de entrenamiento...",
-    "volume": "Volumen",
-    "hours": "Horas",
-    "duration": "Duración",
-    "distance": "Distancia",
-    "exercises": "Ejercicios",
-    "weight": "Peso",
-    "notes": "Notas",
-    "description": "Descripción",
-    "muscles": "Músculos",
-    "groups": "Grupos",
+    "sw": {
+      "volume": "Volumen",
+      "hours": "Horas",
+      "duration": "Duración",
+      "distance": "Distancia",
+      "exercises": "Ejercicios",
+      "weight": "Peso",
+      "notes": "Notas",
+      "description": "Descripción",
+      "day": "Día",
+      "reps": "reps"
+    },
     "days": {
       "mondayLong": "Lunes",
       "tuesdayLong": "Martes",
@@ -309,7 +311,6 @@
       "triceps": "Tríceps",
       "upperBack": "Espalda Superior"
     },
-    "day": "Día",
     "pagination": {
       "first": "Primero",
       "previous": "Anterior",

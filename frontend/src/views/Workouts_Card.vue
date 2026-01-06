@@ -3,7 +3,9 @@ import { ref, computed, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
 import { formatDurationFromTimestamps, formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
 import { detectExerciseType, formatDurationSeconds, formatDistance } from "../utils/exerciseTypeDetector";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
 
@@ -201,9 +203,9 @@ onMounted(async () => {
 
           <!--  Middle Row with Stats  -->
           <div class="stats-row">
-            <div class="stat"><strong>{{ formatWeight(workout.estimated_volume_kg || 0) }} {{ getWeightUnit() }}</strong><span>{{ $t('global.volume') }}</span></div>
-            <div class="stat"><strong>{{ formatDurationFromTimestamps(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.duration') }}</span></div>
-            <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.exercises') }}</span></div>
+            <div class="stat"><strong>{{ formatWeight(workout.estimated_volume_kg || 0) }} {{ getWeightUnit() }}</strong><span>{{ $t('global.sw.volume') }}</span></div>
+            <div class="stat"><strong>{{ formatDurationFromTimestamps(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.sw.duration') }}</span></div>
+            <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.sw.exercises') }}</span></div>
             <div class="stat"><strong>{{ totalSets(workout) }}</strong><span>{{ $t('workouts.card.totalSets') }}</span></div>
           </div>
 
@@ -213,7 +215,7 @@ onMounted(async () => {
 
           <!--  Exercises List  -->
           <div class="exercises">
-            <h3>{{ $t('global.exercises') }}</h3>
+            <h3>{{ $t('global.sw.exercises') }}</h3>
             <div v-for="exercise in workout.exercises" :key="exercise.id" class="exercise" :class="{ 'pr-highlight': exerciseHasPR(exercise) }">
               <button class="exercise-toggle" @click="toggleExercise(exercise.id)">
                 <span class="exercise-title">{{ exercise.title || "Unknown Exercise" }}</span>
@@ -230,11 +232,11 @@ onMounted(async () => {
                       <th>{{ $t('workouts.card.set') }}</th>
                       <!-- Dynamic headers based on exercise type -->
                       <template v-if="detectExerciseType(exercise) === 'cardio'">
-                        <th>{{ $t('global.distance') }}</th>
-                        <th>{{ $t('global.duration') }}</th>
+                        <th>{{ $t('global.sw.distance') }}</th>
+                        <th>{{ $t('global.sw.duration') }}</th>
                       </template>
                       <template v-else>
-                        <th>{{ $t('global.weight') }} ({{ getWeightUnit() }})</th>
+                        <th>{{ $t('global.sw.weight') }} ({{ getWeightUnit() }})</th>
                         <th>{{ $t('workouts.card.reps') }}</th>
                       </template>
                       <th>RPE</th>
@@ -258,7 +260,7 @@ onMounted(async () => {
                 </table>
 
                 <div v-if="exercise.notes" class="exercise-notes">
-                  <em>{{ $t('global.notes') }}: {{ exercise.notes }}</em>
+                  <em>{{ $t('global.sw.notes') }}: {{ exercise.notes }}</em>
                 </div>
               </div>
             </div>

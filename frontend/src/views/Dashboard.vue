@@ -932,7 +932,7 @@ onMounted(() => {
                 <div class="plateau-icon">⏸️</div>
                 <div class="plateau-content">
                   <div class="plateau-title">{{ plateau.localizedTitle }}</div>
-                  <div class="plateau-meta">{{ formatWeight(plateau.avgWeight) }} {{ getWeightUnit() }} × {{ plateau.avgReps }} reps</div>
+                  <div class="plateau-meta">{{ formatWeight(plateau.avgWeight) }} {{ getWeightUnit() }} × {{ plateau.avgReps }} {{ $t('global.sw.reps') }}</div>
                 </div>
               </div>
             </div>
@@ -1008,7 +1008,7 @@ onMounted(() => {
                     :data="{ 
                       labels: hoursTrained_Data.labels, 
                       datasets: [{ 
-                        label: $t('global.hours'), 
+                        label: $t('global.sw.hours'), 
                         data: hoursTrained_Data.data, 
                         borderColor: primaryColor, 
                         backgroundColor: primaryColor + '33', 
@@ -1046,7 +1046,7 @@ onMounted(() => {
                     :data="{ 
                       labels: volumeProgression_Data.labels, 
                       datasets: [{ 
-                        label: $t('global.volume') + ` (${getWeightUnit()})`, 
+                        label: $t('global.sw.volume') + ` (${getWeightUnit()})`, 
                         data: volumeProgression_Data.data, 
                         borderColor: secondaryColor, 
                         backgroundColor: secondaryColor + '33', 

@@ -651,7 +651,7 @@ function getVolumeChartData(ex: any, graphRange: GraphRange = 0) {
     labels,
     datasets: [
       {
-        label: `${t("global.volume")} (${getWeightUnit()})`,
+        label: `${t("global.sw.volume")} (${getWeightUnit()})`,
         data: volData,
         backgroundColor: primaryColor.value + "33",
         borderColor: primaryColor.value,
@@ -676,7 +676,7 @@ function getDistanceOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
     labels,
     datasets: [
       {
-        label: `${t("global.distance")} (${getDistanceUnit()})`,
+        label: `${t("global.sw.distance")} (${getDistanceUnit()})`,
         data: distanceData,
         backgroundColor: primaryColor.value + "33",
         borderColor: primaryColor.value,
@@ -702,7 +702,7 @@ function getDurationOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
     labels,
     datasets: [
       {
-        label: `${t("global.duration")} (min)`,
+        label: `${t("global.sw.duration")} (min)`,
         data: durationData,
         backgroundColor: secondaryColor.value + "33",
         borderColor: secondaryColor.value,
@@ -946,10 +946,10 @@ const barChartOptions = {
               <table class="sets-table compact">
                 <thead>
                   <tr>
-                    <th>{{ $t("global.day") }}</th>
+                    <th>{{ $t("global.sw.day") }}</th>
                     <template v-if="ex.exerciseType === 'cardio'">
-                      <th>{{ $t("global.distance") }}</th>
-                      <th>{{ $t("global.duration") }}</th>
+                      <th>{{ $t("global.sw.distance") }}</th>
+                      <th>{{ $t("global.sw.duration") }}</th>
                     </template>
                     <template v-else>
                       <th>{{ getWeightUnit() }}</th>
@@ -1001,7 +1001,7 @@ const barChartOptions = {
               <!-- Distance Over Time -->
               <div class="graph">
                 <div class="graph-header">
-                  <h3>{{ $t("global.distance") }} Over Time</h3>
+                  <h3>{{ $t("global.sw.distance") }} Over Time</h3>
                   <div class="graph-controls">
                     <div class="range-selector">
                       <button
@@ -1044,7 +1044,7 @@ const barChartOptions = {
               <!-- Duration Over Time -->
               <div class="graph">
                 <div class="graph-header">
-                  <h3>{{ $t("global.duration") }} Over Time</h3>
+                  <h3>{{ $t("global.sw.duration") }} Over Time</h3>
                   <div class="graph-controls">
                     <div class="range-selector">
                       <button

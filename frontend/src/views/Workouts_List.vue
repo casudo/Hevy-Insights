@@ -290,17 +290,17 @@ onMounted(async () => { await store.fetchWorkouts(); });
               </div>
             </div>
             <div class="stats">
-              <div class="stat"><strong>{{ formatWeight(workout.estimated_volume_kg || 0) }} {{ getWeightUnit() }}</strong><span>{{ $t('global.volume') }}</span></div>
-              <div class="stat"><strong>{{ formatDurationFromTimestamps(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.duration') }}</span></div>
-              <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.exercises') }}</span></div>
+              <div class="stat"><strong>{{ formatWeight(workout.estimated_volume_kg || 0) }} {{ getWeightUnit() }}</strong><span>{{ $t('global.sw.volume') }}</span></div>
+              <div class="stat"><strong>{{ formatDurationFromTimestamps(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.sw.duration') }}</span></div>
+              <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.sw.exercises') }}</span></div>
               <div class="stat"><strong>{{ totalSets(workout) }}</strong><span>Sets</span></div>
-              <div class="stat" v-if="workout.description"><strong>{{ workout.description }}</strong><span>{{ $t('global.description') }}</span></div>
+              <div class="stat" v-if="workout.description"><strong>{{ workout.description }}</strong><span>{{ $t('global.sw.description') }}</span></div>
             </div>
           </div>
 
           <!-- Exercises list with thumbnails -->
           <div class="exercises">
-            <h3>{{ $t('global.exercises') }}</h3>
+            <h3>{{ $t('global.sw.exercises') }}</h3>
             <div class="exercise-grid">
               <div v-for="(exercise, exIdx) in workout.exercises" :key="exercise.id" class="exercise">
                 <div class="exercise-header">
@@ -317,11 +317,11 @@ onMounted(async () => { await store.fetchWorkouts(); });
                     <th>{{ $t('workouts.list.set') }}</th>
                     <!-- Dynamic headers based on exercise type -->
                     <template v-if="detectExerciseType(exercise) === 'cardio'">
-                      <th>{{ $t('global.distance') }}</th>
-                      <th>{{ $t('global.duration') }}</th>
+                      <th>{{ $t('global.sw.distance') }}</th>
+                      <th>{{ $t('global.sw.duration') }}</th>
                     </template>
                     <template v-else>
-                      <th>{{ $t('global.weight') }} ({{ getWeightUnit() }})</th>
+                      <th>{{ $t('global.sw.weight') }} ({{ getWeightUnit() }})</th>
                       <th>{{ $t('workouts.list.reps') }}</th>
                     </template>
                     <th>RPE</th>
@@ -343,7 +343,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
                   </tr>
                 </tbody>
               </table>
-              <div v-if="exercise.notes" class="exercise-notes"><em>{{ $t('global.notes') }}: {{ exercise.notes }}</em></div>
+              <div v-if="exercise.notes" class="exercise-notes"><em>{{ $t('global.sw.notes') }}: {{ exercise.notes }}</em></div>
               </div>
             </div>
           </div>
