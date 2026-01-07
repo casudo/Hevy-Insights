@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useHevyCache } from "../stores/hevy_cache";
 import { calculateCSVStats, calculatePRsGrouped, calculateMuscleDistribution } from "../utils/csvCalculator";
-import { formatDuration, formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
+import { formatDuration, formatWeight, getWeightUnit, formatPRValue, formatDate, formatMonthYear } from "../utils/formatters";
 import { Line, Doughnut, Radar, Bar } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
 import {
@@ -217,7 +217,8 @@ const formatPeriodLabel = (period: string, displayStyle: DisplayStyle): string =
     const weekNum = getWeekNumber(date);
     return `${t("dashboard.charts.calendarWeek")} ${weekNum}`;
   }
-  return period; // Monthly: keep as "YYYY-MM"
+  // Monthly: Format using user's graph axis format preference
+  return formatMonthYear(new Date(period + "-01"));
 };
 
 // Helper to filter by range
@@ -1139,7 +1140,7 @@ onMounted(() => {
                   <div class="pr-type">{{ pr.localizedType }}</div>
                   <div class="pr-value">{{ formatPRValue(pr.type, pr.value) }}</div>
                 </div>
-                <div class="pr-date">{{ new Date(pr.date).toLocaleDateString() }}</div>
+                <div class="pr-date">{{ formatDate(pr.date) }}</div>
               </div>
             </div>
           </div>

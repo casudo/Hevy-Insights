@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
-import { formatWeight, getWeightUnit, getDistanceUnit, formatPRValue } from "../utils/formatters";
+import { formatWeight, getWeightUnit, getDistanceUnit, formatPRValue, formatDate } from "../utils/formatters";
 import { detectExerciseType, formatDurationSeconds, formatDistance } from "../utils/exerciseTypeDetector";
 import { Scatter, Bar, Line } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
@@ -570,7 +570,7 @@ function getWeightVsRepsChartData(ex: any, graphRange: GraphRange = 0) {
   const days = filterGraphDates(ex, graphRange);
   const scatterData = days.map((d) => {
     const date = new Date(d);
-    const dateLabel = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const dateLabel = formatDate(date);
     return {
       x: ex.byDay[d]?.repsAtMax || 0,
       y: store.weightUnit === "lbs" ? (ex.byDay[d]?.maxWeight || 0) * 2.20462 : (ex.byDay[d]?.maxWeight || 0),
@@ -594,10 +594,7 @@ function getWeightVsRepsChartData(ex: any, graphRange: GraphRange = 0) {
 
 function getMaxWeightOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
   const days = filterGraphDates(ex, graphRange);
-  const labels = days.map((d) => {
-    const date = new Date(d);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  });
+  const labels = days.map((d) => formatDate(new Date(d)));
   const weightData = days.map((d) => {
     const kg = ex.byDay[d]?.maxWeight || 0;
     return store.weightUnit === "lbs" ? kg * 2.20462 : kg;
@@ -621,10 +618,7 @@ function getMaxWeightOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
 
 function getAvgVolumePerSetChartData(ex: any, graphRange: GraphRange = 0) {
   const days = filterGraphDates(ex, graphRange);
-  const labels = days.map((d) => {
-    const date = new Date(d);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  });
+  const labels = days.map((d) => formatDate(new Date(d)));
   const avgVolData = days.map((d) => {
     const kg = ex.byDay[d]?.avgVolumePerSet || 0;
     return Math.round(store.weightUnit === "lbs" ? kg * 2.20462 : kg);
@@ -648,10 +642,7 @@ function getAvgVolumePerSetChartData(ex: any, graphRange: GraphRange = 0) {
 
 function getVolumeChartData(ex: any, graphRange: GraphRange = 0) {
   const days = filterGraphDates(ex, graphRange);
-  const labels = days.map((d) => {
-    const date = new Date(d);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  });
+  const labels = days.map((d) => formatDate(new Date(d)));
   const volData = days.map((d) => {
     const kg = ex.byDay[d]?.volume || 0;
     return store.weightUnit === "lbs" ? kg * 2.20462 : kg;
@@ -674,10 +665,7 @@ function getVolumeChartData(ex: any, graphRange: GraphRange = 0) {
 // Cardio-specific chart data builders
 function getDistanceOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
   const days = filterGraphDates(ex, graphRange);
-  const labels = days.map((d) => {
-    const date = new Date(d);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  });
+  const labels = days.map((d) => formatDate(new Date(d)));
   const distanceData = days.map((d) => {
     return ex.byDay[d]?.totalDistance || 0;
   });
@@ -700,10 +688,7 @@ function getDistanceOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
 
 function getDurationOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
   const days = filterGraphDates(ex, graphRange);
-  const labels = days.map((d) => {
-    const date = new Date(d);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  });
+  const labels = days.map((d) => formatDate(new Date(d)));
   const durationData = days.map((d) => {
     return (ex.byDay[d]?.totalDuration || 0) / 60; // Convert to minutes
   });
@@ -969,7 +954,7 @@ const barChartOptions = {
                 </thead>
                 <tbody>
                   <tr v-for="s in ex.topSets" :key="`${ex.id}-${s.day}-${s.index}`">
-                    <td>{{ s.day }}</td>
+                    <td>{{ formatDate(s.day) }}</td>
                     <template v-if="ex.exerciseType === 'cardio'">
                       <td>{{ s.distance_km ? formatDistance(s.distance_km) : '-' }}</td>
                       <td>{{ s.duration_seconds ? formatDurationSeconds(s.duration_seconds) : '-' }}</td>

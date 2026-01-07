@@ -3,7 +3,7 @@ import { ref, computed, onMounted, nextTick, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useHevyCache } from "../stores/hevy_cache";
 import { useI18n } from "vue-i18n";
-import { formatDurationFromTimestamps, formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
+import { formatDurationFromTimestamps, formatWeight, getWeightUnit, formatPRValue, formatDateTime } from "../utils/formatters";
 import { detectExerciseType, formatDurationSeconds, formatDistance } from "../utils/exerciseTypeDetector";
 
 const store = useHevyCache();
@@ -74,9 +74,11 @@ const formatDateFull = (timestamp: number) => {
   const d = new Date(timestamp * 1000);
   const days = [t("global.days.sundayLong"), t("global.days.mondayLong"), t("global.days.tuesdayLong"), t("global.days.wednesdayLong"), t("global.days.thursdayLong"), t("global.days.fridayLong"), t("global.days.saturdayLong")];
   const dayName = days[d.getDay()];
-  const usDate = d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }); // MM/DD/YYYY
-  const time = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-  return `${dayName}, ${usDate} ${time}`;
+  
+  // Use the shared formatDateTime utility, but extract date and time separately to insert day name
+  const formattedDateTime = formatDateTime(d);
+  
+  return `${dayName}, ${formattedDateTime}`;
 };
 
 const biometrics = (workout: any) => {

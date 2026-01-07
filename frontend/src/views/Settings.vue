@@ -79,31 +79,30 @@ watch(selectedLanguage, (newLang) => {
   localStorage.setItem("language", newLang);
 });
 
-// Date/Time Format settings
-// const dateFormats = [
-//   { label: "YYYY-MM-DD (2025-12-21)", value: "iso" },
-//   { label: "DD.MM.YYYY (21.12.2025)", value: "eu" },
-//   { label: "MM/DD/YYYY (12/21/2025)", value: "us" },
-//   { label: "DD/MM/YYYY (21/12/2025)", value: "uk" },
-// ];
+// Date Format settings
+const dateFormats = computed(() => [
+  { label: "YYYY-MM-DD (2025-12-21) + 14:32", value: "iso" },
+  { label: "DD.MM.YYYY (21.12.2025) + 17:53", value: "eu" },
+  { label: "MM/DD/YYYY (12/21/2025) + 6:14 AM", value: "us" },
+  { label: "DD/MM/YYYY (21/12/2025) + 2:35 PM", value: "uk" },
+]);
 
-// const graphAxisFormats = [
-//   { label: "YYYY-MM (2025-12)", value: "year-month" },
-//   { label: "MM-YYYY (12-2025)", value: "month-year" },
-//   { label: "MMM YYYY (Dec 2025)", value: "short" },
-//   { label: "Month YYYY (December 2025)", value: "long" },
-// ];
+const graphAxisFormats = computed(() => [
+  { label: "YYYY-MM (2025-12)", value: "numeric" },
+  { label: `MMM YYYY (${t('global.months.decemberShort')} 2025)`, value: "short" },
+  { label: `Month YYYY (${t('global.months.decemberLong')} 2025)`, value: "long" },
+]);
 
-const selectedDateFormat = ref<string>(localStorage.getItem("date-format") || "iso");
-const selectedGraphAxisFormat = ref<string>(localStorage.getItem("graph-axis-format") || "year-month");
+const selectedDateFormat = ref<string>(store.dateFormat);
+const selectedGraphAxisFormat = ref<string>(store.graphAxisFormat);
 
 // Watch for format changes
 watch(selectedDateFormat, (newFormat) => {
-  localStorage.setItem("date-format", newFormat);
+  store.setDateFormat(newFormat as "iso" | "eu" | "us" | "uk");
 });
 
 watch(selectedGraphAxisFormat, (newFormat) => {
-  localStorage.setItem("graph-axis-format", newFormat);
+  store.setGraphAxisFormat(newFormat as "numeric" | "short" | "long");
 });
 
 // Weight unit settings
@@ -132,13 +131,13 @@ const resetSettings = () => {
   selectedTheme.value = "default";
   selectedLanguage.value = "en";
   selectedDateFormat.value = "iso";
-  selectedGraphAxisFormat.value = "year-month";
+  selectedGraphAxisFormat.value = "short";
   selectedWeightUnit.value = "kg";
   plateauSessions.value = 5;
   locale.value = "en";
   localStorage.setItem("language", "en");
-  localStorage.setItem("date-format", "iso");
-  localStorage.setItem("graph-axis-format", "year-month");
+  store.setDateFormat("iso");
+  store.setGraphAxisFormat("short");
   store.setWeightUnit("kg");
   store.setPlateauDetectionSessions(5);
 };
@@ -220,7 +219,7 @@ const resetSettings = () => {
       </div>
 
       <!-- Date/Time Format Section -->
-      <!--  <div class="settings-section">
+      <div class="settings-section">
         <div class="section-header">
           <h2>📅 {{ t("settings.dateTimeFormat.title") }}</h2>
           <p class="section-description">{{ t("settings.dateTimeFormat.description") }}</p>
@@ -236,6 +235,7 @@ const resetSettings = () => {
             >
               <input
                 type="radio"
+                name="dateFormat"
                 :value="format.value"
                 v-model="selectedDateFormat"
                 class="format-radio"
@@ -256,6 +256,7 @@ const resetSettings = () => {
             >
               <input
                 type="radio"
+                name="graphAxisFormat"
                 :value="format.value"
                 v-model="selectedGraphAxisFormat"
                 class="format-radio"
@@ -265,7 +266,7 @@ const resetSettings = () => {
             </label>
           </div>
         </div>
-      </div>  -->
+      </div>
 
       <!-- Weight Unit Section -->
       <div class="settings-section">

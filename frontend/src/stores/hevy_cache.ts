@@ -24,6 +24,8 @@ export const useHevyCache = defineStore("hevyCache", {
     dataSource: (localStorage.getItem("data_source") || "api") as "api" | "csv",
     weightUnit: (localStorage.getItem("weight_unit") || "kg") as "kg" | "lbs",
     plateauDetectionSessions: parseInt(localStorage.getItem("plateau_detection_sessions") || "5"),
+    dateFormat: (localStorage.getItem("date_format") || "iso") as "iso" | "eu" | "us" | "uk",
+    graphAxisFormat: (localStorage.getItem("graph_axis_format") || "short") as "numeric" | "short" | "long",
   }),
 
   getters: {
@@ -241,6 +243,16 @@ export const useHevyCache = defineStore("hevyCache", {
     setPlateauDetectionSessions(sessions: number) {
       this.plateauDetectionSessions = sessions;
       localStorage.setItem("plateau_detection_sessions", sessions.toString());
+    },
+
+    setDateFormat(format: "iso" | "eu" | "us" | "uk") {
+      this.dateFormat = format;
+      localStorage.setItem("date_format", format);
+    },
+
+    setGraphAxisFormat(format: "numeric" | "short" | "long") {
+      this.graphAxisFormat = format;
+      localStorage.setItem("graph_axis_format", format);
     },
   },
 });

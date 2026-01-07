@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
-import { formatDurationFromTimestamps, formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
+import { formatDurationFromTimestamps, formatWeight, getWeightUnit, formatPRValue, formatDateTime } from "../utils/formatters";
 import { detectExerciseType, formatDurationSeconds, formatDistance } from "../utils/exerciseTypeDetector";
 import { useI18n } from "vue-i18n";
 
@@ -66,7 +66,7 @@ const prevPage = () => { if (hasPrev.value) currentPage.value--; };
 const firstPage = () => { currentPage.value = 1; };
 const lastPage = () => { currentPage.value = totalPages.value; };
 
-const formatDate = (timestamp: number) => new Date(timestamp * 1000).toLocaleString();
+const formatDate = (timestamp: number) => formatDateTime(new Date(timestamp * 1000));
 
 // Helpers for additional stats
 const totalSets = (workout: any) => {
