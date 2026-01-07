@@ -206,14 +206,9 @@ Clone/download the repository and follow these steps:
     - Top 3 Best Sets date: YYYY-MM-DD
     - Graph X-Axis: "Dec 1, 2025"
     - Max weight vs reps graph hover over: "Dec 1, 2025"
-- Data Source: Add Hevy PRO API
-- Gaining text: "you have increased over your last N sessions" add the amount of N configured in settings
 - Mobile: workout details not filling out whole exercise container (Same for list and card)
-- Dashboard: Detected plateaus showing exercises which are marked as „New“ in Exercises.vue page
-- New stat: Average Workout time
 - On mobile: Fix padding and margin for "workouts-card-header", "workouts-list-header" and "exercises-header" (too big, blank space). Also decrease it for Dashboard.vue and Exercises.vue pages to gain more space on mobile
 - - To get more space on mobile: Dashboard charts: Remove Description and Filters. Add a „i“ button which shows the desc and a filter button so the user can switch filters
-- Exercises: Some exercise names start left, some in the middle
 - Exercises.vue: On mobile reduce padding to the side so that the graphs appear bigger (just like on Dashboard.vue)
 
 ---
