@@ -188,28 +188,10 @@ Clone/download the repository and follow these steps:
 - Resort/group CSS styles better
 - Dashboard: Top stats: Display them more in rows instead of big "buttons". Maybe like "🏋️ 25 Total Workouts * 💪 282.741,5 kg Total Volume * ⏱️ 34h 15m Total Time Trained"
 - CSV upload: PRs not shown and muscle regions missing
-- Enable/configure settings for date format, time format, week start day
 - [Debounce typeahead search boxes](https://github.com/casudo/Hevy-Insights/issues/29)
-- Localization string fixes
-  - Workouts List
-    - "03:13 PM" time format in workout list
-- Date formatting inconsistencies
-  - Dashboard
-    - PRs achieved date: "DD.MM.YYYY"
-    - Graph X-Axis: "YYYY-MM"
-    - Workout Calender: "YYYY-MM-DD"
-  - Workouts (Card)
-    - Workout date: "DD.MM.YYYY, HH:MM:SS"
-  - Workouts (List)
-    - Workout date: "MM/DD/YYYY"
-  - Exercises
-    - Top 3 Best Sets date: YYYY-MM-DD
-    - Graph X-Axis: "Dec 1, 2025"
-    - Max weight vs reps graph hover over: "Dec 1, 2025"
-- Mobile: workout details not filling out whole exercise container (Same for list and card)
-- On mobile: Fix padding and margin for "workouts-card-header", "workouts-list-header" and "exercises-header" (too big, blank space). Also decrease it for Dashboard.vue and Exercises.vue pages to gain more space on mobile
-- - To get more space on mobile: Dashboard charts: Remove Description and Filters. Add a „i“ button which shows the desc and a filter button so the user can switch filters
-- Exercises.vue: On mobile reduce padding to the side so that the graphs appear bigger (just like on Dashboard.vue)
+- To get more space on mobile: Dashboard charts: Hide Filters. Add something similar to the „i“ button which shows the filters
+- Better tablet screen responsiveness
+
 
 ---
 
