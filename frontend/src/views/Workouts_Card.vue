@@ -281,7 +281,7 @@ onMounted(async () => {
         <div class="pagination-controls">
           <button @click="firstPage" :disabled="!hasPrev" class="pagination-btn">《 {{ $t('global.pagination.first') }}</button>
           <button @click="prevPage" :disabled="!hasPrev" class="pagination-btn">← {{ $t('global.pagination.previous') }}</button>
-          <span class="page-info">{{ $t('global.pagination.page') }} {{ currentPage }} {{ $t('global.pagination.pageOf') }} {{ totalPages }}</span>
+          <span class="page-info">{{ $t('global.pagination.indicator', { current: currentPage, total: totalPages }) }}</span>
           <button @click="nextPage" :disabled="!hasMore" class="pagination-btn">{{ $t('global.pagination.next') }} →</button>
           <button @click="lastPage" :disabled="!hasMore" class="pagination-btn">{{ $t('global.pagination.last') }} 》</button>
         </div>
