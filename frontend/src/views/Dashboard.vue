@@ -92,6 +92,20 @@ const prsOverTime_Display = ref<DisplayStyle>("mo");
 
 const muscleDistribution_Range = ref<Range>("all");
 const muscleDistribution_Grouping = ref<"groups" | "muscles">("groups");
+
+// Mobile: Track which chart description tooltip is shown
+const activeTooltip = ref<string | null>(null);
+const showTooltip = (chartId: string, event: Event) => {
+  event.stopPropagation();
+  activeTooltip.value = chartId;
+};
+
+// Close tooltip when clicking outside
+onMounted(() => {
+  document.addEventListener("click", () => {
+    activeTooltip.value = null;
+  });
+});
   
 // ---------- Helper functions for date keys ----------
 
@@ -1150,7 +1164,13 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>⏳ {{ $t("dashboard.charts.hoursTrained") }}</h3>
+                    <h3>
+                      ⏳ {{ $t("dashboard.charts.hoursTrained") }}
+                      <button class="mobile-info-btn" @click="showTooltip('hoursTrained', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'hoursTrained'" class="info-popup" @click.stop>
+                        {{ $t("dashboard.charts.hoursTrainedDescription") }}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{ $t("dashboard.charts.hoursTrainedDescription") }}</span>
                   </div>
                   <div class="chart-filters">
@@ -1188,7 +1208,13 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>💪 {{ $t('dashboard.charts.volumeProgression') }}</h3>
+                    <h3>
+                      💪 {{ $t('dashboard.charts.volumeProgression') }}
+                      <button class="mobile-info-btn" @click="showTooltip('volume', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'volume'" class="info-popup" @click.stop>
+                        {{ $t('dashboard.charts.volumeProgressionDescription') }}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{ $t('dashboard.charts.volumeProgressionDescription') }}</span>
                   </div>
                   <div class="chart-filters">
@@ -1226,7 +1252,13 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>📊 {{ $t('dashboard.charts.repsAndSets') }}</h3>
+                    <h3>
+                      📊 {{ $t('dashboard.charts.repsAndSets') }}
+                      <button class="mobile-info-btn" @click="showTooltip('repsAndSets', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'repsAndSets'" class="info-popup" @click.stop>
+                        {{ $t('dashboard.charts.repsAndSetsDescription') }}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{ $t('dashboard.charts.repsAndSetsDescription') }}</span>
                   </div>
                   <div class="chart-filters">
@@ -1294,7 +1326,13 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>🏆 {{ $t('dashboard.charts.PRsOverTime') }}</h3>
+                    <h3>
+                      🏆 {{ $t('dashboard.charts.PRsOverTime') }}
+                      <button class="mobile-info-btn" @click="showTooltip('prsOverTime', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'prsOverTime'" class="info-popup" @click.stop>
+                        {{ $t('dashboard.charts.PRsOverTimeDescription') }}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{ $t('dashboard.charts.PRsOverTimeDescription') }}</span>
                   </div>
                   <div class="chart-filters">
@@ -1398,7 +1436,13 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>📅 {{$t("dashboard.charts.workoutCalendar")}}</h3>
+                    <h3>
+                      📅 {{$t("dashboard.charts.workoutCalendar")}}
+                      <button class="mobile-info-btn" @click="showTooltip('calendar', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'calendar'" class="info-popup" @click.stop>
+                        {{$t("dashboard.charts.workoutCalendarDescription")}}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{$t("dashboard.charts.workoutCalendarDescription")}}</span>
                   </div>
                 </div>
@@ -1444,7 +1488,13 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>🔥 {{$t('dashboard.charts.weeklyRhythm')}}</h3>
+                    <h3>
+                      🔥 {{$t('dashboard.charts.weeklyRhythm')}}
+                      <button class="mobile-info-btn" @click="showTooltip('weeklyRhythm', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'weeklyRhythm'" class="info-popup" @click.stop>
+                        {{$t('dashboard.charts.weeklyRhythmDescription')}}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{$t('dashboard.charts.weeklyRhythmDescription')}}</span>
                   </div>
                 </div>
@@ -1492,7 +1542,13 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>🎯 {{$t('dashboard.charts.muscleDistribution')}}</h3>
+                    <h3>
+                      🎯 {{$t('dashboard.charts.muscleDistribution')}}
+                      <button class="mobile-info-btn" @click="showTooltip('muscleDistribution', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'muscleDistribution'" class="info-popup" @click.stop>
+                        {{$t('dashboard.charts.muscleDistributionDescription')}}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{$t('dashboard.charts.muscleDistributionDescription')}}</span>
                   </div>
                   <div class="chart-filters">
@@ -1524,7 +1580,13 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>📊 {{ $t("dashboard.charts.muscleRegions") }}</h3>
+                    <h3>
+                      📊 {{ $t("dashboard.charts.muscleRegions") }}
+                      <button class="mobile-info-btn" @click="showTooltip('muscleRegions', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'muscleRegions'" class="info-popup" @click.stop>
+                        {{ $t("dashboard.charts.muscleRegionsDescription") }}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{ $t("dashboard.charts.muscleRegionsDescription") }}</span>
                   </div>
                   <div class="chart-filters">
@@ -2208,6 +2270,32 @@ onMounted(() => {
   min-width: 0;
 }
 
+.chart-title-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mobile-info-btn {
+  display: none;
+  position: relative;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.mobile-info-btn:hover {
+  opacity: 1;
+}
+
+.info-popup {
+  display: none;
+}
+
 .chart-header h2, .chart-header h3 {
   margin: 0 0 0.25rem;
   color: #f8fafc;
@@ -2437,6 +2525,13 @@ onMounted(() => {
   
   .chart-container {
     border-radius: 12px;
+    position: relative;
+    /* Use "visible" so the popup can overflow the top boundary */
+    overflow: visible;
+    /* Ensure container doesn't grow beyond grid track width */
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
   }
   
   .chart-header {
@@ -2444,6 +2539,57 @@ onMounted(() => {
     align-items: flex-start;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
+  }
+  
+  .mobile-info-btn {
+    display: inline-flex;
+  }
+  
+  /* Hide regular subtitle on mobile - show popup instead */
+  .chart-title-section .chart-subtitle {
+    display: none;
+  }
+  
+  .info-popup {
+    display: block;
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: normal;
+    max-width: 280px;
+    width: max-content;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    animation: popupFadeIn 0.2s ease-out;
+  }
+  
+  .info-popup::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+  }
+  
+  @keyframes popupFadeIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   }
   
   .chart-filters {
@@ -2460,6 +2606,8 @@ onMounted(() => {
   .chart-body {
     padding: 0.75rem 0.5rem;
     min-height: 260px;
+    overflow: hidden; /* Prevent charts from expanding container width */
+    max-width: 100%;
   }
   
   .doughnut-body,
