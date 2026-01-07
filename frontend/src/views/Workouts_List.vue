@@ -189,7 +189,7 @@ watch(() => route.query.day, async (d) => {
     </div>
 
     <!-- Top filters (time range, workout number, name) -->
-    <div class="top-filters">
+    <div v-if="!loading" class="top-filters">
       <div class="filter-group">
         <label class="filter-label">{{ $t('global.timeRangeFilter.timeRange') }}</label>
         <select class="filter-select" v-model="filterRange">
