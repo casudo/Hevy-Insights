@@ -1069,29 +1069,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Compact KPI Row for Mobile -->
-      <div class="kpi-compact-row" style="display: none;">
-        <div class="kpi-compact-item">
-          <span class="kpi-icon">🏋️</span>
-          <span class="kpi-value">{{ totalWorkouts }} workouts</span>
-        </div>
-        <span>•</span>
-        <div class="kpi-compact-item">
-          <span class="kpi-icon">💪</span>
-          <span class="kpi-value">{{ totalVolume.toLocaleString() }}kg lifted</span>
-        </div>
-        <span>•</span>
-        <div class="kpi-compact-item">
-          <span class="kpi-icon">⏳</span>
-          <span class="kpi-value">{{ totalHoursAll }} hours trained</span>
-        </div>
-        <span>•</span>
-        <div class="kpi-compact-item">
-          <span class="kpi-icon">🔥</span>
-          <span class="kpi-value">{{ workoutStreakWeeks }} weeks streak</span>
-        </div>
-      </div>
-
       <!-- Plateau Alerts (if any) -->
       <div v-if="plateauExercises.length > 0" class="dashboard-section plateau-section">
         <div class="section-header" @click="toggleSection('plateaus')">
@@ -2447,38 +2424,6 @@ onMounted(() => {
   .stats-grid,
   .kpi-grid {
     display: none; /* Hide card grid on mobile */
-  }
-  
-  .kpi-compact-row {
-    display: flex !important; /* Show compact row on mobile */
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 1rem;
-    /* background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); */
-    
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-  }
-  
-  .kpi-compact-item {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    white-space: nowrap;
-  }
-  
-  .kpi-compact-item .kpi-icon {
-    font-size: 1rem;
-  }
-  
-  .kpi-compact-item .kpi-value {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #f8fafc;
   }
   
   .stats-grid {
