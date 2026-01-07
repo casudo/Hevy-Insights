@@ -434,6 +434,11 @@ onMounted(async () => {
   .settings-btn {
     display: none;
   }
+  
+  .workouts-card-header {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+  }
 }
 
 .filters { display: flex; align-items: center; gap: 0.75rem; }

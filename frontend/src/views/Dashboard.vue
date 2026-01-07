@@ -2498,6 +2498,15 @@ onMounted(() => {
     padding: 1.5rem 1rem;
   }
   
+  .dashboard-header {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .header-content {
+    gap: 1rem;
+  }
+  
   .title-section h1 {
     font-size: 1.875rem;
   }

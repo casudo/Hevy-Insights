@@ -1384,6 +1384,15 @@ const barChartOptions = {
   .settings-btn {
     display: none;
   }
+  
+  .exercises-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .header-content {
+    gap: 0rem;
+  }
 }
 
 /* Search Section */
@@ -1709,10 +1718,11 @@ const barChartOptions = {
 }
 
 @media (max-width: 640px) {
-  .exercises-page { padding: 1rem; }
+  .exercises-page { padding: 0.5rem; }
   .header-row { flex-direction: column; align-items: flex-start; }
   .header-actions { width: 100%; }
   .search-input { width: 100%; min-width: unset; }
+  .exercise-card { padding: 0.4rem; }
 }
 
 @media (max-width: 480px) {

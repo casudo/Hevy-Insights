@@ -444,6 +444,15 @@ watch(() => route.query.day, async (d) => {
     .settings-btn {
       display: none;
     }
+    
+    .workouts-list-header {
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+    }
+    
+    .header-content {
+      gap: 0rem;
+    }
   }
 
   /* Contribution graph */
