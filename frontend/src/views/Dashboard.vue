@@ -1051,7 +1051,7 @@ onMounted(() => {
 
     <!-- Main Content -->
     <div v-else class="dashboard-content">
-      <!-- KPI Cards - Compact 4-Column Layout -->
+      <!-- KPI Cards - Desktop: 5 columns, Mobile: 2x3 grid -->
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-icon">🏋️</div>
@@ -1081,6 +1081,49 @@ onMounted(() => {
           <div class="kpi-icon">🔥</div>
           <div class="kpi-value">{{ workoutStreakWeeks }}</div>
           <div class="kpi-label">{{ $t("dashboard.stats.workoutStreak") }}</div>
+        </div>
+      </div>
+
+      <!-- Mobile KPI Stats - Compact Version -->
+      <div class="kpi-mobile">
+        <div class="kpi-mobile-card">
+          <span class="kpi-mobile-icon">🏋️</span>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ totalWorkouts }}</div>
+            <div class="kpi-mobile-label">{{ $t("dashboard.stats.totalWorkouts") }}</div>
+          </div>
+        </div>
+        
+        <div class="kpi-mobile-card">
+          <span class="kpi-mobile-icon">💪</span>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ formatWeight(totalVolume) }} {{ getWeightUnit() }}</div>
+            <div class="kpi-mobile-label">{{ $t("dashboard.stats.totalVolume") }}</div>
+          </div>
+        </div>
+        
+        <div class="kpi-mobile-card">
+          <span class="kpi-mobile-icon">⏳</span>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ totalHoursAll }}</div>
+            <div class="kpi-mobile-label">{{ $t("dashboard.stats.totalHoursTrained") }}</div>
+          </div>
+        </div>
+
+        <div class="kpi-mobile-card">
+          <span class="kpi-mobile-icon">⏱️</span>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ avgWorkoutMinutes }}</div>
+            <div class="kpi-mobile-label">{{ $t("dashboard.stats.avgWorkoutTime") }}</div>
+          </div>
+        </div>
+
+        <div class="kpi-mobile-card">
+          <span class="kpi-mobile-icon">🔥</span>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ workoutStreakWeeks }}</div>
+            <div class="kpi-mobile-label">{{ $t("dashboard.stats.workoutStreak") }}</div>
+          </div>
         </div>
       </div>
 
@@ -1822,7 +1865,7 @@ onMounted(() => {
   margin: 0;
 }
 
-/* KPI Cards - Compact 4-Column Layout */
+/* KPI Cards - 5 Column Layout */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -1866,6 +1909,70 @@ onMounted(() => {
   color: var(--text-secondary);
   text-align: center;
   line-height: 1.2;
+}
+
+/* Mobile KPI Stats - Hidden on desktop, shown on mobile */
+.kpi-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .kpi-grid {
+    display: none;
+  }
+  
+  .kpi-mobile {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .kpi-mobile-card {
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(8px);
+    padding: 0.875rem;
+    border-radius: 10px;
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+  }
+  
+  .kpi-mobile-card:active {
+    transform: scale(0.98);
+    border-color: var(--color-primary, #10b981);
+  }
+  
+  .kpi-mobile-icon {
+    font-size: 1.5rem;
+    opacity: 0.9;
+    flex-shrink: 0;
+  }
+  
+  .kpi-mobile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+  
+  .kpi-mobile-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #f8fafc;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .kpi-mobile-label {
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    line-height: 1.2;
+  }
 }
 
 /* Plateau Alert Section */
@@ -2516,12 +2623,6 @@ onMounted(() => {
   .plateau-section .plateau-section-title:not(),
   .pr-section .pr-section-title:not() {
     display: none;
-  }
-  
-  /* Compact KPI Row for Mobile */
-  .stats-grid,
-  .kpi-grid {
-    display: none; /* Hide card grid on mobile */
   }
   
   .stats-grid {
