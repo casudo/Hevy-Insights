@@ -191,7 +191,7 @@ Clone/download the repository and follow these steps:
 - [Debounce typeahead search boxes](https://github.com/casudo/Hevy-Insights/issues/29)
 - To get more space on mobile: Dashboard charts: Hide Filters. Add something similar to the „i“ button which shows the filters
 - Better tablet screen responsiveness
-
+- Implement update checker
 
 ---
 
