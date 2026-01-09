@@ -181,20 +181,17 @@ Clone/download the repository and follow these steps:
 
 - Better logging
 - Replace localStorage with HTTP cookie
-- Handle exercises with time (planks, jogging)
-- Move contribution graph to Dashboard
-- Add a better visual line between months in the contribution graph
 - Add visual representation of trained muscle groups (body heatmap)
-- Add i18n variables to pagination localization (specifically footer)
 - Add calendar filter
 - In-depth muscle analysis page
 - Remove emojis, use icons instead
 - Resort/group CSS styles better
 - Dashboard: Top stats: Display them more in rows instead of big "buttons". Maybe like "🏋️ 25 Total Workouts * 💪 282.741,5 kg Total Volume * ⏱️ 34h 15m Total Time Trained"
-- PRs on Dashboard: Showing hardcoded english "title" of exercise, not localized
 - CSV upload: PRs not shown and muscle regions missing
-- Contribution Graph: Fix timeline (still shows 2025 + 2026 data). Only show current year.
-- Enable/configure settings for date format, time format, week start day
+- [Debounce typeahead search boxes](https://github.com/casudo/Hevy-Insights/issues/29)
+- To get more space on mobile: Dashboard charts: Hide Filters. Add something similar to the „i“ button which shows the filters
+- Better tablet screen responsiveness
+
 
 ---
 

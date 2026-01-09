@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
-import { formatWeight, getWeightUnit, getDistanceUnit, formatPRValue } from "../utils/formatters";
+import { formatWeight, getWeightUnit, getDistanceUnit, formatPRValue, formatDate } from "../utils/formatters";
 import { detectExerciseType, formatDurationSeconds, formatDistance } from "../utils/exerciseTypeDetector";
 import { Scatter, Bar, Line } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
@@ -69,6 +69,24 @@ function getGraphFilter(exerciseId: string) {
     };
   }
   return graphFilters.value[exerciseId];
+}
+
+// Get localized range label
+function getRangeLabel(range: GraphRange): string {
+  if (range === 0) return t("exercises.filters.allTime");
+  if (range === 30) return t("exercises.filters.30days");
+  if (range === 60) return t("exercises.filters.60days");
+  if (range === 90) return t("exercises.filters.90days");
+  if (range === 365) return t("exercises.filters.1year");
+  return `${range}d`;
+}
+
+// Translate PR type names using i18n keys
+function getLocalizedPRType(prType: string): string {
+  const key = `dashboard.prTypes.${prType}`;
+  const translation = t(key);
+  if (translation === key) return prType.split("_").join(" ");
+  return translation;
 }
 
 const allWorkouts = computed(() => store.workouts || []);
@@ -203,14 +221,14 @@ function analyzeStrengthProgress(ex: any) {
     if (change > 5) {
       return {
         type: "gaining",
-        message: t("exercises.insights.gainingCardio", { change: change.toFixed(1) })
+        message: t("exercises.insights.gainingCardio", { change: change.toFixed(1), sessions: minSessions })
       };
     }
     
     if (change < -5) {
       return {
         type: "losing",
-        message: t("exercises.insights.losingCardio", { change: Math.abs(change).toFixed(1) })
+        message: t("exercises.insights.losingCardio", { change: Math.abs(change).toFixed(1), sessions: minSessions })
       };
     }
     
@@ -267,7 +285,8 @@ function analyzeStrengthProgress(ex: any) {
         type: "gaining",
         message: t("exercises.insights.gaining", {
           weightChange: `${formatWeight(Math.abs(weightChange))} ${getWeightUnit()}`,
-          repsChange: Math.abs(repsChange).toFixed(0)
+          repsChange: Math.abs(repsChange).toFixed(0),
+          sessions: minSessions
         })
       };
     }
@@ -278,7 +297,8 @@ function analyzeStrengthProgress(ex: any) {
         type: "losing",
         message: t("exercises.insights.losing", {
           weightChange: `${formatWeight(Math.abs(weightChange))} ${getWeightUnit()}`,
-          repsChange: Math.abs(repsChange).toFixed(0)
+          repsChange: Math.abs(repsChange).toFixed(0),
+          sessions: minSessions
         })
       };
     }
@@ -550,7 +570,7 @@ function getWeightVsRepsChartData(ex: any, graphRange: GraphRange = 0) {
   const days = filterGraphDates(ex, graphRange);
   const scatterData = days.map((d) => {
     const date = new Date(d);
-    const dateLabel = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const dateLabel = formatDate(date);
     return {
       x: ex.byDay[d]?.repsAtMax || 0,
       y: store.weightUnit === "lbs" ? (ex.byDay[d]?.maxWeight || 0) * 2.20462 : (ex.byDay[d]?.maxWeight || 0),
@@ -574,10 +594,7 @@ function getWeightVsRepsChartData(ex: any, graphRange: GraphRange = 0) {
 
 function getMaxWeightOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
   const days = filterGraphDates(ex, graphRange);
-  const labels = days.map((d) => {
-    const date = new Date(d);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  });
+  const labels = days.map((d) => formatDate(new Date(d)));
   const weightData = days.map((d) => {
     const kg = ex.byDay[d]?.maxWeight || 0;
     return store.weightUnit === "lbs" ? kg * 2.20462 : kg;
@@ -601,10 +618,7 @@ function getMaxWeightOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
 
 function getAvgVolumePerSetChartData(ex: any, graphRange: GraphRange = 0) {
   const days = filterGraphDates(ex, graphRange);
-  const labels = days.map((d) => {
-    const date = new Date(d);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  });
+  const labels = days.map((d) => formatDate(new Date(d)));
   const avgVolData = days.map((d) => {
     const kg = ex.byDay[d]?.avgVolumePerSet || 0;
     return Math.round(store.weightUnit === "lbs" ? kg * 2.20462 : kg);
@@ -628,10 +642,7 @@ function getAvgVolumePerSetChartData(ex: any, graphRange: GraphRange = 0) {
 
 function getVolumeChartData(ex: any, graphRange: GraphRange = 0) {
   const days = filterGraphDates(ex, graphRange);
-  const labels = days.map((d) => {
-    const date = new Date(d);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  });
+  const labels = days.map((d) => formatDate(new Date(d)));
   const volData = days.map((d) => {
     const kg = ex.byDay[d]?.volume || 0;
     return store.weightUnit === "lbs" ? kg * 2.20462 : kg;
@@ -641,7 +652,7 @@ function getVolumeChartData(ex: any, graphRange: GraphRange = 0) {
     labels,
     datasets: [
       {
-        label: `${t("global.volume")} (${getWeightUnit()})`,
+        label: `${t("global.sw.volume")} (${getWeightUnit()})`,
         data: volData,
         backgroundColor: primaryColor.value + "33",
         borderColor: primaryColor.value,
@@ -654,10 +665,7 @@ function getVolumeChartData(ex: any, graphRange: GraphRange = 0) {
 // Cardio-specific chart data builders
 function getDistanceOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
   const days = filterGraphDates(ex, graphRange);
-  const labels = days.map((d) => {
-    const date = new Date(d);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  });
+  const labels = days.map((d) => formatDate(new Date(d)));
   const distanceData = days.map((d) => {
     return ex.byDay[d]?.totalDistance || 0;
   });
@@ -666,7 +674,7 @@ function getDistanceOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
     labels,
     datasets: [
       {
-        label: `${t("global.distance")} (${getDistanceUnit()})`,
+        label: `${t("global.sw.distance")} (${getDistanceUnit()})`,
         data: distanceData,
         backgroundColor: primaryColor.value + "33",
         borderColor: primaryColor.value,
@@ -680,10 +688,7 @@ function getDistanceOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
 
 function getDurationOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
   const days = filterGraphDates(ex, graphRange);
-  const labels = days.map((d) => {
-    const date = new Date(d);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  });
+  const labels = days.map((d) => formatDate(new Date(d)));
   const durationData = days.map((d) => {
     return (ex.byDay[d]?.totalDuration || 0) / 60; // Convert to minutes
   });
@@ -692,7 +697,7 @@ function getDurationOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
     labels,
     datasets: [
       {
-        label: `${t("global.duration")} (min)`,
+        label: `${t("global.sw.duration")} (min)`,
         data: durationData,
         backgroundColor: secondaryColor.value + "33",
         borderColor: secondaryColor.value,
@@ -936,10 +941,10 @@ const barChartOptions = {
               <table class="sets-table compact">
                 <thead>
                   <tr>
-                    <th>{{ $t("global.day") }}</th>
+                    <th>{{ $t("global.sw.day") }}</th>
                     <template v-if="ex.exerciseType === 'cardio'">
-                      <th>{{ $t("global.distance") }}</th>
-                      <th>{{ $t("global.duration") }}</th>
+                      <th>{{ $t("global.sw.distance") }}</th>
+                      <th>{{ $t("global.sw.duration") }}</th>
                     </template>
                     <template v-else>
                       <th>{{ getWeightUnit() }}</th>
@@ -949,7 +954,7 @@ const barChartOptions = {
                 </thead>
                 <tbody>
                   <tr v-for="s in ex.topSets" :key="`${ex.id}-${s.day}-${s.index}`">
-                    <td>{{ s.day }}</td>
+                    <td>{{ formatDate(s.day) }}</td>
                     <template v-if="ex.exerciseType === 'cardio'">
                       <td>{{ s.distance_km ? formatDistance(s.distance_km) : '-' }}</td>
                       <td>{{ s.duration_seconds ? formatDurationSeconds(s.duration_seconds) : '-' }}</td>
@@ -968,7 +973,7 @@ const barChartOptions = {
               <div class="pr-list" v-if="ex.prDistinct && ex.prDistinct.length">
                 <h3>{{ $t("exercises.personalRecords") }}</h3>
                 <div class="pr-chips">
-                  <span v-for="(pr,i) in ex.prDistinct" :key="i" class="pr-chip">{{ (pr.type||'').split('_').join(' ') }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
+                  <span v-for="(pr,i) in ex.prDistinct" :key="i" class="pr-chip">{{ getLocalizedPRType(pr.type) }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
                 </div>
               </div>
               <!-- Stats -->
@@ -991,7 +996,7 @@ const barChartOptions = {
               <!-- Distance Over Time -->
               <div class="graph">
                 <div class="graph-header">
-                  <h3>{{ $t("global.distance") }} Over Time</h3>
+                  <h3>{{ $t("global.sw.distance") }} Over Time</h3>
                   <div class="graph-controls">
                     <div class="range-selector">
                       <button
@@ -1034,7 +1039,7 @@ const barChartOptions = {
               <!-- Duration Over Time -->
               <div class="graph">
                 <div class="graph-header">
-                  <h3>{{ $t("global.duration") }} Over Time</h3>
+                  <h3>{{ $t("global.sw.duration") }} Over Time</h3>
                   <div class="graph-controls">
                     <div class="range-selector">
                       <button
@@ -1089,7 +1094,7 @@ const barChartOptions = {
                         :class="['range-btn', { active: getGraphFilter(ex.id).maxWeight.range === range }]"
                         @click="getGraphFilter(ex.id).maxWeight.range = range as GraphRange"
                       >
-                        {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
+                        {{ getRangeLabel(range as GraphRange) }}
                       </button>
                     </div>
                     <div class="type-selector">
@@ -1132,7 +1137,7 @@ const barChartOptions = {
                         :class="['range-btn', { active: getGraphFilter(ex.id).avgVolume.range === range }]"
                         @click="getGraphFilter(ex.id).avgVolume.range = range as GraphRange"
                       >
-                        {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
+                        {{ getRangeLabel(range as GraphRange) }}
                       </button>
                     </div>
                     <div class="type-selector">
@@ -1175,7 +1180,7 @@ const barChartOptions = {
                         :class="['range-btn', { active: getGraphFilter(ex.id).weightVsReps.range === range }]"
                         @click="getGraphFilter(ex.id).weightVsReps.range = range as GraphRange"
                       >
-                        {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
+                        {{ getRangeLabel(range as GraphRange) }}
                       </button>
                     </div>
                   </div>
@@ -1197,7 +1202,7 @@ const barChartOptions = {
                         :class="['range-btn', { active: getGraphFilter(ex.id).volumeSession.range === range }]"
                         @click="getGraphFilter(ex.id).volumeSession.range = range as GraphRange"
                       >
-                        {{ range === 0 ? 'All' : range === 365 ? '1Y' : `${range}D` }}
+                        {{ getRangeLabel(range as GraphRange) }}
                       </button>
                     </div>
                     <div class="type-selector">
@@ -1363,6 +1368,15 @@ const barChartOptions = {
   
   .settings-btn {
     display: none;
+  }
+  
+  .exercises-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .header-content {
+    gap: 0rem;
   }
 }
 
@@ -1537,7 +1551,7 @@ const barChartOptions = {
 .card-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); color: var(--text-primary); border: none; padding: 0.6rem 0.75rem; cursor: pointer; border-radius: 8px; }
 .toggle-left { display: flex; align-items: center; gap: 1rem; flex: 1; }
 .exercise-title-container { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; }
-.exercise-title { font-size: 1rem; font-weight: 600; }
+.exercise-title { font-size: 1rem; font-weight: 600; text-align: left; }
 .last-trained-date { font-size: 0.75rem; color: var(--text-secondary); font-weight: 400; }
 .insight-badge-container { display: flex; align-items: center; }
 .insight-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; transition: all 0.2s ease; }
@@ -1689,10 +1703,11 @@ const barChartOptions = {
 }
 
 @media (max-width: 640px) {
-  .exercises-page { padding: 1rem; }
+  .exercises-page { padding: 0.5rem; }
   .header-row { flex-direction: column; align-items: flex-start; }
   .header-actions { width: 100%; }
   .search-input { width: 100%; min-width: unset; }
+  .exercise-card { padding: 0.4rem; }
 }
 
 @media (max-width: 480px) {

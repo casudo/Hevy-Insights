@@ -67,14 +67,35 @@
       "calendarViews": "Calendar Views",
       "muscleDistribution": "Muscle Distribution"
     },
+    "filters": {
+      "all": "All",
+      "oneYear": "1Y",
+      "sixMonths": "6M",
+      "threeMonths": "3M",
+      "oneMonth": "1M",
+      "monthly": "Mo",
+      "weekly": "Wk"
+    },
     "stats": {
       "totalWorkouts": "Total Workouts",
       "totalVolume": "Total Volume",
       "avgVolume": "Avg Volume",
       "totalHoursTrained": "Total Hours Trained",
+      "avgWorkoutTime": "Avg Workout Time",
       "workoutStreak": "Workout Streak (Weeks)",
       "mostTrainedExercise": "Most Trained Exercise",
-      "longestWorkout": "Longest Workout"
+      "longestWorkout": "Longest Workout",
+      "sessions": "sessions",
+      "perWorkout": "per workout"
+    },
+    "prTypes": {
+      "best_weight": "Most Weight",
+      "best_max": "Best Max",
+      "best_1rm": "1RM",
+      "best_volume": "Best Volume",
+      "best_reps": "Most Reps",
+      "distance": "Distance",
+      "duration": "Duration"
     },
     "charts": {
       "hoursTrained": "Hours Trained",
@@ -85,19 +106,36 @@
       "repsAndSetsDescription": "Training volume breakdown",
       "PRsOverTime": "PRs Over Time",
       "PRsOverTimeDescription": "Personal records achieved",
+      "workoutCalendar": "Workout Calendar",
+      "workoutCalendarDescription": "Workout consistency over the 12 months",
       "weeklyRhythm": "Weekly Rhythm",
       "weeklyRhythmDescription": "Training frequency by day",
       "muscleDistribution": "Muscle Distribution",
       "muscleDistributionDescription": "Sets by muscle group",
       "muscleRegions": "Muscle Regions",
-      "muscleRegionsDescription": "Stacked breakdown by period"
+      "muscleRegionsDescription": "Stacked breakdown by period",
+      "calendarWeek": "CW",
+      "muscleFilters": {
+        "groups": "GROUPS",
+        "muscles": "MUSCLE"
+      }
     }
   },
   "workouts": {
-    "workoutsCardTitle": "Workouts (Card)",
-    "workoutsCardSubtitle": "Browse your workouts in a card design.",
-    "workoutsListTitle": "Workouts (List)",
-    "workoutsListSubtitle": "Browse your workouts in a detailed list format with contribution calendar."
+    "card": {
+      "title": "Workouts (Card)",
+      "subtitle": "Browse your workouts in a card design.",
+      "totalSets": "Total Sets",
+      "set": "Set",
+      "reps": "Reps"
+    },
+    "list": {
+      "title": "Workouts (List)",
+      "subtitle": "Browse your workouts in a detailed list format with contribution calendar.",
+      "searchContains": "Contains…",
+      "set": "Set",
+      "reps": "Reps"
+    }
   },
   "exercises": {
     "title": "Exercises",
@@ -105,6 +143,13 @@
     "searchFilter": "Search exercises by name...",
     "personalRecords": "Personal Records",
     "neverTrained": "Never trained",
+    "filters": {
+      "30days": "30d",
+      "60days": "60d",
+      "90days": "90d",
+      "1year": "1y",
+      "allTime": "All"
+    },
     "summary": {
       "total": "Total",
       "active": "Active"
@@ -129,10 +174,10 @@
       "maintainingBadge": "Maintaining",
       "plateau": "Your top set has hovered around {weight} for {repsMin}-{repsMax} reps. Try adding more weight or reps to break the plateau!",
       "plateauCardio": "Your performance has plateaued around {metric}. Try increasing distance or pace!",
-      "gaining": "You've increased by {weightChange} or {repsChange} reps over your last sessions!",
-      "gainingCardio": "Great progress! You've improved by {change}% in recent sessions!",
-      "losing": "Performance decreased by {weightChange} or {repsChange} reps. Consider rest or form check.",
-      "losingCardio": "Performance decreased by {change}%. Consider rest or check your training.",
+      "gaining": "You've increased by {weightChange} or {repsChange} reps over your last {sessions} sessions!",
+      "gainingCardio": "Great progress! You've improved by {change}% over your last {sessions} sessions!",
+      "losing": "Performance decreased by {weightChange} or {repsChange} reps over your last {sessions} sessions. Consider rest or form check.",
+      "losingCardio": "Performance decreased by {change}% over your last {sessions} sessions. Consider rest or check your training.",
       "insufficient": "Not enough data yet. Need at least {needed} sessions, currently have {sessions}.",
       "inactive": "Not trained in {days} days. Resume training to track progress!",
       "maintaining": "Performance is stable. You're maintaining your current strength level."
@@ -181,7 +226,9 @@
     },
     "weightUnit": {
       "title": "Weight Unit",
-      "description": "Choose your preferred weight unit for display"
+      "description": "Choose your preferred weight unit for display",
+      "kg": "Kilogram",
+      "lbs": "Pound"
     },
     "plateauDetection": {
       "title": "Plateau Detection",
@@ -200,35 +247,86 @@
   },
   "global": {
     "loadingSpinnerText": "Loading your workout data...",
-    "volume": "Volume",
-    "hours": "Hours",
-    "duration": "Duration",
-    "distance": "Distance",
-    "exercises": "Exercises",
-    "weight": "Weight",
-    "notes": "Notes",
-    "description": "Description",
-    "monday": "Monday",
-    "tuesday": "Tuesday",
-    "wednesday": "Wednesday",
-    "thursday": "Thursday",
-    "friday": "Friday",
-    "saturday": "Saturday",
-    "sunday": "Sunday",
-    "day": "Day",
-    "arms": "Arms",
-    "back": "Back",
-    "chest": "Chest",
-    "core": "Core",
-    "legs": "Legs",
-    "shoulders": "Shoulders",
+    "sw": {
+      "volume": "Volume",
+      "hours": "Hours",
+      "duration": "Duration",
+      "distance": "Distance",
+      "exercises": "Exercises",
+      "weight": "Weight",
+      "notes": "Notes",
+      "description": "Description",
+      "day": "Day",
+      "reps": "reps"
+    },
+    "days": {
+      "mondayLong": "Monday",
+      "tuesdayLong": "Tuesday",
+      "wednesdayLong": "Wednesday",
+      "thursdayLong": "Thursday",
+      "fridayLong": "Friday",
+      "saturdayLong": "Saturday",
+      "sundayLong": "Sunday",
+      "mondayShort": "Mon",
+      "tuesdayShort": "Tue",
+      "wednesdayShort": "Wed",
+      "thursdayShort": "Thu",
+      "fridayShort": "Fri",
+      "saturdayShort": "Sat",
+      "sundayShort": "Sun"
+    },
+    "months": {
+      "januaryLong": "January",
+      "februaryLong": "February",
+      "marchLong": "March",
+      "aprilLong": "April",
+      "mayLong": "May",
+      "juneLong": "June",
+      "julyLong": "July",
+      "augustLong": "August",
+      "septemberLong": "September",
+      "octoberLong": "October",
+      "novemberLong": "November",
+      "decemberLong": "December",
+      "januaryShort": "Jan",
+      "februaryShort": "Feb",
+      "marchShort": "Mar",
+      "aprilShort": "Apr",
+      "mayShort": "May",
+      "juneShort": "Jun",
+      "julyShort": "Jul",
+      "augustShort": "Aug",
+      "septemberShort": "Sep",
+      "octoberShort": "Oct",
+      "novemberShort": "Nov",
+      "decemberShort": "Dec"
+    },
+    "bodymuscles": {
+      "chest": "Chest",
+      "back": "Back",
+      "shoulders": "Shoulders",
+      "arms": "Arms",
+      "core": "Core",
+      "legs": "Legs",
+      "abdominals": "Abdominals",
+      "abductors": "Abductors",
+      "adductors": "Adductors",
+      "biceps": "Biceps",
+      "calves": "Calves",
+      "glutes": "Glutes",
+      "hamstrings": "Hamstrings",
+      "lats": "Lats",
+      "lower_back": "Lower Back",
+      "quadriceps": "Quadriceps",
+      "triceps": "Triceps",
+      "upper_back": "Upper Back"
+    },
     "pagination": {
       "first": "First",
       "previous": "Previous",
       "next": "Next",
       "last": "Last",
-      "page": "Page",
-      "pageOf": "of"
+      "indicator": "Page {current} of {total}"
     },
     "searchFilter": {
       "byNumber": "By Number",

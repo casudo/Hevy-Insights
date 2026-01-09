@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
+import { useRoute } from "vue-router";
 import { useHevyCache } from "../stores/hevy_cache";
 import { useI18n } from "vue-i18n";
-import { formatDurationFromTimestamps, formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
+import { formatDurationFromTimestamps, formatWeight, getWeightUnit, formatPRValue, formatDateTime } from "../utils/formatters";
 import { detectExerciseType, formatDurationSeconds, formatDistance } from "../utils/exerciseTypeDetector";
 
 const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
 const { t } = useI18n();
+const route = useRoute();
 
 // UI state
 const filterRange = ref<"all" | "1w" | "1m" | "3m" | "6m" | "12m">("all");
@@ -70,11 +72,13 @@ const filteredAndSearchedWorkouts = computed(() => {
 // Helpers
 const formatDateFull = (timestamp: number) => {
   const d = new Date(timestamp * 1000);
-  const days = [t("global.sunday"), t("global.monday"), t("global.tuesday"), t("global.wednesday"), t("global.thursday"), t("global.friday"), t("global.saturday")];
+  const days = [t("global.days.sundayLong"), t("global.days.mondayLong"), t("global.days.tuesdayLong"), t("global.days.wednesdayLong"), t("global.days.thursdayLong"), t("global.days.fridayLong"), t("global.days.saturdayLong")];
   const dayName = days[d.getDay()];
-  const usDate = d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }); // MM/DD/YYYY
-  const time = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-  return `${dayName}, ${usDate} ${time}`;
+  
+  // Use the shared formatDateTime utility, but extract date and time separately to insert day name
+  const formattedDateTime = formatDateTime(d);
+  
+  return `${dayName}, ${formattedDateTime}`;
 };
 
 const biometrics = (workout: any) => {
@@ -119,71 +123,39 @@ const workoutPRCount = (workout: any) => {
   return count;
 };
 
+// Translate PR type names using i18n keys
+function getLocalizedPRType(prType: string): string {
+  const key = `dashboard.prTypes.${prType}`;
+  const translation = t(key);
+  if (translation === key) return prType.split("_").join(" ");
+  return translation;
+}
+
 // Contribution graph (heatmap) data by day
-const workoutsByDay = computed(() => {
-  const map: Record<string, any[]> = {};
-  for (const w of filteredAndSearchedWorkouts.value) {
-    const dayKey = new Date((w.start_time || 0) * 1000).toISOString().slice(0,10); // YYYY-MM-DD
-    (map[dayKey] ||= []).push(w);
-  }
-  return map;
-});
-
-// Build weeks for a GitHub-like calendar: 52 columns (weeks) x 7 rows (Mon-Sun)
-const weeks = computed(() => {
-  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const end = new Date();
-  const start = new Date(end);
-  // Go back ~12 months and snap to Monday of the first visible week
-  start.setMonth(end.getMonth() - 11);
-  start.setDate(1);
-  const day = start.getDay(); // 0=Sun,1=Mon
-  const offsetToMonday = (day === 0 ? 6 : day - 1);
-  start.setDate(start.getDate() - offsetToMonday);
-
-  // Build daily cells first
-  const daily: { date: string; count: number; dateObj: Date }[] = [];
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const key = d.toISOString().slice(0,10);
-    daily.push({ date: key, count: (workoutsByDay.value[key] || []).length, dateObj: new Date(d) });
-  }
-
-  // Group into weeks (chunks of 7 days starting Monday)
-  const cols: Array<{ days: typeof daily; monthLabel?: string } > = [];
-  for (let i = 0; i < daily.length; i += 7) {
-    const chunk = daily.slice(i, i + 7);
-    if (chunk.length < 7) break;
-    // Month label on the first column that starts a new month (near beginning)
-    const firstItem = chunk[0] as { dateObj: Date; date: string };
-    const first = firstItem.dateObj ?? new Date(firstItem.date);
-    const isFirstWeekOfMonth = first.getDate() <= 7;
-    const monthLabel = isFirstWeekOfMonth ? monthNames[first.getMonth()] : undefined;
-    cols.push({ days: chunk, monthLabel });
-  }
-  return cols;
-});
-
-const cellColor = (count: number) => {
-  const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#10b981';
-  return count > 0 ? primary : "var(--bg-secondary)"; // single color for days with workouts
-};
-
+// Auto-expand and scroll to workouts on a given day
 const scrollToDay = async (day: string) => {
-  // Auto-expand all workouts on that day
-  const workouts = workoutsByDay.value[day] || [];
+  // Find workouts in the current filtered/search list that match the date
+  const workouts = filteredAndSearchedWorkouts.value.filter((w: any) => {
+    const key = new Date((w.start_time || 0) * 1000).toISOString().slice(0,10);
+    return key === day;
+  });
   for (const w of workouts) expanded.value[w.id] = true;
   await nextTick();
-  const anchors = document.querySelectorAll(`[data-day="${day}"]`);
-  if (anchors.length) {
-    const el = anchors[0] as HTMLElement;
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  const el = document.querySelector(`[data-day="${day}"]`) as HTMLElement;
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
 const toggleItem = (id: string) => { expanded.value[id] = !expanded.value[id]; };
-const onChangeFilter = (val: "all"|"1w"|"1m"|"3m"|"6m"|"12m") => { filterRange.value = val; };
 
-onMounted(async () => { await store.fetchWorkouts(); });
+onMounted(async () => {
+  await store.fetchWorkouts();
+  const dayParam = route.query.day;
+  if (dayParam) await scrollToDay(String(dayParam));
+});
+
+watch(() => route.query.day, async (d) => {
+  if (d) await scrollToDay(String(d));
+});
 </script>
 
 <!-- ===============================================================================  -->
@@ -194,8 +166,8 @@ onMounted(async () => { await store.fetchWorkouts(); });
     <div class="workouts-list-header">
       <div class="header-content">
         <div class="title-section">
-          <h1>{{ $t('workouts.workoutsListTitle') }}</h1>
-          <p class="subtitle">{{ $t('workouts.workoutsListSubtitle') }}</p>
+          <h1>{{ $t('workouts.list.title') }}</h1>
+          <p class="subtitle">{{ $t('workouts.list.subtitle') }}</p>
         </div>
 
         <div class="header-actions">
@@ -216,41 +188,26 @@ onMounted(async () => { await store.fetchWorkouts(); });
       </div>
     </div>
 
-    <!-- Top Row -->
-    <div class="contrib-graph">
-      <div class="graph-and-filters">
-        <!-- Contribution Graph (hidden on mobile via CSS) -->
-        <div class="graph-area">
-          <div class="month-row">
-            <span v-for="(col, ci) in weeks" :key="'m-' + ci" class="month-label">{{ col.monthLabel || '' }}</span>
-          </div>
-          <div class="grid">
-            <div class="weekday-col">
-              <span v-for="label in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']" :key="label" class="weekday">{{ label }}</span>
-            </div>
-            <div class="weeks-wrap">
-              <div v-for="(col, ci) in weeks" :key="'c-' + ci" class="week-col">
-                <div v-for="day in col.days" :key="day.date" class="cell" :style="{ backgroundColor: cellColor(day.count) }" @click="scrollToDay(day.date)" :title="`${day.date} — ${day.count} workout(s)`"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Filters -->
-        <div class="filters">
-          <label class="filter-label">{{ $t('global.timeRangeFilter.timeRange') }}</label>
-          <select class="filter-select" :value="filterRange" @change="onChangeFilter(($event.target as HTMLSelectElement).value as any)">
-            <option value="all">{{ $t('global.timeRangeFilter.allTime') }}</option>
-            <option value="1w">{{ $t('global.timeRangeFilter.lastWeek') }}</option>
-            <option value="1m">{{ $t('global.timeRangeFilter.lastMonth') }}</option>
-            <option value="3m">{{ $t('global.timeRangeFilter.last3Months') }}</option>
-            <option value="6m">{{ $t('global.timeRangeFilter.last6Months') }}</option>
-            <option value="12m">{{ $t('global.timeRangeFilter.last12Months') }}</option>
-          </select>
-          <label class="filter-label">{{ $t('global.searchFilter.byNumber') }}</label>
-          <input class="filter-input" type="number" min="1" placeholder="#" v-model.number="filters.workoutNumber" />
-          <label class="filter-label">{{ $t('global.searchFilter.byName') }}</label>
-          <input class="filter-input" type="text" placeholder="Contains…" v-model="filters.workoutName" />
-        </div>
+    <!-- Top filters (time range, workout number, name) -->
+    <div v-if="!loading" class="top-filters">
+      <div class="filter-group">
+        <label class="filter-label">{{ $t('global.timeRangeFilter.timeRange') }}</label>
+        <select class="filter-select" v-model="filterRange">
+          <option value="all">{{ $t('global.timeRangeFilter.allTime') }}</option>
+          <option value="1w">{{ $t('global.timeRangeFilter.lastWeek') }}</option>
+          <option value="1m">{{ $t('global.timeRangeFilter.lastMonth') }}</option>
+          <option value="3m">{{ $t('global.timeRangeFilter.last3Months') }}</option>
+          <option value="6m">{{ $t('global.timeRangeFilter.last6Months') }}</option>
+          <option value="12m">{{ $t('global.timeRangeFilter.last12Months') }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">{{ $t('global.searchFilter.byNumber') }}</label>
+        <input class="filter-input" type="number" min="1" placeholder="#" v-model.number="filters.workoutNumber" />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">{{ $t('global.searchFilter.byName') }}</label>
+        <input class="filter-input" type="text" :placeholder="$t('workouts.list.searchContains')" v-model="filters.workoutName" />
       </div>
     </div>
 
@@ -290,17 +247,17 @@ onMounted(async () => { await store.fetchWorkouts(); });
               </div>
             </div>
             <div class="stats">
-              <div class="stat"><strong>{{ formatWeight(workout.estimated_volume_kg || 0) }} {{ getWeightUnit() }}</strong><span>{{ $t('global.volume') }}</span></div>
-              <div class="stat"><strong>{{ formatDurationFromTimestamps(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.duration') }}</span></div>
-              <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.exercises') }}</span></div>
+              <div class="stat"><strong>{{ formatWeight(workout.estimated_volume_kg || 0) }} {{ getWeightUnit() }}</strong><span>{{ $t('global.sw.volume') }}</span></div>
+              <div class="stat"><strong>{{ formatDurationFromTimestamps(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.sw.duration') }}</span></div>
+              <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.sw.exercises') }}</span></div>
               <div class="stat"><strong>{{ totalSets(workout) }}</strong><span>Sets</span></div>
-              <div class="stat" v-if="workout.description"><strong>{{ workout.description }}</strong><span>{{ $t('global.description') }}</span></div>
+              <div class="stat" v-if="workout.description"><strong>{{ workout.description }}</strong><span>{{ $t('global.sw.description') }}</span></div>
             </div>
           </div>
 
           <!-- Exercises list with thumbnails -->
           <div class="exercises">
-            <h3>{{ $t('global.exercises') }}</h3>
+            <h3>{{ $t('global.sw.exercises') }}</h3>
             <div class="exercise-grid">
               <div v-for="(exercise, exIdx) in workout.exercises" :key="exercise.id" class="exercise">
                 <div class="exercise-header">
@@ -309,20 +266,20 @@ onMounted(async () => { await store.fetchWorkouts(); });
                   <div class="exercise-title">{{ exercise.title || "Unknown Exercise" }}</div>
                 </div>
               <div v-if="exercisePRs(exercise).length" class="pr-summary">
-                <span v-for="(pr, i) in exercisePRs(exercise)" :key="i" class="pr-chip">{{ (pr.type || '').split('_').join(' ') }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
+                <span v-for="(pr, i) in exercisePRs(exercise)" :key="i" class="pr-chip">{{ getLocalizedPRType(pr.type) }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
               </div>
               <table class="sets-table">
                 <thead>
                   <tr>
-                    <th>Set</th>
+                    <th>{{ $t('workouts.list.set') }}</th>
                     <!-- Dynamic headers based on exercise type -->
                     <template v-if="detectExerciseType(exercise) === 'cardio'">
-                      <th>{{ $t('global.distance') }}</th>
-                      <th>{{ $t('global.duration') }}</th>
+                      <th>{{ $t('global.sw.distance') }}</th>
+                      <th>{{ $t('global.sw.duration') }}</th>
                     </template>
                     <template v-else>
-                      <th>{{ $t('global.weight') }} ({{ getWeightUnit() }})</th>
-                      <th>Reps</th>
+                      <th>{{ $t('global.sw.weight') }} ({{ getWeightUnit() }})</th>
+                      <th>{{ $t('workouts.list.reps') }}</th>
                     </template>
                     <th>RPE</th>
                   </tr>
@@ -343,7 +300,7 @@ onMounted(async () => { await store.fetchWorkouts(); });
                   </tr>
                 </tbody>
               </table>
-              <div v-if="exercise.notes" class="exercise-notes"><em>{{ $t('global.notes') }}: {{ exercise.notes }}</em></div>
+              <div v-if="exercise.notes" class="exercise-notes"><em>{{ $t('global.sw.notes') }}: {{ exercise.notes }}</em></div>
               </div>
             </div>
           </div>
@@ -489,6 +446,15 @@ onMounted(async () => { await store.fetchWorkouts(); });
     .settings-btn {
       display: none;
     }
+    
+    .workouts-list-header {
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+    }
+    
+    .header-content {
+      gap: 0rem;
+    }
   }
 
   /* Contribution graph */
@@ -526,6 +492,13 @@ onMounted(async () => { await store.fetchWorkouts(); });
   .pill-blue { background: rgba(59,130,246,0.15); color: #3b82f6; border-color: rgba(59,130,246,0.35); }
   .pill-gold { background: rgba(201, 187, 0, 0.205); color: #eeea05; border-color: rgba(253, 228, 3, 0.35); }
   .toggle-icon { color: var(--text-secondary); margin-left: 0.5rem; }
+
+  /* Top filters */
+  .top-filters { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+  .top-filters .filter-group { display: flex; flex-direction: column; gap: 0.25rem; }
+  .filter-label { color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; }
+  .filter-select, .filter-input { padding: 0.45rem 0.6rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); }
+  .filter-select { min-width: 160px; }
 
   .details { padding: 1rem; }
   .row { display: grid; grid-template-columns: 240px 1fr; gap: 1rem; align-items: start; }

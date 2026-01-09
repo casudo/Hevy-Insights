@@ -7,6 +7,7 @@ const store = useHevyCache();
 const { locale, t } = useI18n();
 const userAccount = computed(() => store.userAccount);
 const dataSource = computed(() => store.dataSource);
+const isUsingApiKey = computed(() => !!localStorage.getItem("hevy_api_key"));
 
 // Color theme presets
 const colorThemes = [
@@ -78,38 +79,37 @@ watch(selectedLanguage, (newLang) => {
   localStorage.setItem("language", newLang);
 });
 
-// Date/Time Format settings
-// const dateFormats = [
-//   { label: "YYYY-MM-DD (2025-12-21)", value: "iso" },
-//   { label: "DD.MM.YYYY (21.12.2025)", value: "eu" },
-//   { label: "MM/DD/YYYY (12/21/2025)", value: "us" },
-//   { label: "DD/MM/YYYY (21/12/2025)", value: "uk" },
-// ];
+// Date Format settings
+const dateFormats = computed(() => [
+  { label: "YYYY-MM-DD (2025-12-21) + 14:32", value: "iso" },
+  { label: "DD.MM.YYYY (21.12.2025) + 17:53", value: "eu" },
+  { label: "MM/DD/YYYY (12/21/2025) + 6:14 AM", value: "us" },
+  { label: "DD/MM/YYYY (21/12/2025) + 2:35 PM", value: "uk" },
+]);
 
-// const graphAxisFormats = [
-//   { label: "YYYY-MM (2025-12)", value: "year-month" },
-//   { label: "MM-YYYY (12-2025)", value: "month-year" },
-//   { label: "MMM YYYY (Dec 2025)", value: "short" },
-//   { label: "Month YYYY (December 2025)", value: "long" },
-// ];
+const graphAxisFormats = computed(() => [
+  { label: "YYYY-MM (2025-12)", value: "numeric" },
+  { label: `MMM YYYY (${t('global.months.decemberShort')} 2025)`, value: "short" },
+  { label: `Month YYYY (${t('global.months.decemberLong')} 2025)`, value: "long" },
+]);
 
-const selectedDateFormat = ref<string>(localStorage.getItem("date-format") || "iso");
-const selectedGraphAxisFormat = ref<string>(localStorage.getItem("graph-axis-format") || "year-month");
+const selectedDateFormat = ref<string>(store.dateFormat);
+const selectedGraphAxisFormat = ref<string>(store.graphAxisFormat);
 
 // Watch for format changes
 watch(selectedDateFormat, (newFormat) => {
-  localStorage.setItem("date-format", newFormat);
+  store.setDateFormat(newFormat as "iso" | "eu" | "us" | "uk");
 });
 
 watch(selectedGraphAxisFormat, (newFormat) => {
-  localStorage.setItem("graph-axis-format", newFormat);
+  store.setGraphAxisFormat(newFormat as "numeric" | "short" | "long");
 });
 
 // Weight unit settings
-const weightUnits = [
-  { label: "Kilograms (kg)", value: "kg" },
-  { label: "Pounds (lbs)", value: "lbs" },
-];
+const weightUnits = computed(() => [
+  { label: `${t('settings.weightUnit.kg')} (kg)`, value: "kg" },
+  { label: `${t('settings.weightUnit.lbs')} (lbs)`, value: "lbs" },
+]);
 
 const selectedWeightUnit = ref<string>(store.weightUnit);
 
@@ -131,13 +131,13 @@ const resetSettings = () => {
   selectedTheme.value = "default";
   selectedLanguage.value = "en";
   selectedDateFormat.value = "iso";
-  selectedGraphAxisFormat.value = "year-month";
+  selectedGraphAxisFormat.value = "short";
   selectedWeightUnit.value = "kg";
   plateauSessions.value = 5;
   locale.value = "en";
   localStorage.setItem("language", "en");
-  localStorage.setItem("date-format", "iso");
-  localStorage.setItem("graph-axis-format", "year-month");
+  store.setDateFormat("iso");
+  store.setGraphAxisFormat("short");
   store.setWeightUnit("kg");
   store.setPlateauDetectionSessions(5);
 };
@@ -197,134 +197,148 @@ const resetSettings = () => {
         </div>
       </div>
 
-      <!-- Language Section -->
-      <div class="settings-section">
-        <div class="section-header">
-          <h2>🌐 {{ t('settings.language.title') }}</h2>
-          <p class="section-description">{{ t('settings.language.description') }}</p>
+      <!-- Language & Weight Unit Row -->
+      <div class="settings-row">
+        <!-- Language Section -->
+        <div class="settings-section">
+          <div class="section-header">
+            <h2>🌐 {{ t('settings.language.title') }}</h2>
+            <p class="section-description">{{ t('settings.language.description') }}</p>
+          </div>
+
+          <div class="language-grid">
+            <div
+              v-for="lang in languages"
+              :key="lang.code"
+              @click="selectedLanguage = lang.code"
+              :class="['language-card', { active: selectedLanguage === lang.code }]"
+            >
+              <span class="language-flag">{{ lang.flag }}</span>
+              <div class="language-name">{{ lang.name }}</div>
+              <div v-if="selectedLanguage === lang.code" class="language-check">✓</div>
+            </div>
+          </div>
         </div>
 
-        <div class="language-grid">
-          <div
-            v-for="lang in languages"
-            :key="lang.code"
-            @click="selectedLanguage = lang.code"
-            :class="['language-card', { active: selectedLanguage === lang.code }]"
-          >
-            <span class="language-flag">{{ lang.flag }}</span>
-            <div class="language-name">{{ lang.name }}</div>
-            <div v-if="selectedLanguage === lang.code" class="language-check">✓</div>
+        <!-- Weight Unit Section -->
+        <div class="settings-section">
+          <div class="section-header">
+            <h2>⚖️ {{ t('settings.weightUnit.title') }}</h2>
+            <p class="section-description">{{ t('settings.weightUnit.description') }}</p>
+          </div>
+
+          <div class="weight-unit-options">
+            <div
+              v-for="unit in weightUnits"
+              :key="unit.value"
+              @click="selectedWeightUnit = unit.value"
+              :class="['weight-unit-card', { active: selectedWeightUnit === unit.value }]"
+            >
+              <div class="unit-name">{{ unit.label }}</div>
+              <div v-if="selectedWeightUnit === unit.value" class="unit-check">✓</div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Date/Time Format Section -->
-      <!--  <div class="settings-section">
+      <div class="settings-section">
         <div class="section-header">
           <h2>📅 {{ t("settings.dateTimeFormat.title") }}</h2>
           <p class="section-description">{{ t("settings.dateTimeFormat.description") }}</p>
         </div>
 
-        <div class="format-subsection">
-          <h3>{{ t("settings.dateTimeFormat.dateFormat") }}</h3>
-          <div class="format-options">
-            <label
-              v-for="format in dateFormats"
-              :key="format.value"
-              :class="['format-option', { active: selectedDateFormat === format.value }]"
-            >
-              <input
-                type="radio"
-                :value="format.value"
-                v-model="selectedDateFormat"
-                class="format-radio"
-              />
-              <span class="format-label">{{ format.label }}</span>
-              <div v-if="selectedDateFormat === format.value" class="format-check">✓</div>
-            </label>
+        <div class="format-grid">
+          <div class="format-subsection">
+            <h3>{{ t("settings.dateTimeFormat.dateFormat") }}</h3>
+            <div class="format-options">
+              <label
+                v-for="format in dateFormats"
+                :key="format.value"
+                :class="['format-option', { active: selectedDateFormat === format.value }]"
+              >
+                <input
+                  type="radio"
+                  name="dateFormat"
+                  :value="format.value"
+                  v-model="selectedDateFormat"
+                  class="format-radio"
+                />
+                <span class="format-label">{{ format.label }}</span>
+                <div v-if="selectedDateFormat === format.value" class="format-check">✓</div>
+              </label>
+            </div>
           </div>
-        </div>
 
-        <div class="format-subsection">
-          <h3>{{ t("settings.dateTimeFormat.graphAxisFormat") }}</h3>
-          <div class="format-options">
-            <label
-              v-for="format in graphAxisFormats"
-              :key="format.value"
-              :class="['format-option', { active: selectedGraphAxisFormat === format.value }]"
-            >
-              <input
-                type="radio"
-                :value="format.value"
-                v-model="selectedGraphAxisFormat"
-                class="format-radio"
-              />
-              <span class="format-label">{{ format.label }}</span>
-              <div v-if="selectedGraphAxisFormat === format.value" class="format-check">✓</div>
-            </label>
-          </div>
-        </div>
-      </div>  -->
-
-      <!-- Weight Unit Section -->
-      <div class="settings-section">
-        <div class="section-header">
-          <h2>⚖️ {{ t('settings.weightUnit.title') }}</h2>
-          <p class="section-description">{{ t('settings.weightUnit.description') }}</p>
-        </div>
-
-        <div class="weight-unit-options">
-          <div
-            v-for="unit in weightUnits"
-            :key="unit.value"
-            @click="selectedWeightUnit = unit.value"
-            :class="['weight-unit-card', { active: selectedWeightUnit === unit.value }]"
-          >
-            <div class="unit-name">{{ unit.label }}</div>
-            <div v-if="selectedWeightUnit === unit.value" class="unit-check">✓</div>
+          <div class="format-subsection">
+            <h3>{{ t("settings.dateTimeFormat.graphAxisFormat") }}</h3>
+            <div class="format-options">
+              <label
+                v-for="format in graphAxisFormats"
+                :key="format.value"
+                :class="['format-option', { active: selectedGraphAxisFormat === format.value }]"
+              >
+                <input
+                  type="radio"
+                  name="graphAxisFormat"
+                  :value="format.value"
+                  v-model="selectedGraphAxisFormat"
+                  class="format-radio"
+                />
+                <span class="format-label">{{ format.label }}</span>
+                <div v-if="selectedGraphAxisFormat === format.value" class="format-check">✓</div>
+              </label>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Plateau Detection Section -->
-      <div class="settings-section">
-        <div class="section-header">
-          <h2>📊 {{ t('settings.plateauDetection.title') }}</h2>
-          <p class="section-description">{{ t('settings.plateauDetection.description') }}</p>
-        </div>
-
-        <div class="plateau-settings">
-          <label class="plateau-label">
-            {{ t('settings.plateauDetection.sessionsLabel') }}
-            <input
-              type="number"
-              v-model.number="plateauSessions"
-              min="3"
-              max="100"
-              class="plateau-input"
-            />
-          </label>
-          <p class="plateau-hint">{{ t('settings.plateauDetection.hint') }}</p>
-        </div>
-      </div>
-
-      <!-- Data Management Section -->
-      <div class="settings-section">
-        <div class="section-header">
-          <h2>💾 {{ t('settings.dataManagement.title') }}</h2>
-          <p class="section-description">{{ t('settings.dataManagement.description') }}</p>
-        </div>
-
-        <div class="data-info-card">
-          <div class="data-info-row">
-            <span class="data-label">{{ t('settings.dataManagement.dataSource') }}</span>
-            <span class="data-value" :class="dataSource">
-              {{ dataSource === "csv" ? "CSV Upload" : "Hevy API" }}
-            </span>
+      <!-- Plateau Detection & Data Management Row -->
+      <div class="settings-row">
+        <!-- Plateau Detection Section -->
+        <div class="settings-section">
+          <div class="section-header">
+            <h2>📊 {{ t('settings.plateauDetection.title') }}</h2>
+            <p class="section-description">{{ t('settings.plateauDetection.description') }}</p>
           </div>
-          <p v-if="dataSource === 'csv'" class="data-note">
-            {{ t('settings.dataManagement.csvNote') }}
-          </p>
+
+          <div class="plateau-settings">
+            <label class="plateau-label">
+              {{ t('settings.plateauDetection.sessionsLabel') }}
+              <input
+                type="number"
+                v-model.number="plateauSessions"
+                min="3"
+                max="100"
+                class="plateau-input"
+              />
+            </label>
+            <p class="plateau-hint">{{ t('settings.plateauDetection.hint') }}</p>
+          </div>
+        </div>
+
+        <!-- Data Management Section -->
+        <div class="settings-section">
+          <div class="section-header">
+            <h2>💾 {{ t('settings.dataManagement.title') }}</h2>
+            <p class="section-description">{{ t('settings.dataManagement.description') }}</p>
+          </div>
+
+          <div class="data-info-card">
+            <div class="data-info-row">
+              <span class="data-label">{{ t('settings.dataManagement.dataSource') }}</span>
+              <span class="data-value" :class="dataSource">
+                {{ 
+                  dataSource === "csv" 
+                    ? "CSV Upload" 
+                    : (isUsingApiKey ? "Hevy PRO API" : "Hevy API")
+                }}
+              </span>
+            </div>
+            <p v-if="dataSource === 'csv'" class="data-note">
+              {{ t('settings.dataManagement.csvNote') }}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -473,6 +487,19 @@ const resetSettings = () => {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+/* Settings Row - Side-by-side sections on larger screens */
+.settings-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .settings-row {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .settings-section {
@@ -647,11 +674,21 @@ const resetSettings = () => {
   box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary, #10b981) 40%, transparent);
 }
 /* Date/Time Format Options */
-.format-subsection {
-  margin-bottom: 2rem;
+.format-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
 }
 
-.format-subsection:last-child {
+/* Side-by-side layout on larger screens to save vertical space */
+@media (min-width: 900px) {
+  .format-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.format-subsection {
   margin-bottom: 0;
 }
 

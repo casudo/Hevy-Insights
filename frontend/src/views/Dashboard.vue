@@ -3,8 +3,9 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useHevyCache } from "../stores/hevy_cache";
 import { calculateCSVStats, calculatePRsGrouped, calculateMuscleDistribution } from "../utils/csvCalculator";
-import { formatDuration, formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
+import { formatDuration, formatWeight, getWeightUnit, formatPRValue, formatDate, formatMonthYear } from "../utils/formatters";
 import { Line, Doughnut, Radar, Bar } from "vue-chartjs";
+import { useI18n } from "vue-i18n";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,6 +33,7 @@ ChartJS.register(
   Legend
 );
 
+const { t } = useI18n();
 const store = useHevyCache();
 const router = useRouter();
 const chartData = ref<any>(null);
@@ -90,6 +92,20 @@ const prsOverTime_Display = ref<DisplayStyle>("mo");
 
 const muscleDistribution_Range = ref<Range>("all");
 const muscleDistribution_Grouping = ref<"groups" | "muscles">("groups");
+
+// Mobile: Track which chart description tooltip is shown
+const activeTooltip = ref<string | null>(null);
+const showTooltip = (chartId: string, event: Event) => {
+  event.stopPropagation();
+  activeTooltip.value = chartId;
+};
+
+// Close tooltip when clicking outside
+onMounted(() => {
+  document.addEventListener("click", () => {
+    activeTooltip.value = null;
+  });
+});
   
 // ---------- Helper functions for date keys ----------
 
@@ -148,6 +164,42 @@ function groupMuscles(muscleGroup: string): string {
   return muscleGroup;
 }
 
+// Localize muscle name
+function getLocalizedMuscleName(muscleName: string): string {
+  const key = muscleName.toLowerCase().replace(/\s+/g, "");
+  // Check if we have a direct translation
+  const translationKey = `global.bodymuscles.${key}`;
+  const translated = t(translationKey);
+  // If translation exists and is different from the key, use it
+  return translated !== translationKey ? translated : muscleName;
+}
+
+// Localize PR type name
+function getLocalizedPRType(prType: string): string {
+  const key = `dashboard.prTypes.${prType}`;
+  const translation = t(key);
+  if (translation === key) return prType.split("_").join(" ");
+  return translation;
+}
+
+// Get localized range filter label
+function getRangeLabel(range: Range): string {
+  if (range === "all") return t("dashboard.filters.all");
+  if (range === "1y") return t("dashboard.filters.oneYear");
+  if (range === "6m") return t("dashboard.filters.sixMonths");
+  if (range === "3m") return t("dashboard.filters.threeMonths");
+  if (range === "1m") return t("dashboard.filters.oneMonth");
+  return range;
+}
+
+// Get localized display style label
+function getDisplayLabel(display: DisplayStyle): string {
+  if (display === "mo") return t("dashboard.filters.monthly");
+  if (display === "wk") return t("dashboard.filters.weekly");
+  return display;
+}
+
+
 // Get calendar week number (ISO 8601)
 const getWeekNumber = (d: Date): number => {
   const date = new Date(d.getTime());
@@ -163,9 +215,10 @@ const formatPeriodLabel = (period: string, displayStyle: DisplayStyle): string =
   if (displayStyle === "wk") {
     const date = new Date(period);
     const weekNum = getWeekNumber(date);
-    return `CW ${weekNum}`;
+    return `${t("dashboard.charts.calendarWeek")} ${weekNum}`;
   }
-  return period; // Monthly: keep as "YYYY-MM"
+  // Monthly: Format using user's graph axis format preference
+  return formatMonthYear(new Date(period + "-01"));
 };
 
 // Helper to filter by range
@@ -292,7 +345,15 @@ const prsOverTime_Data = computed(() => {
 
 // Weekly Rhythm - Distribution across days of week
 const weeklyRhythm_Data = computed(() => {
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const days = [
+    t("global.days.mondayLong"),
+    t("global.days.tuesdayLong"),
+    t("global.days.wednesdayLong"),
+    t("global.days.thursdayLong"),
+    t("global.days.fridayLong"),
+    t("global.days.saturdayLong"),
+    t("global.days.sundayLong")
+  ];
   const counts = [0, 0, 0, 0, 0, 0, 0];
   
   for (const w of workouts.value) {
@@ -307,6 +368,120 @@ const weeklyRhythm_Data = computed(() => {
     data: counts
   };
 });
+
+// ========== CALENDAR HEATMAP (12-Month Contribution Graph) ==========
+
+// Group workouts by date (YYYY-MM-DD)
+const workoutsByDay = computed(() => {
+  const map: Record<string, number> = {};
+  for (const w of workouts.value) {
+    const date = new Date((w.start_time || 0) * 1000);
+    const dayKey = date.toISOString().slice(0, 10);
+    map[dayKey] = (map[dayKey] || 0) + 1;
+  }
+  return map;
+});
+
+// Generate calendar data for the last 12 months (grouped by month)
+const calendarData = computed(() => {
+  const monthNames = [
+    t("global.months.januaryShort"), 
+    t("global.months.februaryShort"),
+    t("global.months.marchShort"),
+    t("global.months.aprilShort"),
+    t("global.months.mayShort"),
+    t("global.months.juneShort"),
+    t("global.months.julyShort"),
+    t("global.months.augustShort"),
+    t("global.months.septemberShort"),
+    t("global.months.octoberShort"),
+    t("global.months.novemberShort"),
+    t("global.months.decemberShort")
+  ];
+  
+  // Calculate date range: last 12 months (current month + 11 previous)
+  const today = new Date();
+  const months: Array<{ label: string; year: number; weeks: Array<Array<{ date: Date; dateStr: string; count: number } | null>> }> = [];
+  
+  // Iterate 12 times backwards to get the last 12 months
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const year = d.getFullYear();
+    const monthIndex = d.getMonth();
+    const monthLabel = monthNames[monthIndex];
+    
+    // Get all days in this month
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    const monthWeeks: Array<Array<{ date: Date; dateStr: string; count: number } | null>> = [];
+    let currentWeek: Array<{ date: Date; dateStr: string; count: number } | null> = [];
+    
+    // Pad start of first week
+    // getDay(): 0=Sun, 1=Mon... 6=Sat. We want Mon=0...Sun=6
+    let firstDayOfWeek = new Date(year, monthIndex, 1).getDay();
+    // Convert to Mon-start (0=Mon, 6=Sun)
+    firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+    
+    for (let j = 0; j < firstDayOfWeek; j++) {
+      currentWeek.push(null);
+    }
+    
+    // Fill days
+    for (let day = 1; day <= daysInMonth; day++) {
+      // Use string construction to avoid timezone issues
+      const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const date = new Date(year, monthIndex, day);
+      const count = workoutsByDay.value[dateStr] || 0;
+      
+      currentWeek.push({ date, dateStr, count });
+      
+      if (currentWeek.length === 7) {
+        monthWeeks.push(currentWeek);
+        currentWeek = [];
+      }
+    }
+    
+    // Pad end of last week if needed
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) {
+        currentWeek.push(null);
+      }
+      monthWeeks.push(currentWeek);
+    }
+    
+    months.push({
+      label: monthLabel || "",
+      year,
+      weeks: monthWeeks
+    });
+  }
+  
+  return months;
+});
+
+// Color intensity based on workout count
+const getCellColor = (count: number) => {
+  if (count === 0) return "var(--bg-secondary)";
+  const primary = getComputedStyle(document.documentElement)
+    .getPropertyValue("--color-primary")
+    .trim() || "#10b981";
+  
+  // Intensity levels - increased opacity for better visibility
+  if (count === 1) return primary + "66"; // ~40%
+  // 40% = 66
+  // 60% = 99
+  // 80% = CC
+  // 100% = FF
+  
+  if (count === 1) return primary + "99"; // 60%
+  if (count === 2) return primary + "CC"; // 80%
+  if (count >= 3) return primary;         // 100%
+  return primary;
+};
+
+// Navigate to workouts list for a specific day
+const scrollToDay = (day: string) => {
+  router.push({ path: "/workouts-list", query: { day } });
+};
 
 // Muscle Distribution
 const muscleDistribution_Data = computed(() => {
@@ -337,7 +512,7 @@ const muscleDistribution_Data = computed(() => {
   }
   
   return {
-    labels: Object.keys(muscleGroups),
+    labels: Object.keys(muscleGroups).map(m => getLocalizedMuscleName(m)),
     data: Object.values(muscleGroups)
   };
 });
@@ -381,7 +556,7 @@ const muscleRegions_Data = computed(() => {
   const datasets = muscleGroups.map((muscle, index) => {
     const colors = generateGradientColors(muscleGroups.length);
     return {
-      label: muscle,
+      label: getLocalizedMuscleName(muscle),
       data: periods.map(period => (periodMuscleData[period] || {})[muscle] || 0),
       backgroundColor: colors[index],
       borderColor: colors[index],
@@ -466,9 +641,17 @@ const totalMinutesAll = computed(() => {
 });
 const totalHoursAll = computed(() => Number((totalMinutesAll.value / 60).toFixed(2)));
 
+// Average workout duration
+const avgWorkoutMinutes = computed(() => {
+  if (totalWorkouts.value === 0) return "0m";
+  const minutes = Math.round(totalMinutesAll.value / totalWorkouts.value);
+  return formatDuration(minutes);
+});
+
 // Get exercises with plateaus - show most recent 5
 const plateauExercises = computed(() => {
   const locale = localStorage.getItem("language") || "en";
+  const minSessions = store.plateauDetectionSessions;
   
   // Build exercise map similar to Exercises.vue
   const exerciseMap: Record<string, any> = {};
@@ -514,7 +697,8 @@ const plateauExercises = computed(() => {
   
   for (const ex of Object.values(exerciseMap)) {
     const days = Object.keys(ex.byDay).sort();
-    if (days.length < 5) continue;
+    // Filter out exercises with insufficient data (use configured minimum sessions)
+    if (days.length < minSessions) continue;
     
     // Check if active (trained in last 60 days)
     const lastDay = days[days.length - 1];
@@ -568,7 +752,8 @@ const plateauExercises = computed(() => {
 
 // Get recent PRs - show last 5 PRs achieved
 const recentPRs = computed(() => {
-  const prsMap = new Map<string, { exercise: string; type: string; value: number; date: string }>();
+  const locale = localStorage.getItem("language") || "en";
+  const prsMap = new Map<string, { exercise: string; localizedExercise: string; type: string; localizedType: string; value: number; date: string }>();
   
   for (const w of workouts.value) {
     const date = new Date((w.start_time || 0) * 1000);
@@ -577,12 +762,21 @@ const recentPRs = computed(() => {
     for (const ex of (w.exercises || [])) {
       const exerciseName = ex.title || "Unknown Exercise";
       
+      // Get localized exercise title
+      let localizedExercise = exerciseName;
+      if (locale === "de" && ex.de_title) {
+        localizedExercise = ex.de_title;
+      } else if (locale === "es" && ex.es_title) {
+        localizedExercise = ex.es_title;
+      }
+      
       for (const s of (ex.sets || [])) {
         const prsArr = Array.isArray(s?.prs) ? s.prs : (s?.prs ? [s.prs] : []);
         const personalArr = Array.isArray(s?.personalRecords) ? s.personalRecords : (s?.personalRecords ? [s.personalRecords] : []);
         
         for (const pr of [...prsArr, ...personalArr].filter(Boolean)) {
-          const type = String(pr.type || '').replace(/_/g, ' ');
+          const type = String(pr.type || "");
+          const localizedType = getLocalizedPRType(type);
           const value = pr.value || 0;
           
           // Create unique key: exercise + type + value to avoid duplicates
@@ -593,7 +787,9 @@ const recentPRs = computed(() => {
           if (!existing || new Date(dateStr) > new Date(existing.date)) {
             prsMap.set(key, {
               exercise: exerciseName,
+              localizedExercise,
               type,
+              localizedType,
               value,
               date: dateStr
             });
@@ -716,6 +912,25 @@ const doughnutOptions = {
   },
 };
 
+// Reusable filter definitions (single source of truth)
+const rangeFilters = [
+  { value: "all" as Range, label: () => getRangeLabel("all") },
+  { value: "1y" as Range, label: () => getRangeLabel("1y") },
+  { value: "6m" as Range, label: () => getRangeLabel("6m") },
+  { value: "3m" as Range, label: () => getRangeLabel("3m") },
+  { value: "1m" as Range, label: () => getRangeLabel("1m") }
+];
+
+const displayFilters = [
+  { value: "mo" as DisplayStyle, label: () => getDisplayLabel("mo") },
+  { value: "wk" as DisplayStyle, label: () => getDisplayLabel("wk") }
+];
+
+const groupingFilters = [
+  { value: "groups" as "groups" | "muscles", label: () => t("dashboard.charts.muscleFilters.groups") },
+  { value: "muscles" as "groups" | "muscles", label: () => t("dashboard.charts.muscleFilters.muscles") }
+];
+
 const radarOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -836,7 +1051,7 @@ onMounted(() => {
 
     <!-- Main Content -->
     <div v-else class="dashboard-content">
-      <!-- KPI Cards - Compact 4-Column Layout -->
+      <!-- KPI Cards - Desktop: 5 columns, Mobile: 2x3 grid -->
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-icon">🏋️</div>
@@ -857,9 +1072,58 @@ onMounted(() => {
         </div>
 
         <div class="kpi-card">
+          <div class="kpi-icon">⏱️</div>
+          <div class="kpi-value">{{ avgWorkoutMinutes }}</div>
+          <div class="kpi-label">{{ $t("dashboard.stats.avgWorkoutTime") }}</div>
+        </div>
+
+        <div class="kpi-card">
           <div class="kpi-icon">🔥</div>
           <div class="kpi-value">{{ workoutStreakWeeks }}</div>
           <div class="kpi-label">{{ $t("dashboard.stats.workoutStreak") }}</div>
+        </div>
+      </div>
+
+      <!-- Mobile KPI Stats - Compact Version -->
+      <div class="kpi-mobile">
+        <div class="kpi-mobile-card">
+          <span class="kpi-mobile-icon">🏋️</span>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ totalWorkouts }}</div>
+            <div class="kpi-mobile-label">{{ $t("dashboard.stats.totalWorkouts") }}</div>
+          </div>
+        </div>
+        
+        <div class="kpi-mobile-card">
+          <span class="kpi-mobile-icon">💪</span>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ formatWeight(totalVolume) }} {{ getWeightUnit() }}</div>
+            <div class="kpi-mobile-label">{{ $t("dashboard.stats.totalVolume") }}</div>
+          </div>
+        </div>
+        
+        <div class="kpi-mobile-card">
+          <span class="kpi-mobile-icon">⏳</span>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ totalHoursAll }}</div>
+            <div class="kpi-mobile-label">{{ $t("dashboard.stats.totalHoursTrained") }}</div>
+          </div>
+        </div>
+
+        <div class="kpi-mobile-card">
+          <span class="kpi-mobile-icon">⏱️</span>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ avgWorkoutMinutes }}</div>
+            <div class="kpi-mobile-label">{{ $t("dashboard.stats.avgWorkoutTime") }}</div>
+          </div>
+        </div>
+
+        <div class="kpi-mobile-card">
+          <span class="kpi-mobile-icon">🔥</span>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ workoutStreakWeeks }}</div>
+            <div class="kpi-mobile-label">{{ $t("dashboard.stats.workoutStreak") }}</div>
+          </div>
         </div>
       </div>
 
@@ -886,7 +1150,7 @@ onMounted(() => {
                 <div class="plateau-icon">⏸️</div>
                 <div class="plateau-content">
                   <div class="plateau-title">{{ plateau.localizedTitle }}</div>
-                  <div class="plateau-meta">{{ formatWeight(plateau.avgWeight) }} {{ getWeightUnit() }} × {{ plateau.avgReps }} reps</div>
+                  <div class="plateau-meta">{{ formatWeight(plateau.avgWeight) }} {{ getWeightUnit() }} × {{ plateau.avgReps }} {{ $t('global.sw.reps') }}</div>
                 </div>
               </div>
             </div>
@@ -915,11 +1179,11 @@ onMounted(() => {
               >
                 <div class="pr-icon">🏆</div>
                 <div class="pr-content">
-                  <div class="pr-exercise">{{ pr.exercise }}</div>
-                  <div class="pr-type">{{ pr.type }}</div>
+                  <div class="pr-exercise">{{ pr.localizedExercise }}</div>
+                  <div class="pr-type">{{ pr.localizedType }}</div>
                   <div class="pr-value">{{ formatPRValue(pr.type, pr.value) }}</div>
                 </div>
-                <div class="pr-date">{{ new Date(pr.date).toLocaleDateString() }}</div>
+                <div class="pr-date">{{ formatDate(pr.date) }}</div>
               </div>
             </div>
           </div>
@@ -944,20 +1208,21 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>⏳ {{ $t("dashboard.charts.hoursTrained") }}</h3>
+                    <h3>
+                      ⏳ {{ $t("dashboard.charts.hoursTrained") }}
+                      <button class="mobile-info-btn" @click="showTooltip('hoursTrained', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'hoursTrained'" class="info-popup" @click.stop>
+                        {{ $t("dashboard.charts.hoursTrainedDescription") }}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{ $t("dashboard.charts.hoursTrainedDescription") }}</span>
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="hoursTrained_Range = 'all'" :class="['filter-btn', { active: hoursTrained_Range === 'all' }]" title="All Time">All</button>
-                      <button @click="hoursTrained_Range = '1y'" :class="['filter-btn', { active: hoursTrained_Range === '1y' }]" title="1 Year">1Y</button>
-                      <button @click="hoursTrained_Range = '6m'" :class="['filter-btn', { active: hoursTrained_Range === '6m' }]" title="6 Months">6M</button>
-                      <button @click="hoursTrained_Range = '3m'" :class="['filter-btn', { active: hoursTrained_Range === '3m' }]" title="3 Months">3M</button>
-                      <button @click="hoursTrained_Range = '1m'" :class="['filter-btn', { active: hoursTrained_Range === '1m' }]" title="1 Month">1M</button>
+                      <button v-for="filter in rangeFilters" :key="filter.value" @click="hoursTrained_Range = filter.value" :class="['filter-btn', { active: hoursTrained_Range === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="hoursTrained_Display = 'mo'" :class="['filter-btn', { active: hoursTrained_Display === 'mo' }]" title="Monthly">Mo</button>
-                      <button @click="hoursTrained_Display = 'wk'" :class="['filter-btn', { active: hoursTrained_Display === 'wk' }]" title="Weekly">Wk</button>
+                      <button v-for="filter in displayFilters" :key="filter.value" @click="hoursTrained_Display = filter.value" :class="['filter-btn', { active: hoursTrained_Display === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                   </div>
                 </div>
@@ -967,7 +1232,7 @@ onMounted(() => {
                     :data="{ 
                       labels: hoursTrained_Data.labels, 
                       datasets: [{ 
-                        label: $t('global.hours'), 
+                        label: $t('global.sw.hours'), 
                         data: hoursTrained_Data.data, 
                         borderColor: primaryColor, 
                         backgroundColor: primaryColor + '33', 
@@ -987,20 +1252,21 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>💪 {{ $t('dashboard.charts.volumeProgression') }}</h3>
+                    <h3>
+                      💪 {{ $t('dashboard.charts.volumeProgression') }}
+                      <button class="mobile-info-btn" @click="showTooltip('volume', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'volume'" class="info-popup" @click.stop>
+                        {{ $t('dashboard.charts.volumeProgressionDescription') }}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{ $t('dashboard.charts.volumeProgressionDescription') }}</span>
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="volumeProgression_Range = 'all'" :class="['filter-btn', { active: volumeProgression_Range === 'all' }]">All</button>
-                      <button @click="volumeProgression_Range = '1y'" :class="['filter-btn', { active: volumeProgression_Range === '1y' }]">1Y</button>
-                      <button @click="volumeProgression_Range = '6m'" :class="['filter-btn', { active: volumeProgression_Range === '6m' }]">6M</button>
-                      <button @click="volumeProgression_Range = '3m'" :class="['filter-btn', { active: volumeProgression_Range === '3m' }]">3M</button>
-                      <button @click="volumeProgression_Range = '1m'" :class="['filter-btn', { active: volumeProgression_Range === '1m' }]">1M</button>
+                      <button v-for="filter in rangeFilters" :key="filter.value" @click="volumeProgression_Range = filter.value" :class="['filter-btn', { active: volumeProgression_Range === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="volumeProgression_Display = 'mo'" :class="['filter-btn', { active: volumeProgression_Display === 'mo' }]">Mo</button>
-                      <button @click="volumeProgression_Display = 'wk'" :class="['filter-btn', { active: volumeProgression_Display === 'wk' }]">Wk</button>
+                      <button v-for="filter in displayFilters" :key="filter.value" @click="volumeProgression_Display = filter.value" :class="['filter-btn', { active: volumeProgression_Display === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                   </div>
                 </div>
@@ -1010,7 +1276,7 @@ onMounted(() => {
                     :data="{ 
                       labels: volumeProgression_Data.labels, 
                       datasets: [{ 
-                        label: $t('global.volume') + ` (${getWeightUnit()})`, 
+                        label: $t('global.sw.volume') + ` (${getWeightUnit()})`, 
                         data: volumeProgression_Data.data, 
                         borderColor: secondaryColor, 
                         backgroundColor: secondaryColor + '33', 
@@ -1030,20 +1296,21 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>📊 {{ $t('dashboard.charts.repsAndSets') }}</h3>
+                    <h3>
+                      📊 {{ $t('dashboard.charts.repsAndSets') }}
+                      <button class="mobile-info-btn" @click="showTooltip('repsAndSets', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'repsAndSets'" class="info-popup" @click.stop>
+                        {{ $t('dashboard.charts.repsAndSetsDescription') }}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{ $t('dashboard.charts.repsAndSetsDescription') }}</span>
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="repsAndSets_Range = 'all'" :class="['filter-btn', { active: repsAndSets_Range === 'all' }]">All</button>
-                      <button @click="repsAndSets_Range = '1y'" :class="['filter-btn', { active: repsAndSets_Range === '1y' }]">1Y</button>
-                      <button @click="repsAndSets_Range = '6m'" :class="['filter-btn', { active: repsAndSets_Range === '6m' }]">6M</button>
-                      <button @click="repsAndSets_Range = '3m'" :class="['filter-btn', { active: repsAndSets_Range === '3m' }]">3M</button>
-                      <button @click="repsAndSets_Range = '1m'" :class="['filter-btn', { active: repsAndSets_Range === '1m' }]">1M</button>
+                      <button v-for="filter in rangeFilters" :key="filter.value" @click="repsAndSets_Range = filter.value" :class="['filter-btn', { active: repsAndSets_Range === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="repsAndSets_Display = 'mo'" :class="['filter-btn', { active: repsAndSets_Display === 'mo' }]">Mo</button>
-                      <button @click="repsAndSets_Display = 'wk'" :class="['filter-btn', { active: repsAndSets_Display === 'wk' }]">Wk</button>
+                      <button v-for="filter in displayFilters" :key="filter.value" @click="repsAndSets_Display = filter.value" :class="['filter-btn', { active: repsAndSets_Display === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                   </div>
                 </div>
@@ -1103,20 +1370,21 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>🏆 {{ $t('dashboard.charts.PRsOverTime') }}</h3>
+                    <h3>
+                      🏆 {{ $t('dashboard.charts.PRsOverTime') }}
+                      <button class="mobile-info-btn" @click="showTooltip('prsOverTime', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'prsOverTime'" class="info-popup" @click.stop>
+                        {{ $t('dashboard.charts.PRsOverTimeDescription') }}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{ $t('dashboard.charts.PRsOverTimeDescription') }}</span>
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="prsOverTime_Range = 'all'" :class="['filter-btn', { active: prsOverTime_Range === 'all' }]">All</button>
-                      <button @click="prsOverTime_Range = '1y'" :class="['filter-btn', { active: prsOverTime_Range === '1y' }]">1Y</button>
-                      <button @click="prsOverTime_Range = '6m'" :class="['filter-btn', { active: prsOverTime_Range === '6m' }]">6M</button>
-                      <button @click="prsOverTime_Range = '3m'" :class="['filter-btn', { active: prsOverTime_Range === '3m' }]">3M</button>
-                      <button @click="prsOverTime_Range = '1m'" :class="['filter-btn', { active: prsOverTime_Range === '1m' }]">1M</button>
+                      <button v-for="filter in rangeFilters" :key="filter.value" @click="prsOverTime_Range = filter.value" :class="['filter-btn', { active: prsOverTime_Range === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="prsOverTime_Display = 'mo'" :class="['filter-btn', { active: prsOverTime_Display === 'mo' }]">Mo</button>
-                      <button @click="prsOverTime_Display = 'wk'" :class="['filter-btn', { active: prsOverTime_Display === 'wk' }]">Wk</button>
+                      <button v-for="filter in displayFilters" :key="filter.value" @click="prsOverTime_Display = filter.value" :class="['filter-btn', { active: prsOverTime_Display === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                   </div>
                 </div>
@@ -1167,7 +1435,7 @@ onMounted(() => {
                 <div class="insight-content">
                   <div class="insight-label">{{ $t('dashboard.stats.mostTrainedExercise') }}</div>
                   <div class="insight-value">{{ mostTrainedExercise.name }}</div>
-                  <div class="insight-meta">{{ mostTrainedExercise.count }} sessions</div>
+                  <div class="insight-meta">{{ mostTrainedExercise.count }} {{ $t('dashboard.stats.sessions') }}</div>
                 </div>
               </div>
 
@@ -1186,7 +1454,7 @@ onMounted(() => {
                 <div class="insight-content">
                   <div class="insight-label">{{ $t('dashboard.stats.avgVolume') }}</div>
                   <div class="insight-value">{{ formatWeight(avgVolume) }} {{ getWeightUnit() }}</div>
-                  <div class="insight-meta">per workout</div>
+                  <div class="insight-meta">{{ $t('dashboard.stats.perWorkout') }}</div>
                 </div>
               </div>
             </div>
@@ -1208,11 +1476,69 @@ onMounted(() => {
         <transition name="expand">
           <div v-if="expandedSections.calendarViews" class="section-content">
             <div class="charts-grid">
+              <!-- Calendar Heatmap Chart -->
+              <div class="chart-container">
+                <div class="chart-header">
+                  <div class="chart-title-section">
+                    <h3>
+                      📅 {{$t("dashboard.charts.workoutCalendar")}}
+                      <button class="mobile-info-btn" @click="showTooltip('calendar', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'calendar'" class="info-popup" @click.stop>
+                        {{$t("dashboard.charts.workoutCalendarDescription")}}
+                      </div>
+                    </h3>
+                    <span class="chart-subtitle">{{$t("dashboard.charts.workoutCalendarDescription")}}</span>
+                  </div>
+                </div>
+                <div class="chart-body">
+                  <div class="calendar-heatmap">
+                    <div class="calendar-grid-container">
+                      <!-- Months Container -->
+                      <div class="calendar-months-container">
+                        <div 
+                          v-for="(month, mIdx) in calendarData" 
+                          :key="'m-' + mIdx" 
+                          class="calendar-month-block"
+                        >
+                          <!-- Month Label -->
+                          <div class="calendar-month-label">{{ month.label }}</div>
+                          
+                          <!-- Month Weeks Grid -->
+                          <div class="calendar-month-weeks">
+                            <div 
+                              v-for="(week, wIdx) in month.weeks" 
+                              :key="'w-' + mIdx + '-' + wIdx" 
+                              class="calendar-week"
+                            >
+                              <div 
+                                v-for="(day, dIdx) in week" 
+                                :key="'d-' + mIdx + '-' + wIdx + '-' + dIdx"
+                                class="calendar-day"
+                                :class="{ 'empty': !day, 'has-workout': day && day.count > 0 }"
+                                :style="day ? { backgroundColor: getCellColor(day.count) } : {}"
+                                @click="day && day.count > 0 && scrollToDay(day.dateStr)"
+                                :title="day ? `${day.dateStr}: ${day.count} workout${day.count !== 1 ? 's' : ''}` : ''"
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            
               <!-- Weekly Rhythm Radar Chart -->
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>🔥 {{$t('dashboard.charts.weeklyRhythm')}}</h3>
+                    <h3>
+                      🔥 {{$t('dashboard.charts.weeklyRhythm')}}
+                      <button class="mobile-info-btn" @click="showTooltip('weeklyRhythm', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'weeklyRhythm'" class="info-popup" @click.stop>
+                        {{$t('dashboard.charts.weeklyRhythmDescription')}}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{$t('dashboard.charts.weeklyRhythmDescription')}}</span>
                   </div>
                 </div>
@@ -1260,20 +1586,21 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>🎯 {{$t('dashboard.charts.muscleDistribution')}}</h3>
+                    <h3>
+                      🎯 {{$t('dashboard.charts.muscleDistribution')}}
+                      <button class="mobile-info-btn" @click="showTooltip('muscleDistribution', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'muscleDistribution'" class="info-popup" @click.stop>
+                        {{$t('dashboard.charts.muscleDistributionDescription')}}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{$t('dashboard.charts.muscleDistributionDescription')}}</span>
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="muscleDistribution_Range = 'all'" :class="['filter-btn', { active: muscleDistribution_Range === 'all' }]">All</button>
-                      <button @click="muscleDistribution_Range = '1y'" :class="['filter-btn', { active: muscleDistribution_Range === '1y' }]">1Y</button>
-                      <button @click="muscleDistribution_Range = '6m'" :class="['filter-btn', { active: muscleDistribution_Range === '6m' }]">6M</button>
-                      <button @click="muscleDistribution_Range = '3m'" :class="['filter-btn', { active: muscleDistribution_Range === '3m' }]">3M</button>
-                      <button @click="muscleDistribution_Range = '1m'" :class="['filter-btn', { active: muscleDistribution_Range === '1m' }]">1M</button>
+                      <button v-for="filter in rangeFilters" :key="filter.value" @click="muscleDistribution_Range = filter.value" :class="['filter-btn', { active: muscleDistribution_Range === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="muscleDistribution_Grouping = 'groups'" :class="['filter-btn', { active: muscleDistribution_Grouping === 'groups' }]" title="Muscle Groups">Groups</button>
-                      <button @click="muscleDistribution_Grouping = 'muscles'" :class="['filter-btn', { active: muscleDistribution_Grouping === 'muscles' }]" title="Individual Muscles">Muscles</button>
+                      <button v-for="filter in groupingFilters" :key="filter.value" @click="muscleDistribution_Grouping = filter.value" :class="['filter-btn', { active: muscleDistribution_Grouping === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                   </div>
                 </div>
@@ -1297,23 +1624,24 @@ onMounted(() => {
               <div class="chart-container">
                 <div class="chart-header">
                   <div class="chart-title-section">
-                    <h3>📊 {{ $t("dashboard.charts.muscleRegions") }}</h3>
+                    <h3>
+                      📊 {{ $t("dashboard.charts.muscleRegions") }}
+                      <button class="mobile-info-btn" @click="showTooltip('muscleRegions', $event)" title="Toggle info">ℹ️</button>
+                      <div v-if="activeTooltip === 'muscleRegions'" class="info-popup" @click.stop>
+                        {{ $t("dashboard.charts.muscleRegionsDescription") }}
+                      </div>
+                    </h3>
                     <span class="chart-subtitle">{{ $t("dashboard.charts.muscleRegionsDescription") }}</span>
                   </div>
                   <div class="chart-filters">
                     <div class="filter-group">
-                      <button @click="muscleRegions_Range = 'all'" :class="['filter-btn', { active: muscleRegions_Range === 'all' }]">All</button>
-                      <button @click="muscleRegions_Range = '1y'" :class="['filter-btn', { active: muscleRegions_Range === '1y' }]">1Y</button>
-                      <button @click="muscleRegions_Range = '6m'" :class="['filter-btn', { active: muscleRegions_Range === '6m' }]">6M</button>
-                      <button @click="muscleRegions_Range = '3m'" :class="['filter-btn', { active: muscleRegions_Range === '3m' }]">3M</button>
+                      <button v-for="filter in rangeFilters" :key="filter.value" @click="muscleRegions_Range = filter.value" :class="['filter-btn', { active: muscleRegions_Range === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="muscleRegions_Display = 'mo'" :class="['filter-btn', { active: muscleRegions_Display === 'mo' }]">Mo</button>
-                      <button @click="muscleRegions_Display = 'wk'" :class="['filter-btn', { active: muscleRegions_Display === 'wk' }]">Wk</button>
+                      <button v-for="filter in displayFilters" :key="filter.value" @click="muscleRegions_Display = filter.value" :class="['filter-btn', { active: muscleRegions_Display === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                     <div class="filter-group">
-                      <button @click="muscleRegions_Grouping = 'groups'" :class="['filter-btn', { active: muscleRegions_Grouping === 'groups' }]" title="Muscle Groups">Groups</button>
-                      <button @click="muscleRegions_Grouping = 'muscles'" :class="['filter-btn', { active: muscleRegions_Grouping === 'muscles' }]" title="Individual Muscles">Muscles</button>
+                      <button v-for="filter in groupingFilters" :key="filter.value" @click="muscleRegions_Grouping = filter.value" :class="['filter-btn', { active: muscleRegions_Grouping === filter.value }]" :title="filter.label()">{{ filter.label() }}</button>
                     </div>
                   </div>
                 </div>
@@ -1537,7 +1865,7 @@ onMounted(() => {
   margin: 0;
 }
 
-/* KPI Cards - Compact 4-Column Layout */
+/* KPI Cards - 5 Column Layout */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -1581,6 +1909,70 @@ onMounted(() => {
   color: var(--text-secondary);
   text-align: center;
   line-height: 1.2;
+}
+
+/* Mobile KPI Stats - Hidden on desktop, shown on mobile */
+.kpi-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .kpi-grid {
+    display: none;
+  }
+  
+  .kpi-mobile {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .kpi-mobile-card {
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(8px);
+    padding: 0.875rem;
+    border-radius: 10px;
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+  }
+  
+  .kpi-mobile-card:active {
+    transform: scale(0.98);
+    border-color: var(--color-primary, #10b981);
+  }
+  
+  .kpi-mobile-icon {
+    font-size: 1.5rem;
+    opacity: 0.9;
+    flex-shrink: 0;
+  }
+  
+  .kpi-mobile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+  
+  .kpi-mobile-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #f8fafc;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .kpi-mobile-label {
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    line-height: 1.2;
+  }
 }
 
 /* Plateau Alert Section */
@@ -1986,6 +2378,32 @@ onMounted(() => {
   min-width: 0;
 }
 
+.chart-title-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mobile-info-btn {
+  display: none;
+  position: relative;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.mobile-info-btn:hover {
+  opacity: 1;
+}
+
+.info-popup {
+  display: none;
+}
+
 .chart-header h2, .chart-header h3 {
   margin: 0 0 0.25rem;
   color: #f8fafc;
@@ -2069,6 +2487,112 @@ onMounted(() => {
   }
 }
 
+/* ========== Calendar Heatmap Styles ========== */
+.calendar-heatmap {
+  width: 100%;
+  padding: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.calendar-grid-container {
+  display: flex;
+  gap: 12px;
+}
+
+.calendar-months-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px; /* Space between months */
+  flex: 1;
+  justify-content: space-between;
+}
+
+.calendar-month-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03); /* Slightly lighter than bg-primary */
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08); /* Subtle border */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.calendar-month-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  height: 16px;
+}
+
+.calendar-month-weeks {
+  display: flex;
+  gap: 4px;
+}
+
+.calendar-week {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calendar-day {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  cursor: default;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.15s ease;
+  background-color: rgba(255, 255, 255, 0.02); /* Default empty color */
+}
+
+.calendar-day.has-workout {
+  cursor: pointer;
+}
+
+.calendar-day.empty {
+  background-color: transparent;
+  border: none;
+  cursor: default;
+}
+
+.calendar-day.has-workout:hover {
+  transform: scale(1.3);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  z-index: 10;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .calendar-heatmap {
+    overflow-x: scroll;
+    padding: 0.5rem;
+  }
+  
+  .calendar-grid-container {
+    gap: 8px;
+  }
+  
+  .calendar-months-container {
+    gap: 12px;
+    flex-wrap: nowrap; /* Keep horizontal scroll on mobile */
+    justify-content: flex-start;
+  }
+  
+  .calendar-day {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .calendar-month-label {
+    font-size: 0.75rem;
+  }
+}
+
+/* Reverted forcing canvas sizing — allow chart library to manage canvas sizing for accurate axes */
+
 @media (max-width: 768px) {
   .user-badge {
     display: none;
@@ -2080,6 +2604,15 @@ onMounted(() => {
 
   .dashboard {
     padding: 1.5rem 1rem;
+  }
+  
+  .dashboard-header {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .header-content {
+    gap: 1rem;
   }
   
   .title-section h1 {
@@ -2103,6 +2636,13 @@ onMounted(() => {
   
   .chart-container {
     border-radius: 12px;
+    position: relative;
+    /* Use "visible" so the popup can overflow the top boundary */
+    overflow: visible;
+    /* Ensure container doesn't grow beyond grid track width */
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
   }
   
   .chart-header {
@@ -2110,6 +2650,57 @@ onMounted(() => {
     align-items: flex-start;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
+  }
+  
+  .mobile-info-btn {
+    display: inline-flex;
+  }
+  
+  /* Hide regular subtitle on mobile - show popup instead */
+  .chart-title-section .chart-subtitle {
+    display: none;
+  }
+  
+  .info-popup {
+    display: block;
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: normal;
+    max-width: 280px;
+    width: max-content;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    animation: popupFadeIn 0.2s ease-out;
+  }
+  
+  .info-popup::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+  }
+  
+  @keyframes popupFadeIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   }
   
   .chart-filters {
@@ -2126,6 +2717,8 @@ onMounted(() => {
   .chart-body {
     padding: 0.75rem 0.5rem;
     min-height: 260px;
+    overflow: hidden; /* Prevent charts from expanding container width */
+    max-width: 100%;
   }
   
   .doughnut-body,

@@ -1,56 +1,56 @@
 {
   "login": {
-    "welcome": "Willkommen! Bitte melden Sie sich an, um fortzufahren.",
+    "welcome": "Willkommen! Bitte melde dich an, um fortzufahren.",
     "api": {
-      "modeButton": "API-Anmeldung",
+      "modeButton": "API Login",
       "usernameOrEmail": "Benutzername oder E-Mail",
       "password": "Passwort",
-      "usernamePlaceholder": "Geben Sie Ihren Benutzernamen oder E-Mail ein",
-      "passwordPlaceholder": "Geben Sie Ihr Passwort ein",
+      "usernamePlaceholder": "Benutzername oder E-Mail eingeben",
+      "passwordPlaceholder": "Passwort eingeben",
       "loginButton": "Anmelden",
       "loggingIn": "Anmeldung läuft...",
       "errors": {
-        "emptyFields": "Bitte geben Sie sowohl Benutzername/E-Mail als auch Passwort ein",
-        "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
-        "invalidCredentials": "Ungültige Anmeldedaten. Bitte versuchen Sie es erneut."
+        "emptyFields": "Bitte Benutzername/E-Mail und Passwort eingeben",
+        "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+        "invalidCredentials": "Ungültige Zugangsdaten. Bitte versuche es erneut."
       }
     },
     "csv": {
       "modeButton": "CSV hochladen",
-      "description": "Bevor Sie Ihre Daten aus der Hevy-App exportieren, stellen Sie sicher, dass Ihre App-Sprache auf Englisch eingestellt ist und die Gewichtseinheit KG ist.",
+      "description": "Bevor du deine Daten aus der Hevy-App exportierst, stelle sicher, dass die App-Sprache auf Englisch und die Gewichtseinheit auf KG eingestellt ist.",
       "selectFile": "CSV-Datei auswählen",
-      "dragDrop": "oder hierher ziehen und ablegen",
+      "dragDrop": "oder hierher ziehen",
       "browse": "Dateien durchsuchen",
-      "uploadButton": "Hochladen & Fortfahren",
+      "uploadButton": "Hochladen & Weiter",
       "uploading": "Wird hochgeladen...",
       "errors": {
-        "noFile": "Bitte wählen Sie eine CSV-Datei aus",
-        "invalidFile": "Ungültige Datei. Bitte wählen Sie eine gültige CSV-Datei aus (max. 10MB)",
+        "noFile": "Bitte wähle eine CSV-Datei aus",
+        "invalidFile": "Ungültige Datei. Bitte wähle eine gültige CSV-Datei (max. 10MB)",
         "emptyFile": "CSV-Datei ist leer oder enthält keine Trainingsdaten",
-        "uploadFailed": "CSV-Upload fehlgeschlagen. Bitte überprüfen Sie das Dateiformat."
+        "uploadFailed": "Fehler beim Hochladen der CSV. Bitte überprüfe das Dateiformat."
       }
     },
     "apikey": {
-      "linkText": "Hevy PRO API-Schlüssel eingeben",
-      "description": "Geben Sie Ihren Hevy PRO API-Schlüssel ein. Sie können ihn unter https://hevy.com/settings?developer abrufen",
-      "label": "API-Schlüssel",
-      "placeholder": "Geben Sie Ihren Hevy PRO API-Schlüssel ein",
+      "linkText": "Hevy PRO API-Key eingeben",
+      "description": "Gib deinen Hevy PRO API-Key ein. Du findest ihn unter https://hevy.com/settings?developer",
+      "label": "API-Key",
+      "placeholder": "Hevy PRO API-Key eingeben",
       "loginButton": "Validieren & Anmelden",
-      "validating": "Wird validiert...",
+      "validating": "Validierung läuft...",
       "errors": {
-        "emptyKey": "Bitte geben Sie Ihren API-Schlüssel ein",
-        "invalidKey": "Ungültiger API-Schlüssel. Bitte überprüfen Sie ihn und versuchen Sie es erneut.",
-        "validationFailed": "API-Schlüssel konnte nicht validiert werden. Bitte versuchen Sie es erneut."
+        "emptyKey": "Bitte gib deinen API-Key ein",
+        "invalidKey": "Ungültiger API-Key. Bitte prüfen und erneut versuchen.",
+        "validationFailed": "Validierung des API-Keys fehlgeschlagen. Bitte erneut versuchen."
       }
     },
     "madeBy": "Erstellt von",
-    "tagline": "Verfolgen Sie Ihre Fitness-Reise"
+    "tagline": "Verfolge deine Fitness-Reise"
   },
   "nav": {
     "brandTextFor": "für",
     "dashboard": "Dashboard",
-    "workoutsCard": "Trainings (Karten)",
-    "workoutsList": "Trainings (Liste)",
+    "workoutsCard": "Workouts (Karte)",
+    "workoutsList": "Workouts (Liste)",
     "exercises": "Übungen",
     "share": "Teilen",
     "settings": "Einstellungen",
@@ -61,94 +61,139 @@
     "subtitle": "Willkommen zurück",
     "sections": {
       "plateausDetected": "Plateau erkannt ({count})",
-      "recentPRs": "Kürzliche persönliche Rekorde ({count})",
+      "recentPRs": "Aktuelle Bestleistungen ({count})",
       "trainingAnalysis": "Trainingsanalyse",
-      "exerciseInsights": "Übungs-Insights",
+      "exerciseInsights": "Übungseinblicke",
       "calendarViews": "Kalenderansichten",
       "muscleDistribution": "Muskelverteilung"
     },
+    "filters": {
+      "all": "Alle",
+      "oneYear": "1J",
+      "sixMonths": "6M",
+      "threeMonths": "3M",
+      "oneMonth": "1M",
+      "monthly": "Mo",
+      "weekly": "Wo"
+    },
     "stats": {
-      "totalWorkouts": "Gesamte Trainings",
+      "totalWorkouts": "Gesamt Workouts",
       "totalVolume": "Gesamtvolumen",
-      "avgVolume": "Durchschn. Volumen",
-      "totalHoursTrained": "Gesamte Trainingsstunden",
-      "workoutStreak": "Trainingssträhne (Wochen)",
-      "mostTrainedExercise": "Meist trainierte Übung",
-      "longestWorkout": "Längstes Training"
+      "avgVolume": "Durchschnittsvolumen",
+      "totalHoursTrained": "Trainingsstunden gesamt",
+      "avgWorkoutTime": "Durchschn. Workout-Zeit",
+      "workoutStreak": "Workout-Streak (Wochen)",
+      "mostTrainedExercise": "Häufigste Übung",
+      "longestWorkout": "Längstes Workout",
+      "sessions": "Sitzungen",
+      "perWorkout": "pro Workout"
+    },
+    "prTypes": {
+      "best_weight": "Gewicht",
+      "best_max": "Max",
+      "best_1rm": "1RM",
+      "best_volume": "Volumen",
+      "best_reps": "Wiederholungen",
+      "distance": "Distanz",
+      "duration": "Dauer"
     },
     "charts": {
       "hoursTrained": "Trainingsstunden",
       "hoursTrainedDescription": "Trainingsdauer im Zeitverlauf",
-      "volumeProgression": "Volumenentwicklung",
-      "volumeProgressionDescription": "Gehobenes Gesamtgewicht pro Zeitraum",
-      "repsAndSets": "Wiederholungen & Sätze",
-      "repsAndSetsDescription": "Trainingsvolumen aufgeschlüsselt",
-      "PRsOverTime": "PRs im Zeitverlauf",
-      "PRsOverTimeDescription": "Erreichte persönliche Rekorde",
-      "weeklyRhythm": "Wöchentlicher Rhythmus",
+      "volumeProgression": "Volumenverlauf",
+      "volumeProgressionDescription": "Gesamtgewicht pro Zeitraum",
+      "repsAndSets": "Wdh. & Sätze",
+      "repsAndSetsDescription": "Aufschlüsselung des Trainingsvolumens",
+      "PRsOverTime": "Bestleistungen im Zeitverlauf",
+      "PRsOverTimeDescription": "Erzielte persönliche Rekorde",
+      "workoutCalendar": "Trainingskalender",
+      "workoutCalendarDescription": "Trainingskonsistenz über 12 Monate",
+      "weeklyRhythm": "Wochenrhythmus",
       "weeklyRhythmDescription": "Trainingshäufigkeit nach Wochentag",
       "muscleDistribution": "Muskelverteilung",
       "muscleDistributionDescription": "Sätze nach Muskelgruppe",
       "muscleRegions": "Muskelregionen",
-      "muscleRegionsDescription": "Gestapelte Aufschlüsselung nach Zeitraum"
+      "muscleRegionsDescription": "Gestapelte Aufschlüsselung nach Zeitraum",
+      "calendarWeek": "KW",
+      "muscleFilters": {
+        "groups": "GRUPPEN",
+        "muscles": "MUSKEL"
+      }
     }
   },
   "workouts": {
-    "workoutsCardTitle": "Trainings (Karten)",
-    "workoutsCardSubtitle": "Durchsuchen Sie Ihre Trainings im Karten-Design.",
-    "workoutsListTitle": "Trainings (Liste)",
-    "workoutsListSubtitle": "Durchsuchen Sie Ihre Trainings im detaillierten Listenformat mit Beitragskalender."
+    "card": {
+      "title": "Workouts (Karte)",
+      "subtitle": "Durchsuche deine Workouts im Kartendesign.",
+      "totalSets": "Sätze gesamt",
+      "set": "Satz",
+      "reps": "Wdh."
+    },
+    "list": {
+      "title": "Workouts (Liste)",
+      "subtitle": "Durchsuche deine Workouts im Listenformat mit Aktivitätskalender.",
+      "searchContains": "Enthält…",
+      "set": "Satz",
+      "reps": "Wdh."
+    }
   },
   "exercises": {
     "title": "Übungen",
     "subtitle": "Detaillierte Analyse und Fortschrittsverfolgung für jede Übung.",
-    "searchFilter": "Übungen nach Name suchen...",
+    "searchFilter": "Übungen nach Namen suchen...",
     "personalRecords": "Persönliche Rekorde",
-    "neverTrained": "Nie trainiert",
+    "neverTrained": "Noch nie trainiert",
+    "filters": {
+      "30days": "30T",
+      "60days": "60T",
+      "90days": "90T",
+      "1year": "1J",
+      "allTime": "Alle"
+    },
     "summary": {
       "total": "Gesamt",
       "active": "Aktiv"
     },
     "lastTrained": {
-      "today": "Heute trainiert",
-      "yesterday": "Gestern trainiert",
-      "daysAgo": "Vor {days} Tagen trainiert",
-      "weeksAgo": "Vor {weeks} Woche(n) trainiert",
-      "monthsAgo": "Vor {months} Monat(en) trainiert"
+      "today": "Zuletzt heute trainiert",
+      "yesterday": "Zuletzt gestern trainiert",
+      "daysAgo": "Zuletzt vor {days} Tagen trainiert",
+      "weeksAgo": "Zuletzt vor {weeks} Woche(n) trainiert",
+      "monthsAgo": "Zuletzt vor {months} Monat(en) trainiert"
     },
     "stats": {
       "statsHeader": "Statistiken",
-      "totalSessions": "Gesamte Trainingseinheiten"
+      "totalSessions": "Sitzungen gesamt"
     },
     "insights": {
       "plateauBadge": "Plateau",
-      "gainingBadge": "Fortschritt",
+      "gainingBadge": "Steigerung",
       "losingBadge": "Rückgang",
       "insufficientBadge": "Neu",
       "inactiveBadge": "Inaktiv",
-      "maintainingBadge": "Stabil",
-      "plateau": "Ihr bester Satz liegt bei etwa {weight} für {repsMin}-{repsMax} Wdh. Versuchen Sie, mehr Gewicht oder Wiederholungen hinzuzufügen!",
-      "plateauCardio": "Ihre Leistung stagniert bei etwa {metric}. Versuchen Sie, Distanz oder Tempo zu erhöhen!",
-      "gaining": "Sie haben um {weightChange} oder {repsChange} Wdh. in den letzten Einheiten zugelegt!",
-      "gainingCardio": "Toller Fortschritt! Sie haben sich in den letzten Einheiten um {change}% verbessert!",
-      "losing": "Leistung sank um {weightChange} oder {repsChange} Wdh. Erwägen Sie Erholung oder Formüberprüfung.",
-      "losingCardio": "Leistung sank um {change}%. Erwägen Sie Erholung oder überprüfen Sie Ihr Training.",
-      "insufficient": "Noch nicht genug Daten. Benötigt mindestens {needed} Einheiten, aktuell {sessions}.",
-      "inactive": "Seit {days} Tagen nicht trainiert. Nehmen Sie das Training wieder auf!",
-      "maintaining": "Leistung ist stabil. Sie halten Ihr aktuelles Kraftniveau."
+      "maintainingBadge": "Erhalt",
+      "plateau": "Dein Top-Satz stagniert bei {weight} für {repsMin}-{repsMax} Wiederholungen. Versuche mehr Gewicht oder Wiederholungen, um das Plateau zu brechen!",
+      "plateauCardio": "Deine Leistung stagniert bei {metric}. Versuche die Distanz oder das Tempo zu erhöhen!",
+      "gaining": "Du hast dich um {weightChange} oder {repsChange} Wiederholungen gegenüber deinen letzten {sessions} Sitzungen gesteigert!",
+      "gainingCardio": "Toller Fortschritt! Du hast dich in den letzten {sessions} Sitzungen um {change}% verbessert!",
+      "losing": "Die Leistung sank um {weightChange} oder {repsChange} Wiederholungen in den letzten {sessions} Sitzungen. Erholung oder Technik-Check empfohlen.",
+      "losingCardio": "Die Leistung sank um {change}% in den letzten {sessions} Sitzungen. Erholung oder Trainingsplan prüfen.",
+      "insufficient": "Noch nicht genügend Daten. Erfordert mindestens {needed} Sitzungen, aktuell {sessions}.",
+      "inactive": "Seit {days} Tagen nicht trainiert. Nimm das Training wieder auf, um Fortschritte zu verfolgen!",
+      "maintaining": "Die Leistung ist stabil. Du hältst dein aktuelles Kraftniveau."
     },
     "graphs": {
-      "maxWeight": "Max. Gewicht (im Zeitverlauf)",
+      "maxWeight": "Max. Gewicht (Zeitverlauf)",
       "avgVolume": "Durchschn. Volumen pro Satz",
       "weightVsReps": "Max. Gewicht vs. Wiederholungen",
-      "volumeSession": "Volumen (Einheit - alle Sätze an diesem Tag)",
+      "volumeSession": "Volumen (Sitzung - alle Sätze)",
       "labels": {
         "maxWeight": "Max. Gewicht",
-        "avgVolume": "Durchschn. Volumen pro Satz"
+        "avgVolume": "Durchschn. Volumen/Satz"
       },
       "axis": {
         "weightVsReps": {
-          "x": "Wiederholungen bei Max. Gewicht",
+          "x": "Wdh. bei Max. Gewicht",
           "y": "Max. Gewicht"
         },
         "volumeSession": {
@@ -160,75 +205,128 @@
   },
   "settings": {
     "title": "Einstellungen",
-    "subtitle": "Passen Sie Ihr Hevy Insights Erlebnis an.",
+    "subtitle": "Passe dein Hevy Insights Erlebnis an.",
     "themes": {
-      "title": "Farbthema",
-      "description": "Wählen Sie Ihr bevorzugtes Farbschema für Diagramme und Akzente",
+      "title": "Farbschema",
+      "description": "Wähle dein bevorzugtes Farbschema für Diagramme und Akzente",
       "green": "Smaragd/Cyan",
-      "purple": "Lila/Rosa",
+      "purple": "Lila/Pink",
       "blue": "Blau/Indigo",
       "orange": "Orange/Rot"
     },
     "language": {
       "title": "Sprache",
-      "description": "Wählen Sie Ihre bevorzugte Sprache"
+      "description": "Wähle deine bevorzugte Sprache"
     },
     "dateTimeFormat": {
       "title": "Datums- & Zeitformate",
-      "description": "Passen Sie an, wie Datum und Uhrzeit angezeigt werden",
+      "description": "Passe die Anzeige von Datum und Uhrzeit an",
       "dateFormat": "Datumsformat",
-      "graphAxisFormat": "Diagramm-Achsenformat"
+      "graphAxisFormat": "Achsenformat Diagramm"
     },
     "weightUnit": {
       "title": "Gewichtseinheit",
-      "description": "Wählen Sie Ihre bevorzugte Gewichtseinheit für die Anzeige"
+      "description": "Wähle deine bevorzugte Gewichtseinheit",
+      "kg": "Kilogramm",
+      "lbs": "Pfund"
     },
     "plateauDetection": {
       "title": "Plateau-Erkennung",
-      "description": "Passen Sie an, wie viele Ihrer letzten Trainingseinheiten zur Erkennung von Plateaus verwendet werden sollen",
-      "sessionsLabel": "Anzahl der zu analysierenden Einheiten:",
-      "hint": "Analysieren Sie die letzten N Einheiten, um Plateaus zu erkennen (mindestens 3, maximal 100). Standard ist 5."
+      "description": "Wähle aus, wie viele deiner letzten Workouts zur Plateau-Erkennung genutzt werden sollen",
+      "sessionsLabel": "Anzahl der zu analysierenden Sitzungen:",
+      "hint": "Analysiere die letzten N Sitzungen (min. 3, max. 100). Standard ist 5."
     },
     "dataManagement": {
       "title": "Datenverwaltung",
-      "description": "Zeigen Sie Informationen über Ihre Datenquelle an",
+      "description": "Informationen über deine Datenquelle",
       "dataSource": "Datenquelle",
-      "csvNote": "Sie verwenden den CSV-Modus. Daten werden lokal gespeichert, keine API verwendet."
+      "csvNote": "Du nutzt den CSV-Modus. Daten werden lokal gespeichert, keine API-Nutzung."
     },
     "resetButton": "Auf Standard zurücksetzen",
-    "saveButton": "Speichern & zum Dashboard zurückkehren"
+    "saveButton": "Speichern & zum Dashboard"
   },
   "global": {
-    "loadingSpinnerText": "Ihre Trainingsdaten werden geladen...",
-    "volume": "Volumen",
-    "hours": "Stunden",
-    "duration": "Dauer",
-    "distance": "Distanz",
-    "exercises": "Übungen",
-    "weight": "Gewicht",
-    "notes": "Notizen",
-    "description": "Beschreibung",
-    "monday": "Montag",
-    "tuesday": "Dienstag",
-    "wednesday": "Mittwoch",
-    "thursday": "Donnerstag",
-    "friday": "Freitag",
-    "saturday": "Samstag",
-    "sunday": "Sonntag",
-    "day": "Tag",
-    "arms": "Arme",
-    "back": "Rücken",
-    "chest": "Brust",
-    "core": "Kern",
-    "legs": "Beine",
-    "shoulders": "Schultern",
+    "loadingSpinnerText": "Trainingsdaten werden geladen...",
+    "sw": {
+      "volume": "Volumen",
+      "hours": "Stunden",
+      "duration": "Dauer",
+      "distance": "Distanz",
+      "exercises": "Übungen",
+      "weight": "Gewicht",
+      "notes": "Notizen",
+      "description": "Beschreibung",
+      "day": "Tag",
+      "reps": "Wdh."
+    },
+    "days": {
+      "mondayLong": "Montag",
+      "tuesdayLong": "Dienstag",
+      "wednesdayLong": "Mittwoch",
+      "thursdayLong": "Donnerstag",
+      "fridayLong": "Freitag",
+      "saturdayLong": "Samstag",
+      "sundayLong": "Sonntag",
+      "mondayShort": "Mo",
+      "tuesdayShort": "Di",
+      "wednesdayShort": "Mi",
+      "thursdayShort": "Do",
+      "fridayShort": "Fr",
+      "saturdayShort": "Sa",
+      "sundayShort": "So"
+    },
+    "months": {
+      "januaryLong": "Januar",
+      "februaryLong": "Februar",
+      "marchLong": "März",
+      "aprilLong": "April",
+      "mayLong": "Mai",
+      "juneLong": "Juni",
+      "julyLong": "Juli",
+      "augustLong": "August",
+      "septemberLong": "September",
+      "octoberLong": "Oktober",
+      "novemberLong": "November",
+      "decemberLong": "Dezember",
+      "januaryShort": "Jan",
+      "februaryShort": "Feb",
+      "marchShort": "Mär",
+      "aprilShort": "Apr",
+      "mayShort": "Mai",
+      "juneShort": "Jun",
+      "julyShort": "Jul",
+      "augustShort": "Aug",
+      "septemberShort": "Sep",
+      "octoberShort": "Okt",
+      "novemberShort": "Nov",
+      "decemberShort": "Dez"
+    },
+    "bodymuscles": {
+      "chest": "Brust",
+      "back": "Rücken",
+      "shoulders": "Schultern",
+      "arms": "Arme",
+      "core": "Rumpf",
+      "legs": "Beine",
+      "abdominals": "Bauchmuskeln",
+      "abductors": "Abduktoren",
+      "adductors": "Adduktoren",
+      "biceps": "Bizeps",
+      "calves": "Waden",
+      "glutes": "Gesäß",
+      "hamstrings": "Beinbeuger",
+      "lats": "Latissimus",
+      "lower_back": "Unterer Rücken",
+      "quadriceps": "Quadrizeps",
+      "triceps": "Trizeps",
+      "upper_back": "Oberer Rücken"
+    },
     "pagination": {
       "first": "Erste",
-      "previous": "Zurück",
-      "next": "Weiter",
+      "previous": "Vorherige",
+      "next": "Nächste",
       "last": "Letzte",
-      "page": "Seite",
-      "pageOf": "von"
+      "indicator": "Seite {current} von {total}"
     },
     "searchFilter": {
       "byNumber": "Nach Nummer",
@@ -236,7 +334,7 @@
     },
     "timeRangeFilter": {
       "timeRange": "Zeitraum",
-      "allTime": "Alle",
+      "allTime": "Gesamtzeit",
       "lastWeek": "Letzte Woche",
       "lastMonth": "Letzter Monat",
       "last3Months": "Letzte 3 Monate",
@@ -244,11 +342,11 @@
       "last12Months": "Letzte 12 Monate"
     },
     "footer": {
-      "contact": "Kontaktiere mich",
-      "donate": "Kauf mir einen Kaffee",
-      "github": "Stern auf GitHub",
+      "contact": "Kontakt",
+      "donate": "Kaffee spendieren",
+      "github": "Star auf GitHub",
       "bugReport": "Fehler melden",
-      "madeBy": "Gemacht mit ❤️ von {author}"
+      "madeBy": "Erstellt mit ❤️ von {author}"
     }
   }
 }

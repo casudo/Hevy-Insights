@@ -41,7 +41,7 @@ To add a new language to Hevy Insights, follow these steps:
    - Hevy API provides localized exercise titles (e.g. `de_title` and `es_title`)
    - For new languages, add a corresponding field pattern (e.g. `fr_title`)
    - Update these files to check for the new field:
-     - `frontend/src/views/Dashboard.vue` - plateauExercises computed property
+     - `frontend/src/views/Dashboard.vue` - plateauExercises & recentPRs computed property
      - `frontend/src/views/Exercises.vue` - getLocalizedTitle() function
    - The pattern matches the language code: if locale is "fr", check for `fr_title`
 

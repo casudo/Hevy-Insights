@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
-import { formatDurationFromTimestamps, formatWeight, getWeightUnit, formatPRValue } from "../utils/formatters";
+import { formatDurationFromTimestamps, formatWeight, getWeightUnit, formatPRValue, formatDateTime } from "../utils/formatters";
 import { detectExerciseType, formatDurationSeconds, formatDistance } from "../utils/exerciseTypeDetector";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
 
@@ -64,7 +66,7 @@ const prevPage = () => { if (hasPrev.value) currentPage.value--; };
 const firstPage = () => { currentPage.value = 1; };
 const lastPage = () => { currentPage.value = totalPages.value; };
 
-const formatDate = (timestamp: number) => new Date(timestamp * 1000).toLocaleString();
+const formatDate = (timestamp: number) => formatDateTime(new Date(timestamp * 1000));
 
 // Helpers for additional stats
 const totalSets = (workout: any) => {
@@ -106,6 +108,14 @@ const exercisePRs = (exercise: any): PRItem[] => {
 const exerciseHasPR = (exercise: any) => exercisePRs(exercise).length > 0;
 // Note: set-level highlighting reverted per request; keep extractor for future use if needed
 
+// Translate PR type names using i18n keys
+function getLocalizedPRType(prType: string): string {
+  const key = `dashboard.prTypes.${prType}`;
+  const translation = t(key);
+  if (translation === key) return prType.split("_").join(" ");
+  return translation;
+}
+
 const toggleExercise = (exerciseId: string) => {
   // Create a new object to ensure reactivity
   expandedExercises.value = {
@@ -132,8 +142,8 @@ onMounted(async () => {
     <div class="workouts-card-header">
       <div class="header-content">
         <div class="title-section">
-          <h1>{{ $t('workouts.workoutsCardTitle') }}</h1>
-          <p class="subtitle">{{ $t('workouts.workoutsCardSubtitle') }}</p>
+          <h1>{{ $t('workouts.card.title') }}</h1>
+          <p class="subtitle">{{ $t('workouts.card.subtitle') }}</p>
         </div>
 
         <div class="header-actions">
@@ -166,7 +176,7 @@ onMounted(async () => {
         <div class="pagination-controls">
           <button @click="firstPage" :disabled="!hasPrev" class="pagination-btn">《 {{ $t('global.pagination.first') }}</button>
           <button @click="prevPage" :disabled="!hasPrev" class="pagination-btn">← {{ $t('global.pagination.previous') }}</button>
-          <span class="page-info">{{ $t('global.pagination.page') }} {{ currentPage }} {{ $t('global.pagination.pageOf') }} {{ totalPages }}</span>
+          <span class="page-info">{{ $t('global.pagination.indicator', { current: currentPage, total: totalPages }) }}</span>
           <button @click="nextPage" :disabled="!hasMore" class="pagination-btn">{{ $t('global.pagination.next') }} →</button>
           <button @click="lastPage" :disabled="!hasMore" class="pagination-btn">{{ $t('global.pagination.last') }} 》</button>
         </div>
@@ -201,10 +211,10 @@ onMounted(async () => {
 
           <!--  Middle Row with Stats  -->
           <div class="stats-row">
-            <div class="stat"><strong>{{ formatWeight(workout.estimated_volume_kg || 0) }} {{ getWeightUnit() }}</strong><span>{{ $t('global.volume') }}</span></div>
-            <div class="stat"><strong>{{ formatDurationFromTimestamps(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.duration') }}</span></div>
-            <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.exercises') }}</span></div>
-            <div class="stat"><strong>{{ totalSets(workout) }}</strong><span>Total Sets</span></div>
+            <div class="stat"><strong>{{ formatWeight(workout.estimated_volume_kg || 0) }} {{ getWeightUnit() }}</strong><span>{{ $t('global.sw.volume') }}</span></div>
+            <div class="stat"><strong>{{ formatDurationFromTimestamps(workout.start_time, workout.end_time) }}</strong><span>{{ $t('global.sw.duration') }}</span></div>
+            <div class="stat"><strong>{{ workout.exercises?.length || 0 }}</strong><span>{{ $t('global.sw.exercises') }}</span></div>
+            <div class="stat"><strong>{{ totalSets(workout) }}</strong><span>{{ $t('workouts.card.totalSets') }}</span></div>
           </div>
 
           <div v-if="workout.description" class="workout-description">
@@ -213,7 +223,7 @@ onMounted(async () => {
 
           <!--  Exercises List  -->
           <div class="exercises">
-            <h3>{{ $t('global.exercises') }}</h3>
+            <h3>{{ $t('global.sw.exercises') }}</h3>
             <div v-for="exercise in workout.exercises" :key="exercise.id" class="exercise" :class="{ 'pr-highlight': exerciseHasPR(exercise) }">
               <button class="exercise-toggle" @click="toggleExercise(exercise.id)">
                 <span class="exercise-title">{{ exercise.title || "Unknown Exercise" }}</span>
@@ -222,20 +232,20 @@ onMounted(async () => {
 
               <div v-show="expandedExercises[exercise.id]" class="exercise-content">
                 <div v-if="exerciseHasPR(exercise)" class="pr-summary">
-                  <span v-for="(pr, i) in exercisePRs(exercise)" :key="i" class="pr-chip">{{ (pr.type || '').split('_').join(' ') }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
+                  <span v-for="(pr, i) in exercisePRs(exercise)" :key="i" class="pr-chip">{{ getLocalizedPRType(pr.type) }}: <strong>{{ formatPRValue(pr.type, pr.value) }}</strong></span>
                 </div>
                 <table class="sets-table">
                   <thead>
                     <tr>
-                      <th>Set</th>
+                      <th>{{ $t('workouts.card.set') }}</th>
                       <!-- Dynamic headers based on exercise type -->
                       <template v-if="detectExerciseType(exercise) === 'cardio'">
-                        <th>{{ $t('global.distance') }}</th>
-                        <th>{{ $t('global.duration') }}</th>
+                        <th>{{ $t('global.sw.distance') }}</th>
+                        <th>{{ $t('global.sw.duration') }}</th>
                       </template>
                       <template v-else>
-                        <th>{{ $t('global.weight') }} ({{ getWeightUnit() }})</th>
-                        <th>Reps</th>
+                        <th>{{ $t('global.sw.weight') }} ({{ getWeightUnit() }})</th>
+                        <th>{{ $t('workouts.card.reps') }}</th>
                       </template>
                       <th>RPE</th>
                     </tr>
@@ -258,7 +268,7 @@ onMounted(async () => {
                 </table>
 
                 <div v-if="exercise.notes" class="exercise-notes">
-                  <em>{{ $t('global.notes') }}: {{ exercise.notes }}</em>
+                  <em>{{ $t('global.sw.notes') }}: {{ exercise.notes }}</em>
                 </div>
               </div>
             </div>
@@ -271,7 +281,7 @@ onMounted(async () => {
         <div class="pagination-controls">
           <button @click="firstPage" :disabled="!hasPrev" class="pagination-btn">《 {{ $t('global.pagination.first') }}</button>
           <button @click="prevPage" :disabled="!hasPrev" class="pagination-btn">← {{ $t('global.pagination.previous') }}</button>
-          <span class="page-info">{{ $t('global.pagination.page') }} {{ currentPage }} {{ $t('global.pagination.pageOf') }} {{ totalPages }}</span>
+          <span class="page-info">{{ $t('global.pagination.indicator', { current: currentPage, total: totalPages }) }}</span>
           <button @click="nextPage" :disabled="!hasMore" class="pagination-btn">{{ $t('global.pagination.next') }} →</button>
           <button @click="lastPage" :disabled="!hasMore" class="pagination-btn">{{ $t('global.pagination.last') }} 》</button>
         </div>
@@ -423,6 +433,11 @@ onMounted(async () => {
   
   .settings-btn {
     display: none;
+  }
+  
+  .workouts-card-header {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
   }
 }
 
