@@ -21,7 +21,7 @@ logging.basicConfig(level=getenv("LOG_LEVEL", "INFO"), format="%(asctime)s [%(le
 app = FastAPI(
     title="Hevy Insights API",
     description="Backend API for Hevy Insights",
-    version="1.2.0",
+    version="1.3.0",
     docs_url="/api/docs",  # Swagger
 )
 ### Initialize rate limiter
@@ -225,6 +225,28 @@ def get_workouts(
 
     except HevyError as e:
         logging.error(f"Error fetching workouts: {e}")
+        status_code = 401 if "Unauthorized" in str(e) else 500
+        raise HTTPException(status_code=status_code, detail=str(e))
+
+
+@app.get("/api/body_measurements", tags=["Body Measurements"])
+def get_body_measurements(
+    auth_token: str = Header(..., alias="auth-token"),
+):
+    """
+    Get body measurements (weight tracking).
+
+    Returns list of measurements with id, weight_kg, date, and created_at.
+
+    Requires auth-token header.
+    """
+    try:
+        client = HevyClient(auth_token)
+        measurements = client.get_body_measurements()
+        return measurements
+
+    except HevyError as e:
+        logging.error(f"Error fetching body measurements: {e}")
         status_code = 401 if "Unauthorized" in str(e) else 500
         raise HTTPException(status_code=status_code, detail=str(e))
 

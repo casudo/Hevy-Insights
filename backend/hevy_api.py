@@ -53,6 +53,10 @@ class HevyConfig:
     def pro_workouts_url(self) -> str:
         return f"{self.base_url}/v1/workouts"
 
+    @property
+    def body_measurements_url(self) -> str:
+        return f"{self.base_url}/body_measurements"
+
 
 ### Main API client class
 class HevyClient:
@@ -253,6 +257,47 @@ class HevyClient:
             raise HevyError(f"Request timed out: {e}")
         except Exception as e:
             logging.error(f"Unexpected error fetching workouts: {e}")
+            raise HevyError(f"Unexpected error occurred: {e}")
+        
+    def get_body_measurements(self) -> list:
+        """
+        Fetch body measurements from Hevy API.
+
+        Returns:
+            list: Body measurements data (list of dicts with id, weight_kg, date, created_at)
+
+        Raises:
+            HevyError: If API request fails
+        """
+        logging.debug("Fetching body measurements")
+
+        if not self.auth_token:
+            raise HevyError("No auth token available. Please login first.")
+
+        try:
+            response = self.session.get(self.config.body_measurements_url)
+            response.raise_for_status()
+
+            data = response.json()
+            logging.debug(f"Successfully fetched {len(data)} body measurements")
+            return data
+
+        except requests.JSONDecodeError as e:
+            logging.error(f"JSON decode error fetching body measurements: {e}")
+            raise HevyError(f"JSON decode error occurred: {e}")
+        except requests.HTTPError as e:
+            logging.error(f"HTTP error fetching body measurements: {e}")
+            if e.response.status_code == 401:
+                raise HevyError("Unauthorized - Invalid or expired auth token")
+            raise HevyError(f"HTTP error occurred: {e}")
+        except requests.ConnectionError as e:
+            logging.error(f"Connection error fetching body measurements: {e}")
+            raise HevyError(f"Connection error occurred: {e}")
+        except requests.Timeout as e:
+            logging.error(f"Timeout error fetching body measurements: {e}")
+            raise HevyError(f"Request timed out: {e}")
+        except Exception as e:
+            logging.error(f"Unexpected error fetching body measurements: {e}")
             raise HevyError(f"Unexpected error occurred: {e}")
 
     ### ========== Hevy PRO API Methods ==========

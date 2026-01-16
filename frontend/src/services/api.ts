@@ -86,4 +86,13 @@ export const workoutService = {
   },
 };
 
+// Body Measurement Service
+export const bodyMeasurementService = {
+  async getMeasurements() {
+    const response = await api.get("/body_measurements");
+    return response.data;
+  },
+
+};
+
 export default api;
