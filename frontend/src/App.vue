@@ -126,6 +126,10 @@ watch(isMobileSidebarOpen, (open) => {
           <span class="nav-icon">📚</span>
           <span class="nav-text">{{ $t('nav.exercises') }}</span>
         </router-link>
+        <router-link to="/body-measurements" class="nav-item" :title="$t('nav.bodyMeasurements')">
+          <span class="nav-icon">⚖️</span>
+          <span class="nav-text">{{ $t('nav.bodyMeasurements') }}</span>
+        </router-link>
         <!-- 
         <router-link to="/share" class="nav-item">
           <span class="nav-icon">📤</span>

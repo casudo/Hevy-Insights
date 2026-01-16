@@ -5,6 +5,7 @@ import WorkoutsCard from "../views/Workouts_Card.vue";
 import WorkoutsList from "../views/Workouts_List.vue";
 import Exercises from "../views/Exercises.vue";
 import Settings from "../views/Settings.vue";
+import BodyMeasurements from "../views/BodyMeasurements.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -43,6 +44,12 @@ const router = createRouter({
       path: "/exercises",
       name: "Exercises",
       component: Exercises,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/body-measurements",
+      name: "BodyMeasurements",
+      component: BodyMeasurements,
       meta: { requiresAuth: true },
     },
     {
