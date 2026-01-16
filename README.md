@@ -192,6 +192,8 @@ Clone/download the repository and follow these steps:
 - To get more space on mobile: Dashboard charts: Hide Filters. Add something similar to the „i“ button which shows the filters
 - Better tablet screen responsiveness
 - Implement update checker
+- Dashboard recent PRs: Add unit (seconds/formatted minutes) for "Best Duration" stat
+- Workouts pages: PR "best duration" not localized and no unit shown
 
 ---
 
