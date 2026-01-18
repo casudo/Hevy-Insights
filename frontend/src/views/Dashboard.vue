@@ -1032,7 +1032,7 @@ onMounted(() => {
           </button>
           
           <!-- User Badge -->
-          <div v-if="userAccount" class="user-badge">
+          <div v-if="userAccount" class="user-badge" @click="router.push('/profile')" title="View Profile">
             <div class="user-avatar">{{ userAccount.username.charAt(0).toUpperCase() }}</div>
             <div class="user-details">
               <strong>{{ userAccount.username }}</strong>
@@ -1792,6 +1792,7 @@ onMounted(() => {
   border-radius: 50px;
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .user-badge:hover {

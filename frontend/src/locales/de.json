@@ -258,7 +258,9 @@
       "notes": "Notizen",
       "description": "Beschreibung",
       "day": "Tag",
-      "reps": "Wdh."
+      "reps": "Wdh.",
+      "height": "Größe",
+      "reset": "Zurücksetzen"
     },
     "days": {
       "mondayLong": "Montag",
@@ -348,6 +350,28 @@
       "github": "Star auf GitHub",
       "bugReport": "Fehler melden",
       "madeBy": "Erstellt mit ❤️ von {author}"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "subtitle": "Verwalte deine Benutzerinformationen und Einstellungen.",
+    "loading": "Profil wird geladen...",
+    "userInfo": {
+      "title": "Benutzerinformationen",
+      "username": "Benutzername",
+      "email": "E-Mail",
+      "birthday": "Geburtstag",
+      "bio": "Bio"
+    },
+    "heightSettings": {
+      "title": "Größeneinstellungen",
+      "description": "Lege deine Größe fest, um BMI und FFMI zu berechnen. Diese Einstellung wird für alle deine Körpermessungen verwendet.",
+      "save": "Größe speichern",
+      "saving": "Speichere...",
+      "heightNote": "Deine Größe wird gespeichert und für BMI- und FFMI-Berechnungen bei Körpermessungen verwendet.",
+      "heightSaved": "Größe erfolgreich gespeichert!",
+      "currentHeight": "Aktuelle Größe",
+      "noHeightSet": "Es wurde noch keine Größe festgelegt. Gib oben deine Größe ein, um zu beginnen."
     }
   }
 }

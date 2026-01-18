@@ -258,7 +258,9 @@
       "notes": "Notas",
       "description": "Descripción",
       "day": "Día",
-      "reps": "reps"
+      "reps": "reps",
+      "height": "Altura",
+      "reset": "Restablecer"
     },
     "days": {
       "mondayLong": "Lunes",
@@ -348,6 +350,28 @@
       "github": "Estrella en GitHub",
       "bugReport": "Reportar un error",
       "madeBy": "Hecho con ❤️ por {author}"
+    }
+  },
+  "profile": {
+    "title": "Perfil",
+    "subtitle": "Gestiona tu información personal y preferencias",
+    "loading": "Cargando perfil...",
+    "userInfo": {
+      "title": "Información del Usuario",
+      "username": "Nombre de Usuario",
+      "email": "Correo Electrónico",
+      "birthday": "Cumpleaños",
+      "bio": "Biografía"
+    },
+    "heightSettings": {
+      "title": "Configuración de Altura",
+      "description": "Establece tu altura para calcular el IMC e IMML. Esta configuración se utiliza en todas tus medidas corporales.",
+      "save": "Guardar Altura",
+      "saving": "Guardando...",
+      "heightNote": "Tu altura se guardará y se usará para los cálculos de IMC e IMML en medidas corporales.",
+      "heightSaved": "¡Altura guardada exitosamente!",
+      "currentHeight": "Altura Actual",
+      "noHeightSet": "Aún no se ha establecido ninguna altura. Ingresa tu altura arriba para comenzar."
     }
   }
 }

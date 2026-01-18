@@ -258,7 +258,9 @@
       "notes": "Notes",
       "description": "Description",
       "day": "Day",
-      "reps": "reps"
+      "reps": "reps",
+      "height": "Height",
+      "reset": "Reset"
     },
     "days": {
       "mondayLong": "Monday",
@@ -348,6 +350,28 @@
       "github": "Star on GitHub",
       "bugReport": "Report a bug",
       "madeBy": "Made with ❤️ by {author}"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "subtitle": "Manage your personal information and preferences",
+    "loading": "Loading profile...",
+    "userInfo": {
+      "title": "User Information",
+      "username": "Username",
+      "email": "Email",
+      "birthday": "Birthday",
+      "bio": "Bio"
+    },
+    "heightSettings": {
+      "title": "Height Settings",
+      "description": "Set your height to calculate BMI and FFMI. This setting is used across all your body measurements.",
+      "save": "Save Height",
+      "saving": "Saving...",
+      "heightNote": "Your height will be saved and used for BMI and FFMI calculations in body measurements.",
+      "heightSaved": "Height saved successfully!",
+      "currentHeight": "Current Height",
+      "noHeightSet": "No height has been set yet. Enter your height above to get started."
     }
   }
 }
