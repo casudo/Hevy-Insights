@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue"
+import { ref, computed, onMounted, watch } from "vue"
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useHevyCache } from "../stores/hevy_cache";
@@ -14,10 +14,22 @@ const userHeight = ref(parseFloat(localStorage.getItem("user_height") || "0"));
 const tempHeight = ref(userHeight.value || 0);
 const isSaving = ref(false);
 const showSuccessMessage = ref(false);
+const debouncedHeight = ref(tempHeight.value);
 
 // Computed
 const userAccount = computed(() => store.userAccount);
 const loading = computed(() => store.isLoadingUser);
+
+// Debounce the height input (500ms delay)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+watch(tempHeight, (newValue) => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+  }
+  debounceTimer = setTimeout(() => {
+    debouncedHeight.value = newValue;
+  }, 500);
+});
 
 // Save user height
 const saveHeight = () => {
@@ -42,6 +54,7 @@ const saveHeight = () => {
 
 const resetHeight = () => {
   tempHeight.value = userHeight.value;
+  debouncedHeight.value = userHeight.value;
 };
 
 // Format birthday date
