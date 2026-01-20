@@ -72,6 +72,11 @@ class ValidateApiKeyResponse(BaseModel):
     error: Optional[str] = None
 
 
+class BodyMeasurementRequest(BaseModel):
+    date: str
+    weight_kg: float
+
+
 class HealthResponse(BaseModel):
     status: str
 
@@ -247,6 +252,30 @@ def get_body_measurements(
 
     except HevyError as e:
         logging.error(f"Error fetching body measurements: {e}")
+        status_code = 401 if "Unauthorized" in str(e) else 500
+        raise HTTPException(status_code=status_code, detail=str(e))
+    
+
+@app.post("/api/body_measurements_batch", tags=["Body Measurements"])
+def post_body_measurements(
+    measurement: BodyMeasurementRequest,
+    auth_token: str = Header(..., alias="auth-token"),
+):
+    """
+    Post a new body measurement (weight tracking).
+
+    Requires auth-token header.
+
+    Args:
+        measurement: Body measurement data (date and weight_kg)
+    """
+    try:
+        client = HevyClient(auth_token)
+        client.post_body_measurements(measurement.date, measurement.weight_kg)
+        return {"message": "Body measurement posted successfully"}
+
+    except HevyError as e:
+        logging.error(f"Error posting body measurement: {e}")
         status_code = 401 if "Unauthorized" in str(e) else 500
         raise HTTPException(status_code=status_code, detail=str(e))
 

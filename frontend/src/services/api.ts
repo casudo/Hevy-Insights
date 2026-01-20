@@ -93,6 +93,10 @@ export const bodyMeasurementService = {
     return response.data;
   },
 
+  async addMeasurement(data: { weight_kg: number; date: string }) {
+    const response = await api.post("/body_measurements_batch", data);
+    return response.data;
+  },
 };
 
 export default api;

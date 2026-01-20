@@ -299,6 +299,68 @@ class HevyClient:
         except Exception as e:
             logging.error(f"Unexpected error fetching body measurements: {e}")
             raise HevyError(f"Unexpected error occurred: {e}")
+        
+    def post_body_measurements(self, date: str, weight_kg: float) -> None:
+        """
+        Post body measurements to Hevy API.
+
+        Args:
+            date: Date of the measurement in ISO 8601 format (YYYY-MM-DD)
+            weight_kg: Weight in kilograms
+
+        Raises:
+            HevyError: If API request fails
+        """
+        logging.debug(f"Posting body measurement: {date=}, {weight_kg=}")
+
+        if not self.auth_token:
+            raise HevyError("No auth token available. Please login first.")
+
+        try:
+            body = {
+                "measurementsBatch": [
+                    {
+                        "date": date,
+                        "weight_kg": weight_kg,
+                        "_unsyncedObjectId": "zitronenkuchen"
+                    }
+                ]
+            }
+
+            logging.debug(f"POST request body: {body}")
+            logging.debug(f"POST URL: {self.config.body_measurements_url}_batch")
+            
+            response = self.session.post(f"{self.config.body_measurements_url}_batch", json=body)
+            logging.debug(f"Response status: {response.status_code}")
+            logging.debug(f"Response headers: {dict(response.headers)}")
+            logging.debug(f"Response content length: {len(response.content)}")
+            logging.debug(f"Response text: '{response.text}'")
+            
+            response.raise_for_status()
+
+            ### Hevy API returns 200 OK with empty body on successful POST
+            if response.status_code == 200 or not response.content or not response.text.strip():
+                logging.debug("Successfully posted body measurement (empty response)")
+                return {"success": True}
+
+        except requests.JSONDecodeError as e:
+            logging.error(f"JSON decode error posting body measurements: {e}")
+            logging.error(f"Response status: {response.status_code}, Content: {response.text[:200]}")
+            raise HevyError(f"JSON decode error occurred: {e}")
+        except requests.HTTPError as e:
+            logging.error(f"HTTP error posting body measurements: {e}")
+            if e.response.status_code == 401:
+                raise HevyError("Unauthorized - Invalid or expired auth token")
+            raise HevyError(f"HTTP error occurred: {e}")
+        except requests.ConnectionError as e:
+            logging.error(f"Connection error posting body measurements: {e}")
+            raise HevyError(f"Connection error occurred: {e}")
+        except requests.Timeout as e:
+            logging.error(f"Timeout error posting body measurements: {e}")
+            raise HevyError(f"Request timed out: {e}")
+        except Exception as e:
+            logging.error(f"Unexpected error posting body measurements: {e}")
+            raise HevyError(f"Unexpected error occurred: {e}")
 
     ### ========== Hevy PRO API Methods ==========
 
