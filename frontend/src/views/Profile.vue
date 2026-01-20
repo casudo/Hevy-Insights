@@ -31,6 +31,24 @@ watch(tempHeight, (newValue) => {
   }, 500);
 });
 
+// Height validation warnings (uses debounced value)
+const heightWarning = computed(() => {
+  if (!debouncedHeight.value || debouncedHeight.value <= 0) return null;
+  if (debouncedHeight.value > 250) {
+    return {
+      type: "error",
+      message: t("profile.heightSettings.warningTooHigh")
+    };
+  }
+  if (debouncedHeight.value < 150) {
+    return {
+      type: "warning",
+      message: t("profile.heightSettings.warningTooLow")
+    };
+  }
+  return null;
+});
+
 // Save user height
 const saveHeight = () => {
   if (tempHeight.value && tempHeight.value > 0) {
@@ -186,6 +204,12 @@ onMounted(async () => {
               <small class="help-text">
                 {{ t('profile.heightSettings.heightNote') }}
               </small>
+
+              <!-- Height Validation Warnings -->
+              <div v-if="heightWarning" :class="['height-warning', heightWarning.type]">
+                <span class="warning-icon">{{ heightWarning.type === "error" ? "⚠️" : "ℹ️" }}</span>
+                <span>{{ heightWarning.message }}</span>
+              </div>
             </div>
 
             <!-- Success Message -->
@@ -562,6 +586,34 @@ onMounted(async () => {
   color: #10b981;
   font-weight: 600;
   animation: slideIn 0.3s ease;
+}
+
+/* Height Validation Warnings */
+.height-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  margin-top: 0.75rem;
+  animation: slideIn 0.3s ease;
+}
+
+.height-warning.warning {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+}
+
+.height-warning.error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.warning-icon {
+  font-size: 1.25rem;
 }
 
 @keyframes slideIn {
