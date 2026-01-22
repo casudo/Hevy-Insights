@@ -420,7 +420,7 @@ const saveMeasurement = async () => {
     // Post measurement to backend
     await bodyMeasurementService.addMeasurement({
       weight_kg: weightKg,
-      date: newMeasurement.value.date
+      date: newMeasurement.value.date!
     });
     
     // Reload measurements from backend to ensure UI is in sync
