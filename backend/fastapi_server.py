@@ -355,7 +355,7 @@ async def check_version():
             "current_version": CURRENT_VERSION,
             "latest_version": None,
             "update_available": False,
-            "error": "Error checking version. Contact dev.",
+            "error": "Failed to check for updates from GitHub.",
         }
 
 
