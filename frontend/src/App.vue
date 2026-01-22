@@ -94,6 +94,9 @@ watch(isMobileSidebarOpen, (open) => {
       <router-link to="/dashboard" class="topbar-brand">
         <span class="brand-text">Hevy Insights <span v-if="userAccount" class="brand-username">{{ $t('nav.brandTextFor') }} {{ userAccount.username }}</span></span>
       </router-link>
+      <div v-if="userAccount" class="topbar-avatar" @click="router.push('/profile')" title="View Profile">
+        {{ userAccount.username?.[0]?.toUpperCase() }}
+      </div>
     </header>
     
     <!-- Sidebar Navigation -->
@@ -672,8 +675,31 @@ main.without-sidebar {
     padding: 0.5rem 0.6rem;
     font-size: 1rem;
   }
-  .topbar-brand { display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); text-decoration: none; font-weight: 600; }
+  .topbar-brand { display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); text-decoration: none; font-weight: 600; flex: 1; }
   .brand-username { font-weight: 500; color: var(--text-secondary); font-style: italic;}
+  
+  .topbar-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary, #10b981), var(--color-secondary, #06b6d4));
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .topbar-avatar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  }
   
   .sidebar-header {
     display: none;
