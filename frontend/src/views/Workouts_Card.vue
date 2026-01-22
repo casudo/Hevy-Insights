@@ -153,7 +153,7 @@ onMounted(async () => {
           </button>
           
           <!-- User Badge -->
-          <div v-if="userAccount" class="user-badge">
+          <div v-if="userAccount" class="user-badge" @click="$router.push('/profile')" title="View Profile">
             <div class="user-avatar">{{ userAccount.username.charAt(0).toUpperCase() }}</div>
             <div class="user-details">
               <strong>{{ userAccount.username }}</strong>
@@ -315,7 +315,7 @@ onMounted(async () => {
 
 /* Header Styles */
 .workouts-card-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-color);
 }
@@ -386,6 +386,7 @@ onMounted(async () => {
   border-radius: 50px;
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .user-badge:hover {

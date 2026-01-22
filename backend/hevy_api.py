@@ -53,13 +53,17 @@ class HevyConfig:
     def pro_workouts_url(self) -> str:
         return f"{self.base_url}/v1/workouts"
 
+    @property
+    def body_measurements_url(self) -> str:
+        return f"{self.base_url}/body_measurements"
+
 
 ### Main API client class
 class HevyClient:
     """Main API client class for interacting with Hevy services."""
 
     def __init__(self, auth_token: Optional[str] = None, api_key: Optional[str] = None, config: Optional[HevyConfig] = None):
-        self.auth_token = auth_token # Username/Password auth token
+        self.auth_token = auth_token  # Username/Password auth token
         self.api_key = api_key  # Hevy PRO API key
         self.config = config or HevyConfig()
         self.session = requests.Session()
@@ -72,14 +76,14 @@ class HevyClient:
         headers = {
             "Content-Type": "application/json",
         }
-        
+
         ### Use PRO API key if available, otherwise use auth token
         if self.api_key:
             headers["api-key"] = self.api_key
         elif self.auth_token:
             headers["x-api-key"] = self.config.x_api_key
             headers["auth-token"] = self.auth_token
-            
+
         self.session.headers.update(headers)
 
     ### ========== Free Hevy API Methods ==========
@@ -255,6 +259,101 @@ class HevyClient:
             logging.error(f"Unexpected error fetching workouts: {e}")
             raise HevyError(f"Unexpected error occurred: {e}")
 
+    def get_body_measurements(self) -> list:
+        """
+        Fetch body measurements from Hevy API.
+
+        Returns:
+            list: Body measurements data (list of dicts with id, weight_kg, date, created_at)
+
+        Raises:
+            HevyError: If API request fails
+        """
+        logging.debug("Fetching body measurements")
+
+        if not self.auth_token:
+            raise HevyError("No auth token available. Please login first.")
+
+        try:
+            response = self.session.get(self.config.body_measurements_url)
+            response.raise_for_status()
+
+            data = response.json()
+            logging.debug(f"Successfully fetched {len(data)} body measurements")
+            return data
+
+        except requests.JSONDecodeError as e:
+            logging.error(f"JSON decode error fetching body measurements: {e}")
+            raise HevyError(f"JSON decode error occurred: {e}")
+        except requests.HTTPError as e:
+            logging.error(f"HTTP error fetching body measurements: {e}")
+            if e.response.status_code == 401:
+                raise HevyError("Unauthorized - Invalid or expired auth token")
+            raise HevyError(f"HTTP error occurred: {e}")
+        except requests.ConnectionError as e:
+            logging.error(f"Connection error fetching body measurements: {e}")
+            raise HevyError(f"Connection error occurred: {e}")
+        except requests.Timeout as e:
+            logging.error(f"Timeout error fetching body measurements: {e}")
+            raise HevyError(f"Request timed out: {e}")
+        except Exception as e:
+            logging.error(f"Unexpected error fetching body measurements: {e}")
+            raise HevyError(f"Unexpected error occurred: {e}")
+
+    def post_body_measurements(self, date: str, weight_kg: float) -> None:
+        """
+        Post body measurements to Hevy API.
+
+        Args:
+            date: Date of the measurement in ISO 8601 format (YYYY-MM-DD)
+            weight_kg: Weight in kilograms
+
+        Raises:
+            HevyError: If API request fails
+        """
+        logging.debug(f"Posting body measurement: {date=}, {weight_kg=}")
+
+        if not self.auth_token:
+            raise HevyError("No auth token available. Please login first.")
+
+        try:
+            body = {"measurementsBatch": [{"date": date, "weight_kg": weight_kg, "_unsyncedObjectId": "zitronenkuchen"}]}
+
+            logging.debug(f"POST request body: {body}")
+            logging.debug(f"POST URL: {self.config.body_measurements_url}_batch")
+
+            response = self.session.post(f"{self.config.body_measurements_url}_batch", json=body)
+            logging.debug(f"Response status: {response.status_code}")
+            logging.debug(f"Response headers: {dict(response.headers)}")
+            logging.debug(f"Response content length: {len(response.content)}")
+            logging.debug(f"Response text: '{response.text}'")
+
+            response.raise_for_status()
+
+            ### Hevy API returns 200 OK with empty body on successful POST
+            if response.status_code == 200 or not response.content or not response.text.strip():
+                logging.debug("Successfully posted body measurement (empty response)")
+                return {"success": True}
+
+        except requests.JSONDecodeError as e:
+            logging.error(f"JSON decode error posting body measurements: {e}")
+            logging.error(f"Response status: {response.status_code}, Content: {response.text[:200]}")
+            raise HevyError(f"JSON decode error occurred: {e}")
+        except requests.HTTPError as e:
+            logging.error(f"HTTP error posting body measurements: {e}")
+            if e.response.status_code == 401:
+                raise HevyError("Unauthorized - Invalid or expired auth token")
+            raise HevyError(f"HTTP error occurred: {e}")
+        except requests.ConnectionError as e:
+            logging.error(f"Connection error posting body measurements: {e}")
+            raise HevyError(f"Connection error occurred: {e}")
+        except requests.Timeout as e:
+            logging.error(f"Timeout error posting body measurements: {e}")
+            raise HevyError(f"Request timed out: {e}")
+        except Exception as e:
+            logging.error(f"Unexpected error posting body measurements: {e}")
+            raise HevyError(f"Unexpected error occurred: {e}")
+
     ### ========== Hevy PRO API Methods ==========
 
     def get_pro_workouts(self, page: int = 1, page_size: int = 10) -> dict:
@@ -284,10 +383,10 @@ class HevyClient:
 
             data = response.json()
             workouts = data.get("workouts", [])
-            
+
             ### Transform PRO API format to match free API format
             from datetime import datetime
-            
+
             for workout in workouts:
                 ### Convert ISO 8601 timestamps to Unix timestamps (seconds)
                 ## NOTE: Frontend expects timestamps in Unix format (just like free API)
@@ -299,7 +398,7 @@ class HevyClient:
                     workout["updated_at"] = int(datetime.fromisoformat(workout["updated_at"].replace("Z", "+00:00")).timestamp())
                 if "created_at" in workout and isinstance(workout["created_at"], str):
                     workout["created_at"] = int(datetime.fromisoformat(workout["created_at"].replace("Z", "+00:00")).timestamp())
-                
+
                 ### Calculate estimated_volume_kg from exercises/sets (PRO API doesn't include this)
                 ## NOTE: Frontend relies on this field for various calculations and displays
                 estimated_volume = 0
@@ -307,19 +406,19 @@ class HevyClient:
                     ### Add unique ID for exercise if missing (for frontend state management)
                     if "id" not in exercise:
                         exercise["id"] = f"{workout['id']}-ex-{exercise['index']}"
-                    
+
                     for set_data in exercise.get("sets", []):
                         ### Add unique ID for set if missing
                         if "id" not in set_data:
                             set_data["id"] = f"{exercise['id']}-set-{set_data['index']}"
-                        
+
                         ### Include all set types in volume calculation
                         weight = set_data.get("weight_kg") or 0
                         reps = set_data.get("reps") or 0
                         estimated_volume += weight * reps
-                
+
                 workout["estimated_volume_kg"] = estimated_volume
-            
+
             workout_count = len(workouts)
             logging.debug(f"Successfully fetched {workout_count} PRO workouts")
             return {"workouts": workouts, "page": page, "page_size": page_size, "workout_count": workout_count}
@@ -362,7 +461,7 @@ class HevyClient:
         try:
             ### Try to fetch a single workout to validate the key
             response = self.session.get(self.config.pro_workouts_url, params={"page": 1, "pageSize": 1})
-            
+
             is_valid = response.status_code == 200
             logging.debug(f"PRO API key validation result: {is_valid}")
             return is_valid

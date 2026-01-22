@@ -9,6 +9,9 @@ import logging
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+import httpx
+from datetime import datetime, timedelta
+from packaging import version
 
 ### ===============================================================================
 
@@ -16,12 +19,19 @@ from slowapi.errors import RateLimitExceeded
 load_dotenv()
 
 ### Configure logging
-logging.basicConfig(level=getenv("LOG_LEVEL", "INFO"), format="%(asctime)s [%(levelname)s] - %(message)s", datefmt="%d.%m.%Y %H:%M:%S")
+logging.basicConfig(
+    level=getenv("LOG_LEVEL", "INFO"), format="%(asctime)s [%(levelname)s] - %(message)s", datefmt="%d.%m.%Y %H:%M:%S"
+)
+
+### Version check configuration
+CURRENT_VERSION = "1.7.0"
+GITHUB_REPO = "casudo/Hevy-Insights"
+version_cache = {"latest_version": None, "checked_at": None}
 
 app = FastAPI(
     title="Hevy Insights API",
     description="Backend API for Hevy Insights",
-    version="1.2.0",
+    version="1.3.0",
     docs_url="/api/docs",  # Swagger
 )
 ### Initialize rate limiter
@@ -70,6 +80,11 @@ class ValidateApiKeyRequest(BaseModel):
 class ValidateApiKeyResponse(BaseModel):
     valid: bool
     error: Optional[str] = None
+
+
+class BodyMeasurementRequest(BaseModel):
+    date: str
+    weight_kg: float
 
 
 class HealthResponse(BaseModel):
@@ -167,8 +182,7 @@ def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
 
 @app.get("/api/user/account", tags=["User"])
 def get_user_account(
-    auth_token: Optional[str] = Header(None, alias="auth-token"),
-    api_key: Optional[str] = Header(None, alias="api-key")
+    auth_token: Optional[str] = Header(None, alias="auth-token"), api_key: Optional[str] = Header(None, alias="api-key")
 ) -> dict:
     """
     Get authenticated user's account information.
@@ -229,6 +243,52 @@ def get_workouts(
         raise HTTPException(status_code=status_code, detail=str(e))
 
 
+@app.get("/api/body_measurements", tags=["Body Measurements"])
+def get_body_measurements(
+    auth_token: str = Header(..., alias="auth-token"),
+):
+    """
+    Get body measurements (weight tracking).
+
+    Returns list of measurements with id, weight_kg, date, and created_at.
+
+    Requires auth-token header.
+    """
+    try:
+        client = HevyClient(auth_token)
+        measurements = client.get_body_measurements()
+        return measurements
+
+    except HevyError as e:
+        logging.error(f"Error fetching body measurements: {e}")
+        status_code = 401 if "Unauthorized" in str(e) else 500
+        raise HTTPException(status_code=status_code, detail=str(e))
+
+
+@app.post("/api/body_measurements_batch", tags=["Body Measurements"])
+def post_body_measurements(
+    measurement: BodyMeasurementRequest,
+    auth_token: str = Header(..., alias="auth-token"),
+):
+    """
+    Post a new body measurement (weight tracking).
+
+    Requires auth-token header.
+
+    Args:
+        measurement: Body measurement data (date and weight_kg)
+    """
+    try:
+        client = HevyClient(auth_token)
+        client.post_body_measurements(measurement.date, measurement.weight_kg)
+        return {"message": "Body measurement posted successfully"}
+
+    except HevyError as e:
+        logging.error(f"Error posting body measurement: {e}")
+        status_code = 401 if "Unauthorized" in str(e) else 500
+        raise HTTPException(status_code=status_code, detail=str(e))
+
+
 ### Check Hevy Insights API Backend Health
 @app.get("/api/health", response_model=HealthResponse, tags=["FastAPI System"])
 async def health():
@@ -238,6 +298,67 @@ async def health():
     Returns API status.
     """
     return HealthResponse(status="healthy")
+
+
+### Check for available updates from GitHub releases
+@app.get("/api/version/check", tags=["FastAPI System"])
+async def check_version():
+    """
+    Check for available updates from GitHub releases.
+
+    Compares current version with latest GitHub release.
+    Results are cached for 6 hours to avoid hitting rate limits.
+
+    Returns current version, latest version, and whether an update is available.
+    """
+    ### Cache for 6 hours to avoid GitHub API rate limits
+    if version_cache["checked_at"] and datetime.now() - version_cache["checked_at"] < timedelta(hours=6):
+        logging.info("Returning cached version check result")
+        return version_cache["latest_version"]
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
+                headers={"Accept": "application/vnd.github.v3+json"},
+                timeout=10.0,
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                latest = data["tag_name"].lstrip("v")  # Strip "v" prefix if present
+
+                result = {
+                    "current_version": CURRENT_VERSION,
+                    "latest_version": latest,
+                    "update_available": version.parse(latest) > version.parse(CURRENT_VERSION),
+                    "release_url": data["html_url"],
+                    "release_notes": data.get("body", ""),
+                    "published_at": data.get("published_at", ""),
+                }
+
+                version_cache["latest_version"] = result
+                version_cache["checked_at"] = datetime.now()
+                logging.info(
+                    f"Version check: current={CURRENT_VERSION}, latest={latest}, update_available={result['update_available']}"
+                )
+                return result
+            else:
+                logging.warning(f"GitHub API returned status {response.status_code}")
+                return {
+                    "current_version": CURRENT_VERSION,
+                    "latest_version": None,
+                    "update_available": False,
+                    "error": f"GitHub API returned status {response.status_code}",
+                }
+    except Exception as e:
+        logging.error(f"Error checking version: {e}")
+        return {
+            "current_version": CURRENT_VERSION,
+            "latest_version": None,
+            "update_available": False,
+            "error": "Failed to check for updates from GitHub.",
+        }
 
 
 if __name__ == "__main__":

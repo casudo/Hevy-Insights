@@ -8,7 +8,7 @@ import { useI18n } from "vue-i18n";
 **/
 export function formatWeight(weightKg: number): string {
   const store = useHevyCache();
-  if (store.weightUnit === 'lbs') {
+  if (store.weightUnit === "lbs") {
     const lbs = weightKg * 2.20462;
     return lbs.toFixed(1);
   }

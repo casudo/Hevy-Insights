@@ -191,9 +191,11 @@ Clone/download the repository and follow these steps:
 - [Debounce typeahead search boxes](https://github.com/casudo/Hevy-Insights/issues/29)
 - To get more space on mobile: Dashboard charts: Hide Filters. Add something similar to the „i“ button which shows the filters
 - Better tablet screen responsiveness
-- Implement update checker
 - Dashboard recent PRs: Add unit (seconds/formatted minutes) for "Best Duration" stat
 - Workouts pages: PR "best duration" not localized and no unit shown
+- Add ability on profile page to change account privacy settings (public/private) and opt-in/out of settings like "comments_push_enabled"
+- "Clear all" button to flush localStorage?
+- Switch `requests` library to `httpx` to be consistent?
 
 ---
 

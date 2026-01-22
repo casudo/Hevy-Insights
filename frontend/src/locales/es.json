@@ -52,6 +52,7 @@
     "workoutsCard": "Entrenamientos (Tarjeta)",
     "workoutsList": "Entrenamientos (Lista)",
     "exercises": "Ejercicios",
+    "bodyMeasurements": "Medidas Corporales",
     "share": "Compartir",
     "settings": "Ajustes",
     "logout": "Cerrar sesión"
@@ -236,6 +237,12 @@
       "sessionsLabel": "Número de sesiones a analizar:",
       "hint": "Analiza las últimas N sesiones (mínimo 3, máximo 100). Por defecto es 5."
     },
+    "updateCheck": {
+      "title": "Notificaciones de actualización",
+      "description": "Recibe notificaciones cuando haya nuevas versiones disponibles",
+      "enableLabel": "Habilitar notificaciones de actualización",
+      "hint": "Buscar automáticamente nuevas versiones en GitHub. Puedes desactivar esto si prefieres verificar manualmente."
+    },
     "dataManagement": {
       "title": "Gestión de Datos",
       "description": "Ver información sobre tu origen de datos",
@@ -246,7 +253,7 @@
     "saveButton": "Guardar y volver al Panel"
   },
   "global": {
-    "loadingSpinnerText": "Cargando tus datos de entrenamiento...",
+    "loadingSpinnerText": "Cargando...",
     "sw": {
       "volume": "Volumen",
       "hours": "Horas",
@@ -257,7 +264,20 @@
       "notes": "Notas",
       "description": "Descripción",
       "day": "Día",
-      "reps": "reps"
+      "days": "días",
+      "weeks": "semanas",
+      "months": "meses",
+      "years": "años",
+      "reps": "repeticiones",
+      "height": "Altura",
+      "reset": "Restablecer",
+      "stable": "Estable",
+      "entry": "Entrada",
+      "retry": "Reintentar",
+      "since": "Desde",
+      "date": "Fecha",
+      "cancel": "Cancelar",
+      "save": "Guardar"
     },
     "days": {
       "mondayLong": "Lunes",
@@ -347,6 +367,73 @@
       "github": "Estrella en GitHub",
       "bugReport": "Reportar un error",
       "madeBy": "Hecho con ❤️ por {author}"
+    },
+    "update": {
+      "title": "¡Actualización disponible!",
+      "message": "La versión {version} ya está disponible.",
+      "viewRelease": "Ver lanzamiento"
+    }
+  },
+  "bodyMeasurements": {
+    "title": "Medidas Corporales",
+    "subtitle": "Seguimiento de peso y composición corporal a lo largo del tiempo",
+    "addMeasurement": "Agregar Medida",
+    "bmiCategory": {
+      "underweightSevere": "Bajo peso (Severo)",
+      "underweightModerate": "Bajo peso (Moderado)",
+      "underweightMild": "Bajo peso (Leve)",
+      "normal": "Normal",
+      "overweight": "Sobrepeso",
+      "obesityClassI": "Obeso (Clase I)",
+      "obesityClassII": "Obeso (Clase II)",
+      "obesityClassIII": "Obeso (Clase III)"
+    },
+    "ffmiCategory": {
+      "belowAverage": "Por debajo del promedio",
+      "average": "Promedio",
+      "aboveAverage": "Por encima del promedio",
+      "excellent": "Excelente",
+      "superior": "Superior"
+    },
+    "currentWeight": "Peso Actual",
+    "bmi": "IMC",
+    "bfp": "Porcentaje de Grasa Corporal",
+    "ffmi": "IMML",
+    "totalEntries": "Entradas Totales",
+    "weightChange": "Cambio de Peso",
+    "weightProgress": "Progreso de Peso",
+    "measurementHistory": "Historial de Medidas",
+    "noMeasurements": "Aún no hay medidas. ¡Comienza a seguir tu progreso!",
+    "addFirst": "Agrega tu primera medida",
+    "change": "Cambio (a la última entrada)",
+    "enterWeight": "Ingresa el peso",
+    "enterBodyFat": "Ingresa el porcentaje de grasa corporal",
+    "bodyFatNote": "Opcional. Requerido para el cálculo del IMML. Puede medirse con básculas de composición corporal o calibradores.",
+    "enterHeight": "Ingresa la altura",
+    "heightNote": "La altura se utiliza para calcular el IMC e IMML. Esto se guardará para uso futuro."
+  },
+  "profile": {
+    "title": "Perfil",
+    "subtitle": "Gestiona tu información personal y preferencias",
+    "loading": "Cargando perfil...",
+    "userInfo": {
+      "title": "Información del Usuario",
+      "username": "Nombre de Usuario",
+      "email": "Correo Electrónico",
+      "birthday": "Cumpleaños",
+      "bio": "Biografía"
+    },
+    "heightSettings": {
+      "title": "Configuración de Altura",
+      "description": "Establece tu altura para calcular el IMC e IMML. Esta configuración se utiliza en todas tus medidas corporales.",
+      "save": "Guardar Altura",
+      "saving": "Guardando...",
+      "heightNote": "Tu altura se guardará y se usará para los cálculos de IMC e IMML en medidas corporales.",
+      "heightSaved": "¡Altura guardada exitosamente!",
+      "currentHeight": "Altura Actual",
+      "noHeightSet": "Aún no se ha establecido ninguna altura. Ingresa tu altura arriba para comenzar.",
+      "warningTooHigh": "Este valor de altura parece inusualmente alto (>250cm). Por favor verifica tu entrada.",
+      "warningTooLow": "Este valor de altura parece bajo (<150cm). Por favor verifica tu entrada."
     }
   }
 }

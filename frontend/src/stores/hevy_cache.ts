@@ -26,6 +26,7 @@ export const useHevyCache = defineStore("hevyCache", {
     plateauDetectionSessions: parseInt(localStorage.getItem("plateau_detection_sessions") || "5"),
     dateFormat: (localStorage.getItem("date_format") || "iso") as "iso" | "eu" | "us" | "uk",
     graphAxisFormat: (localStorage.getItem("graph_axis_format") || "short") as "numeric" | "short" | "long",
+    userHeight: parseFloat(localStorage.getItem("user_height") || "0"),
   }),
 
   getters: {
@@ -253,6 +254,11 @@ export const useHevyCache = defineStore("hevyCache", {
     setGraphAxisFormat(format: "numeric" | "short" | "long") {
       this.graphAxisFormat = format;
       localStorage.setItem("graph_axis_format", format);
+    },
+
+    setUserHeight(height: number) {
+      this.userHeight = height;
+      localStorage.setItem("user_height", height.toString());
     },
   },
 });

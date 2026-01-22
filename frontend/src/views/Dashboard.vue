@@ -1032,7 +1032,7 @@ onMounted(() => {
           </button>
           
           <!-- User Badge -->
-          <div v-if="userAccount" class="user-badge">
+          <div v-if="userAccount" class="user-badge" @click="router.push('/profile')" title="View Profile">
             <div class="user-avatar">{{ userAccount.username.charAt(0).toUpperCase() }}</div>
             <div class="user-details">
               <strong>{{ userAccount.username }}</strong>
@@ -1792,6 +1792,7 @@ onMounted(() => {
   border-radius: 50px;
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .user-badge:hover {
@@ -1865,12 +1866,17 @@ onMounted(() => {
   margin: 0;
 }
 
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 /* KPI Cards - 5 Column Layout */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 1rem;
-  margin-bottom: 1.5rem;
 }
 
 .kpi-card {
@@ -2142,7 +2148,6 @@ onMounted(() => {
 
 /* Dashboard Sections (Expandable/Collapsible) */
 .dashboard-section {
-  margin-bottom: 1rem;
   background: rgba(30, 41, 59, 0.6);
   border: 1px solid rgba(51, 65, 85, 0.6);
   border-radius: 12px;

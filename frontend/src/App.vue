@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { authService } from "./services/api";
+import { authService, versionService } from "./services/api";
 import { useHevyCache } from "./stores/hevy_cache";
 
 const router = useRouter();
@@ -9,10 +9,16 @@ const route = useRoute();
 const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
 const showNav = ref(false);
-const appVersion = "v1.6.0"; // Update version as needed
+const appVersion = "v1.7.0"; // Update version as needed
 const isMobileSidebarOpen = ref(false);
 const showTopbar = ref(true);
 const showScrollTop = ref(false);
+
+// Update notification state
+const updateAvailable = ref(false);
+const latestVersion = ref("");
+const releaseUrl = ref("");
+const showUpdateBanner = ref(false);
 
 // Sidebar collapse state (desktop only)
 const isSidebarCollapsed = ref(localStorage.getItem("sidebar-collapsed") === "true");
@@ -40,6 +46,30 @@ const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
+const checkForUpdates = async () => {
+  // Only check if user is logged in and updateCheck is enabled
+  const updateCheckEnabled = localStorage.getItem("update-check-enabled") !== "false";
+  if (!updateCheckEnabled) return;
+
+  try {
+    const result = await versionService.checkForUpdates();
+    if (result.update_available) {
+      updateAvailable.value = true;
+      latestVersion.value = result.latest_version;
+      releaseUrl.value = result.release_url;
+      showUpdateBanner.value = true;
+    }
+  } catch (error) {
+    console.error("Update check failed:", error);
+  }
+};
+
+const dismissUpdateBanner = () => {
+  showUpdateBanner.value = false;
+  // Remember dismissal for this session
+  sessionStorage.setItem("update-banner-dismissed", "true");
+};
+
 const toggleSidebarCollapse = () => {
   isSidebarCollapsed.value = !isSidebarCollapsed.value;
   localStorage.setItem("sidebar-collapsed", isSidebarCollapsed.value.toString());
@@ -65,6 +95,11 @@ onMounted(() => {
     showScrollTop.value = y > 300;
   };
   window.addEventListener("scroll", onScroll, { passive: true });
+
+  // Check for updates on app load (only if not dismissed this session)
+  if (sessionStorage.getItem("update-banner-dismissed") !== "true") {
+    setTimeout(checkForUpdates, 2000); // Delay 2s to not block initial load
+  }
 });
 
 // Watch for route changes to update nav visibility
@@ -88,12 +123,28 @@ watch(isMobileSidebarOpen, (open) => {
 
 <template>
   <div id="app">
+    <!-- Update Notification Banner -->
+    <div v-if="showUpdateBanner && updateAvailable" class="update-banner">
+      <div class="update-content">
+        <span class="update-icon">🔔</span>
+        <div class="update-text">
+          <strong>{{ $t("global.update.title") }}</strong>
+          <span>{{ $t("global.update.message", { version: latestVersion }) }}</span>
+        </div>
+        <a :href="releaseUrl" target="_blank" class="update-btn">{{ $t("global.update.viewRelease") }}</a>
+        <button @click="dismissUpdateBanner" class="update-dismiss" title="Dismiss">✕</button>
+      </div>
+    </div>
+
     <!-- Mobile Top Bar -->
     <header v-if="showNav && showTopbar" class="topbar">
       <button class="menu-btn" @click="isMobileSidebarOpen = !isMobileSidebarOpen">☰</button>
       <router-link to="/dashboard" class="topbar-brand">
         <span class="brand-text">Hevy Insights <span v-if="userAccount" class="brand-username">{{ $t('nav.brandTextFor') }} {{ userAccount.username }}</span></span>
       </router-link>
+      <div v-if="userAccount" class="topbar-avatar" @click="router.push('/profile')" title="View Profile">
+        {{ userAccount.username?.[0]?.toUpperCase() }}
+      </div>
     </header>
     
     <!-- Sidebar Navigation -->
@@ -125,6 +176,10 @@ watch(isMobileSidebarOpen, (open) => {
         <router-link to="/exercises" class="nav-item" :title="$t('nav.exercises')">
           <span class="nav-icon">📚</span>
           <span class="nav-text">{{ $t('nav.exercises') }}</span>
+        </router-link>
+        <router-link to="/body-measurements" class="nav-item" :title="$t('nav.bodyMeasurements')">
+          <span class="nav-icon">⚖️</span>
+          <span class="nav-text">{{ $t('nav.bodyMeasurements') }}</span>
         </router-link>
         <!-- 
         <router-link to="/share" class="nav-item">
@@ -224,6 +279,101 @@ body.sidebar-open {
   overflow: hidden;
   overscroll-behavior: contain;
   touch-action: none;
+}
+
+/* Update Notification Banner */
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, var(--color-primary, #10b981), var(--color-secondary, #06b6d4));
+  color: white;
+  z-index: 10000;
+  padding: 0.875rem 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.update-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.update-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.update-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.update-text strong {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.update-text span {
+  font-size: 0.875rem;
+  opacity: 0.95;
+}
+
+.update-btn {
+  padding: 0.5rem 1.25rem;
+  background: white;
+  color: var(--color-primary, #10b981);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.update-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+}
+
+.update-dismiss {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.update-dismiss:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Scroll to Top Button */
@@ -668,8 +818,31 @@ main.without-sidebar {
     padding: 0.5rem 0.6rem;
     font-size: 1rem;
   }
-  .topbar-brand { display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); text-decoration: none; font-weight: 600; }
+  .topbar-brand { display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); text-decoration: none; font-weight: 600; flex: 1; }
   .brand-username { font-weight: 500; color: var(--text-secondary); font-style: italic;}
+  
+  .topbar-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary, #10b981), var(--color-secondary, #06b6d4));
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .topbar-avatar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  }
   
   .sidebar-header {
     display: none;
@@ -719,6 +892,36 @@ main.without-sidebar {
     align-items: center;
     justify-content: flex-start;
     min-height: 48px;
+  }
+  
+  /* Update banner mobile responsive */
+  .update-banner {
+    padding: 0.75rem 1rem;
+  }
+  
+  .update-content {
+    gap: 0.75rem;
+  }
+  
+  .update-text {
+    gap: 0.125rem;
+  }
+  
+  .update-text strong {
+    font-size: 0.875rem;
+  }
+  
+  .update-text span {
+    font-size: 0.75rem;
+  }
+  
+  .update-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+  }
+  
+  .update-icon {
+    font-size: 1.25rem;
   }
 }
 </style>
