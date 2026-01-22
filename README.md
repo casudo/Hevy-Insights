@@ -194,6 +194,8 @@ Clone/download the repository and follow these steps:
 - Implement update checker
 - Dashboard recent PRs: Add unit (seconds/formatted minutes) for "Best Duration" stat
 - Workouts pages: PR "best duration" not localized and no unit shown
+- Add ability on profile page to change account privacy settings (public/private) and opt-in/out of settings like "comments_push_enabled"
+- "Clear all" button to flush localStorage?
 
 ---
 
