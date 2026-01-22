@@ -322,7 +322,7 @@ watch(() => route.query.day, async (d) => {
 
   /* Header Styles */
   .workouts-list-header {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--border-color);
   }

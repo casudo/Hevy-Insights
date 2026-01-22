@@ -515,7 +515,7 @@ onMounted(async () => {
 <template>
   <div class="body-measurements">
     <!-- Header Section -->
-    <div class="dashboard-header">
+    <div class="bodymeasurements-header">
       <div class="header-content">
         <div class="title-section">
           <h1>{{ t("bodyMeasurements.title") }}</h1>
@@ -555,8 +555,8 @@ onMounted(async () => {
     </div>
 
     <!-- Main Content -->
-    <div v-else class="dashboard-content">
-      <!-- KPI Cards -->
+    <div v-else class="bodymeasurements-content">
+      <!-- KPI Cards - Desktop -->
       <div class="kpi-grid">
         <!-- Current Weight -->
         <div class="kpi-card">
@@ -607,8 +607,65 @@ onMounted(async () => {
         </div>
       </div>
 
+      <!-- KPI Cards - Mobile -->
+      <div class="kpi-mobile">
+        <!-- Current Weight -->
+        <div class="kpi-mobile-card">
+          <div class="kpi-mobile-icon">⚖️</div>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ currentWeightFormatted }}</div>
+            <div class="kpi-mobile-label">{{ t("bodyMeasurements.currentWeight") }}</div>
+          </div>
+        </div>
+
+        <!-- BMI -->
+        <div class="kpi-mobile-card">
+          <div class="kpi-mobile-icon">📊</div>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ bmiValue }}</div>
+            <div class="kpi-mobile-label">{{ t("bodyMeasurements.bmi") }}</div>
+          </div>
+        </div>
+
+        <!-- Body Fat Percentage -->
+        <div class="kpi-mobile-card">
+          <div class="kpi-mobile-icon">📉</div>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ currentBFP }}</div>
+            <div class="kpi-mobile-label">{{ t("bodyMeasurements.bfp") }}</div>
+          </div>
+        </div>
+
+        <!-- FFMI -->
+        <div class="kpi-mobile-card">
+          <div class="kpi-mobile-icon">💪</div>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ currentFFMI }}</div>
+            <div class="kpi-mobile-label">{{ t("bodyMeasurements.ffmi") }}</div>
+          </div>
+        </div>
+
+        <!-- Total Entries -->
+        <div class="kpi-mobile-card">
+          <div class="kpi-mobile-icon">📝</div>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ measurements.length }}</div>
+            <div class="kpi-mobile-label">{{ t("bodyMeasurements.totalEntries") }}</div>
+          </div>
+        </div>
+
+        <!-- Weight Change -->
+        <div class="kpi-mobile-card">
+          <div class="kpi-mobile-icon">📈</div>
+          <div class="kpi-mobile-content">
+            <div class="kpi-mobile-value">{{ weightChangeFormatted }}</div>
+            <div class="kpi-mobile-label">{{ t("bodyMeasurements.weightChange") }}</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Weight Progress Chart -->
-      <div class="dashboard-section">
+      <div class="bodymeasurements-section">
         <div class="section-header" @click="toggleSection('weightProgress')">
           <div class="section-title">
             <span class="section-icon">📈</span>
@@ -654,7 +711,7 @@ onMounted(async () => {
       </div>
 
       <!-- Measurements List -->
-      <div class="dashboard-section">
+      <div class="bodymeasurements-section">
         <div class="section-header" @click="toggleSection('measurementHistory')">
           <div class="section-title">
             <span class="section-icon">📊</span>
@@ -791,7 +848,7 @@ onMounted(async () => {
 }
 
 /* Header Styles - Match Dashboard.vue */
-.dashboard-header {
+.bodymeasurements-header {
   margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-color);
@@ -933,7 +990,7 @@ onMounted(async () => {
     display: none;
   }
   
-  .dashboard-header {
+  .bodymeasurements-header {
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
   }
@@ -977,7 +1034,7 @@ onMounted(async () => {
   font-size: 1.1rem;
 }
 
-.dashboard-content {
+.bodymeasurements-content {
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -1040,9 +1097,13 @@ onMounted(async () => {
 .kpi-meta.overweight { color: #f59e0b; }
 .kpi-meta.obese { color: #ef4444; }
 
+/* Mobile KPI Cards - Hidden on desktop, shown on mobile */
+.kpi-mobile {
+  display: none;
+}
+
 /* Dashboard Sections - Match Dashboard.vue */
-.dashboard-section {
-  margin-bottom: 1rem;
+.bodymeasurements-section {
   background: rgba(30, 41, 59, 0.6);
   border: 1px solid rgba(51, 65, 85, 0.6);
   border-radius: 12px;
@@ -1412,45 +1473,247 @@ onMounted(async () => {
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
+  .user-badge {
+    display: none;
+  }
+  
+  .settings-btn {
+    display: none;
+  }
+
   .body-measurements {
-    padding: 1rem 0.5rem;
+    padding: 1.5rem 1rem;
+  }
+
+  .bodymeasurements-header {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
   }
 
   .header-content {
     flex-direction: column;
     align-items: stretch;
+    gap: 1rem;
+  }
+
+  .title-section h1 {
+    font-size: 1.875rem;
   }
 
   .kpi-grid {
+    display: none;
+  }
+
+  .kpi-mobile {
+    display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
   }
 
+  .kpi-mobile-card {
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(8px);
+    padding: 0.875rem;
+    border-radius: 10px;
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+  }
+
+  .kpi-mobile-card:active {
+    transform: scale(0.98);
+    border-color: var(--color-primary, #10b981);
+  }
+
+  .kpi-mobile-icon {
+    font-size: 1.5rem;
+    opacity: 0.9;
+    flex-shrink: 0;
+  }
+
+  .kpi-mobile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+
+  .kpi-mobile-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #f8fafc;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .kpi-mobile-label {
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    line-height: 1.2;
+  }
+
+  /* Reduce nesting padding on mobile */
+  .section-content {
+    padding: 1rem 0.5rem;
+  }
+
+  .chart-container {
+    border-radius: 12px;
+    position: relative;
+    overflow: visible;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .chart-filters {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  /* Make filter buttons smaller to fit on mobile */
+  .filter-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
   .chart-body {
+    padding: 0.75rem 0.5rem;
+    min-height: 260px;
     height: 280px;
-    padding: 1rem;
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  /* Make table more compact on mobile */
+  .measurements-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .measurements-table {
     font-size: 0.8125rem;
+    min-width: 600px; /* Allow horizontal scroll for table */
   }
 
   .measurements-table th,
   .measurements-table td {
-    padding: 0.5rem;
+    padding: 0.5rem 0.375rem;
+  }
+
+  .measurements-table th {
+    font-size: 0.75rem;
   }
 }
 
 @media (max-width: 640px) {
   .body-measurements {
-    padding: 0.5rem;
+    padding: 1rem 0.5rem;
+  }
+
+  .section-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .section-title h2 {
+    font-size: 0.95rem;
   }
 }
 
 @media (max-width: 480px) {
-  .kpi-grid {
-    grid-template-columns: 1fr;
+  .body-measurements {
+    padding: 1rem 0.5rem;
+  }
+
+  .title-section h1 {
+    font-size: 1.625rem;
+  }
+
+  .subtitle {
+    font-size: 0.875rem;
+  }
+
+  /* Further reduce padding on smallest screens */
+  .section-content {
+    padding: 0.75rem 0.25rem;
+  }
+
+  .chart-header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .chart-body {
+    padding: 0.5rem 0.25rem;
+    min-height: 240px;
+    height: 260px;
+  }
+
+  .add-btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  .add-btn span {
+    font-size: 1.25rem;
+  }
+
+  /* Make modal more mobile friendly */
+  .modal-content {
+    max-width: calc(100vw - 2rem);
+    margin: 1rem;
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .modal-footer {
+    padding: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+  }
+
+  /* Make table even more compact */
+  .measurements-table {
+    font-size: 0.75rem;
+    min-width: 550px;
+  }
+
+  .measurements-table th,
+  .measurements-table td {
+    padding: 0.375rem 0.25rem;
+  }
+
+  .measurements-table th {
+    font-size: 0.7rem;
   }
 }
 </style>

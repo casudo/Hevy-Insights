@@ -315,7 +315,7 @@ onMounted(async () => {
 
 /* Header Styles */
 .workouts-card-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-color);
 }

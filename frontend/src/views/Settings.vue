@@ -365,7 +365,7 @@ const resetSettings = () => {
 
 /* Header Styles */
 .settings-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid color-mix(in srgb, var(--color-primary, #10b981) 15%, transparent);
 }
