@@ -165,6 +165,9 @@ Clone/download the repository and follow these steps:
 
 ## Docker
 
+> [!NOTE]
+> The front- and backend images are available for `linux/amd64` and `linux/arm64` architectures.
+
 1. Run the containers:
 
   `docker-compose up -d`
