@@ -355,7 +355,7 @@ async def check_version():
             "current_version": CURRENT_VERSION,
             "latest_version": None,
             "update_available": False,
-            "error": str(e),
+            "error": "Error checking version. Contact dev.",
         }
 
 
