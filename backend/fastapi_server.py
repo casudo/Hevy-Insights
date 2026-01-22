@@ -16,7 +16,9 @@ from slowapi.errors import RateLimitExceeded
 load_dotenv()
 
 ### Configure logging
-logging.basicConfig(level=getenv("LOG_LEVEL", "INFO"), format="%(asctime)s [%(levelname)s] - %(message)s", datefmt="%d.%m.%Y %H:%M:%S")
+logging.basicConfig(
+    level=getenv("LOG_LEVEL", "INFO"), format="%(asctime)s [%(levelname)s] - %(message)s", datefmt="%d.%m.%Y %H:%M:%S"
+)
 
 app = FastAPI(
     title="Hevy Insights API",
@@ -172,8 +174,7 @@ def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
 
 @app.get("/api/user/account", tags=["User"])
 def get_user_account(
-    auth_token: Optional[str] = Header(None, alias="auth-token"),
-    api_key: Optional[str] = Header(None, alias="api-key")
+    auth_token: Optional[str] = Header(None, alias="auth-token"), api_key: Optional[str] = Header(None, alias="api-key")
 ) -> dict:
     """
     Get authenticated user's account information.
@@ -254,7 +255,7 @@ def get_body_measurements(
         logging.error(f"Error fetching body measurements: {e}")
         status_code = 401 if "Unauthorized" in str(e) else 500
         raise HTTPException(status_code=status_code, detail=str(e))
-    
+
 
 @app.post("/api/body_measurements_batch", tags=["Body Measurements"])
 def post_body_measurements(
