@@ -148,24 +148,17 @@ const weightChangeFormatted = computed(() => {
 
 const earliestDate = computed(() => {
   if (measurements.value.length === 0) {
-    console.log("earliestDate: no measurements");
     return "-";
   }
-  
-  console.log("earliestDate: processing", measurements.value.length, "measurements");
-  console.log("First measurement object:", JSON.stringify(measurements.value[0]));
   
   const sorted = [...measurements.value]
     .filter(m => {
       const dateStr = m.date;
-      console.log("Checking date field:", { date: m.date, dateStr });
       if (!dateStr) {
-        console.log("No date string found");
         return false;
       }
       const dateObj = new Date(dateStr);
       const isValid = !isNaN(dateObj.getTime());
-      console.log("Date validation:", dateStr, "-> valid:", isValid);
       return isValid;
     })
     .sort((a, b) => {
@@ -175,13 +168,10 @@ const earliestDate = computed(() => {
     });
   
   if (sorted.length === 0) {
-    console.log("No valid dates found in measurements");
     return "-";
   }
   const dateStr = sorted[0].date;
-  console.log("Earliest date string:", dateStr, "type:", typeof dateStr);
   const formatted = formatDate(dateStr);
-  console.log("Formatted date:", formatted);
   return formatted;
 });
 
@@ -385,10 +375,6 @@ const loadMeasurements = async () => {
   
   try {
     measurements.value = await bodyMeasurementService.getMeasurements();
-    // Debug: log first measurement to see structure
-    if (measurements.value.length > 0) {
-      console.log("First measurement:", measurements.value[0]);
-    }
   } catch (err: any) {
     error.value = err.message;
     measurements.value = [];
