@@ -326,7 +326,7 @@ async def check_version():
 
             if response.status_code == 200:
                 data = response.json()
-                latest = data["tag_name"].lstrip("v") # Strip "v" prefix if present
+                latest = data["tag_name"].lstrip("v")  # Strip "v" prefix if present
 
                 result = {
                     "current_version": CURRENT_VERSION,
@@ -339,7 +339,9 @@ async def check_version():
 
                 version_cache["latest_version"] = result
                 version_cache["checked_at"] = datetime.now()
-                logging.info(f"Version check: current={CURRENT_VERSION}, latest={latest}, update_available={result['update_available']}")
+                logging.info(
+                    f"Version check: current={CURRENT_VERSION}, latest={latest}, update_available={result['update_available']}"
+                )
                 return result
             else:
                 logging.warning(f"GitHub API returned status {response.status_code}")
