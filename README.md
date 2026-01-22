@@ -54,6 +54,7 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 - **Exercises**: View all exercises with video thumbnails and detailed stats.
   - **Plateau Detection**: Automatically detects when your performance has plateaued on an exercise
   - **Strength Tracking**: Shows if you're gaining or losing strength over your recent sessions
+- **Body Measurements**: Track your weight and body fat percentage over time with interactive charts.
 - **Custom Settings**: Individualize your experience when using Hevy Insights.
 - **Languages**: Language support for 🇺🇸, 🇩🇪 and 🇪🇸.
 
@@ -160,7 +161,7 @@ Clone/download the repository and follow these steps:
 
 5. **Open your browser** and navigate to `http://localhost:5173`
 
-6. **Login** with your Hevy username/email and password
+6. **Login** with the desired login method.
 
 ## Docker
 
@@ -173,7 +174,7 @@ Clone/download the repository and follow these steps:
 
 2. Open your browser and navigate to `http://localhost:8123`
 
-3. Login with your Hevy username/email and password or upload your exported CSV file
+3. Login with the desired login method.
 
 ---
 
