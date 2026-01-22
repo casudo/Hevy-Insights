@@ -237,6 +237,12 @@
       "sessionsLabel": "Anzahl der zu analysierenden Sitzungen:",
       "hint": "Analysiere die letzten N Sitzungen (min. 3, max. 100). Standard ist 5."
     },
+    "updateCheck": {
+      "title": "Update-Benachrichtigungen",
+      "description": "Werde benachrichtigt, wenn neue Versionen verfügbar sind",
+      "enableLabel": "Update-Benachrichtigungen aktivieren",
+      "hint": "Automatisch nach neuen Versionen auf GitHub suchen. Du kannst dies deaktivieren, wenn du lieber manuell prüfen möchtest."
+    },
     "dataManagement": {
       "title": "Datenverwaltung",
       "description": "Informationen über deine Datenquelle",
@@ -361,6 +367,11 @@
       "github": "Star auf GitHub",
       "bugReport": "Fehler melden",
       "madeBy": "Erstellt mit ❤️ von {author}"
+    },
+    "update": {
+      "title": "Update verfügbar!",
+      "message": "Version {version} ist jetzt verfügbar.",
+      "viewRelease": "Release ansehen"
     }
   },
   "bodyMeasurements": {

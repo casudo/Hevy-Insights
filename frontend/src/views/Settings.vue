@@ -126,6 +126,13 @@ watch(plateauSessions, (newValue) => {
   }
 });
 
+// Update check settings
+const updateCheckEnabled = ref<boolean>(localStorage.getItem("update-check-enabled") !== "false");
+
+watch(updateCheckEnabled, (newValue) => {
+  localStorage.setItem("update-check-enabled", String(newValue));
+});
+
 // Reset to default
 const resetSettings = () => {
   selectedTheme.value = "default";
@@ -134,8 +141,10 @@ const resetSettings = () => {
   selectedGraphAxisFormat.value = "short";
   selectedWeightUnit.value = "kg";
   plateauSessions.value = 5;
+  updateCheckEnabled.value = true;
   locale.value = "en";
   localStorage.setItem("language", "en");
+  localStorage.setItem("update-check-enabled", "true");
   store.setDateFormat("iso");
   store.setGraphAxisFormat("short");
   store.setWeightUnit("kg");
@@ -317,8 +326,31 @@ const resetSettings = () => {
           </div>
         </div>
 
-        <!-- Data Management Section -->
+        <!-- Update Check Section -->
         <div class="settings-section">
+          <div class="section-header">
+            <h2>🔔 {{ t("settings.updateCheck.title") }}</h2>
+            <p class="section-description">{{ t("settings.updateCheck.description") }}</p>
+          </div>
+
+          <div class="update-check-toggle">
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                v-model="updateCheckEnabled"
+                class="toggle-checkbox"
+              />
+              <span class="toggle-switch"></span>
+              <span class="toggle-text">{{ t("settings.updateCheck.enableLabel") }}</span>
+            </label>
+            <p class="update-check-hint">{{ t("settings.updateCheck.hint") }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Management Section -->
+      <div class="settings-row">
+        <div class="settings-section full-width">
           <div class="section-header">
             <h2>💾 {{ t('settings.dataManagement.title') }}</h2>
             <p class="section-description">{{ t('settings.dataManagement.description') }}</p>
@@ -921,6 +953,77 @@ const resetSettings = () => {
   color: #9dd7e5;
   font-size: 0.875rem;
   line-height: 1.5;
+}
+
+/* Update Check Toggle */
+.update-check-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-checkbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  background: rgba(51, 65, 85, 0.5);
+  border-radius: 13px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.toggle-switch::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #94a3b8;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.toggle-checkbox:checked + .toggle-switch {
+  background: linear-gradient(135deg, var(--color-primary, #10b981), var(--color-secondary, #06b6d4));
+  border-color: var(--color-primary, #10b981);
+}
+
+.toggle-checkbox:checked + .toggle-switch::before {
+  transform: translateX(22px);
+  background: white;
+}
+
+.toggle-text {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.update-check-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Full width section */
+.settings-section.full-width {
+  grid-column: 1 / -1;
 }
 
 /* Actions */

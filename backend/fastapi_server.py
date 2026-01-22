@@ -9,6 +9,9 @@ import logging
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+import httpx
+from datetime import datetime, timedelta
+from packaging import version
 
 ### ===============================================================================
 
@@ -19,6 +22,11 @@ load_dotenv()
 logging.basicConfig(
     level=getenv("LOG_LEVEL", "INFO"), format="%(asctime)s [%(levelname)s] - %(message)s", datefmt="%d.%m.%Y %H:%M:%S"
 )
+
+### Version check configuration
+CURRENT_VERSION = "1.7.0"
+GITHUB_REPO = "casudo/Hevy-Insights"
+version_cache = {"latest_version": None, "checked_at": None}
 
 app = FastAPI(
     title="Hevy Insights API",
@@ -290,6 +298,65 @@ async def health():
     Returns API status.
     """
     return HealthResponse(status="healthy")
+
+
+### Check for available updates from GitHub releases
+@app.get("/api/version/check", tags=["FastAPI System"])
+async def check_version():
+    """
+    Check for available updates from GitHub releases.
+
+    Compares current version with latest GitHub release.
+    Results are cached for 6 hours to avoid hitting rate limits.
+
+    Returns current version, latest version, and whether an update is available.
+    """
+    ### Cache for 6 hours to avoid GitHub API rate limits
+    if version_cache["checked_at"] and datetime.now() - version_cache["checked_at"] < timedelta(hours=6):
+        logging.info("Returning cached version check result")
+        return version_cache["latest_version"]
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
+                headers={"Accept": "application/vnd.github.v3+json"},
+                timeout=10.0,
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                latest = data["tag_name"].lstrip("v") # Strip "v" prefix if present
+
+                result = {
+                    "current_version": CURRENT_VERSION,
+                    "latest_version": latest,
+                    "update_available": version.parse(latest) > version.parse(CURRENT_VERSION),
+                    "release_url": data["html_url"],
+                    "release_notes": data.get("body", ""),
+                    "published_at": data.get("published_at", ""),
+                }
+
+                version_cache["latest_version"] = result
+                version_cache["checked_at"] = datetime.now()
+                logging.info(f"Version check: current={CURRENT_VERSION}, latest={latest}, update_available={result['update_available']}")
+                return result
+            else:
+                logging.warning(f"GitHub API returned status {response.status_code}")
+                return {
+                    "current_version": CURRENT_VERSION,
+                    "latest_version": None,
+                    "update_available": False,
+                    "error": f"GitHub API returned status {response.status_code}",
+                }
+    except Exception as e:
+        logging.error(f"Error checking version: {e}")
+        return {
+            "current_version": CURRENT_VERSION,
+            "latest_version": None,
+            "update_available": False,
+            "error": str(e),
+        }
 
 
 if __name__ == "__main__":

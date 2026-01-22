@@ -237,6 +237,12 @@
       "sessionsLabel": "Number of sessions to analyze:",
       "hint": "Analyze the last N sessions to detect plateaus (minimum 3, maximum 100). Default is 5."
     },
+    "updateCheck": {
+      "title": "Update Notifications",
+      "description": "Get notified when new versions are available",
+      "enableLabel": "Enable update notifications",
+      "hint": "Automatically check for new releases on GitHub. You can disable this if you prefer to check manually."
+    },
     "dataManagement": {
       "title": "Data Management",
       "description": "View information about your data source",
@@ -361,6 +367,11 @@
       "github": "Star on GitHub",
       "bugReport": "Report a bug",
       "madeBy": "Made with ❤️ by {author}"
+    },
+    "update": {
+      "title": "Update Available!",
+      "message": "Version {version} is now available.",
+      "viewRelease": "View Release"
     }
   },
   "bodyMeasurements": {

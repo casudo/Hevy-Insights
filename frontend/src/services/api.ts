@@ -99,4 +99,22 @@ export const bodyMeasurementService = {
   },
 };
 
+// Version Service
+export const versionService = {
+  async checkForUpdates() {
+    try {
+      const response = await api.get("/version/check");
+      return response.data;
+    } catch (error) {
+      console.error("Failed to check for updates:", error);
+      return {
+        current_version: null,
+        latest_version: null,
+        update_available: false,
+        error: "Failed to check for updates",
+      };
+    }
+  },
+};
+
 export default api;
