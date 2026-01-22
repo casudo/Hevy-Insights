@@ -247,7 +247,7 @@
     "saveButton": "Speichern & zum Dashboard"
   },
   "global": {
-    "loadingSpinnerText": "Trainingsdaten werden geladen...",
+    "loadingSpinnerText": "Lädt Daten...",
     "sw": {
       "volume": "Volumen",
       "hours": "Stunden",
@@ -258,9 +258,20 @@
       "notes": "Notizen",
       "description": "Beschreibung",
       "day": "Tag",
+      "days": "Tage",
+      "weeks": "Wochen",
+      "months": "Monate",
+      "years": "Jahre",
       "reps": "Wdh.",
       "height": "Größe",
-      "reset": "Zurücksetzen"
+      "reset": "Zurücksetzen",
+      "stable": "Stabil",
+      "entry": "Eintrag",
+      "retry": "Erneut versuchen",
+      "since": "Seit",
+      "date": "Datum",
+      "cancel": "Abbrechen",
+      "save": "Speichern"
     },
     "days": {
       "mondayLong": "Montag",
@@ -352,6 +363,44 @@
       "madeBy": "Erstellt mit ❤️ von {author}"
     }
   },
+  "bodyMeasurements": {
+    "title": "Körpermaße",
+    "subtitle": "Verfolge dein Gewicht und deine Körperzusammensetzung im Zeitverlauf",
+    "addMeasurement": "Messung hinzufügen",
+    "bmiCategory": {
+      "underweightSevere": "Starkes Untergewicht",
+      "underweightModerate": "Mäßiges Untergewicht",
+      "underweightMild": "Leichtes Untergewicht",
+      "normal": "Normal",
+      "overweight": "Übergewicht",
+      "obesityClassI": "Adipositas (Klasse I)",
+      "obesityClassII": "Adipositas (Klasse II)",
+      "obesityClassIII": "Adipositas (Klasse III)"
+    },
+    "ffmiCategory": {
+      "belowAverage": "Unterdurchschnittlich",
+      "average": "Durchschnittlich",
+      "aboveAverage": "Überdurchschnittlich",
+      "excellent": "Exzellent",
+      "superior": "Überlegen"
+    },
+    "currentWeight": "Aktuelles Gewicht",
+    "bmi": "BMI",
+    "bfp": "Körperfett %",
+    "ffmi": "FFMI",
+    "totalEntries": "Gesamteinträge",
+    "weightChange": "Gewichtsänderung",
+    "weightProgress": "Gewichtsfortschritt",
+    "measurementHistory": "Messverlauf",
+    "noMeasurements": "Noch keine Messungen. Beginne mit der Verfolgung deines Fortschritts!",
+    "addFirst": "Füge deine erste Messung hinzu",
+    "change": "Änderung (zum letzten Eintrag)",
+    "enterWeight": "Gewicht eingeben",
+    "enterBodyFat": "Körperfett in % eingeben",
+    "bodyFatNote": "Optional. Für die FFMI-Berechnung erforderlich. Kann mit Körperfettwaagen oder Calipern gemessen werden.",
+    "enterHeight": "Größe eingeben",
+    "heightNote": "Die Größe wird verwendet, um BMI und FFMI zu berechnen. Diese wird für zukünftige Messungen gespeichert."
+  },
   "profile": {
     "title": "Profil",
     "subtitle": "Verwalte deine Benutzerinformationen und Einstellungen.",
@@ -371,7 +420,9 @@
       "heightNote": "Deine Größe wird gespeichert und für BMI- und FFMI-Berechnungen bei Körpermessungen verwendet.",
       "heightSaved": "Größe erfolgreich gespeichert!",
       "currentHeight": "Aktuelle Größe",
-      "noHeightSet": "Es wurde noch keine Größe festgelegt. Gib oben deine Größe ein, um zu beginnen."
+      "noHeightSet": "Es wurde noch keine Größe festgelegt. Gib oben deine Größe ein, um zu beginnen.",
+      "warningTooHigh": "Dieser Größenwert scheint ungewöhnlich hoch (>250cm). Bitte überprüfe deine Eingabe.",
+      "warningTooLow": "Dieser Größenwert scheint niedrig (<150cm). Bitte überprüfe deine Eingabe."
     }
   }
 }

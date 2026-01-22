@@ -247,7 +247,7 @@
     "saveButton": "Save & Return to Dashboard"
   },
   "global": {
-    "loadingSpinnerText": "Loading your workout data...",
+    "loadingSpinnerText": "Loading your data...",
     "sw": {
       "volume": "Volume",
       "hours": "Hours",
@@ -258,9 +258,20 @@
       "notes": "Notes",
       "description": "Description",
       "day": "Day",
+      "days": "days",
+      "weeks": "weeks",
+      "months": "months",
+      "years": "years",
       "reps": "reps",
       "height": "Height",
-      "reset": "Reset"
+      "reset": "Reset",
+      "stable": "Stable",
+      "entry": "Entry",
+      "retry": "Retry",
+      "since": "Since",
+      "date": "Date",
+      "cancel": "Cancel",
+      "save": "Save"
     },
     "days": {
       "mondayLong": "Monday",
@@ -352,6 +363,44 @@
       "madeBy": "Made with ❤️ by {author}"
     }
   },
+  "bodyMeasurements": {
+    "title": "Body Measurements",
+    "subtitle": "Track your weight and body composition over time",
+    "addMeasurement": "Add Measurement",
+    "bmiCategory": {
+      "underweightSevere": "Underweight (Severe)",
+      "underweightModerate": "Underweight (Moderate)",
+      "underweightMild": "Underweight (Mild)",
+      "normal": "Normal",
+      "overweight": "Overweight",
+      "obesityClassI": "Obese (Class I)",
+      "obesityClassII": "Obese (Class II)",
+      "obesityClassIII": "Obese (Class III)"
+    },
+    "ffmiCategory": {
+      "belowAverage": "Below Average",
+      "average": "Average",
+      "aboveAverage": "Above Average",
+      "excellent": "Excellent",
+      "superior": "Superior"
+    },
+    "currentWeight": "Current Weight",
+    "bmi": "BMI",
+    "bfp": "Body Fat %",
+    "ffmi": "FFMI",
+    "totalEntries": "Total Entries",
+    "weightChange": "Weight Change",
+    "weightProgress": "Weight Progress",
+    "measurementHistory": "Measurement History",
+    "noMeasurements": "No measurements yet. Start tracking your progress!",
+    "addFirst": "Add your first measurement",
+    "change": "Change (to last entry)",
+    "enterWeight": "Enter weight",
+    "enterBodyFat": "Enter body fat in %",
+    "bodyFatNote": "Optional. Required for FFMI calculation. Can be measured with body composition scales or calipers.",
+    "enterHeight": "Enter height",
+    "heightNote": "Height is used to calculate BMI and FFMI. This will be saved for future use."
+  },
   "profile": {
     "title": "Profile",
     "subtitle": "Manage your personal information and preferences",
@@ -371,7 +420,9 @@
       "heightNote": "Your height will be saved and used for BMI and FFMI calculations in body measurements.",
       "heightSaved": "Height saved successfully!",
       "currentHeight": "Current Height",
-      "noHeightSet": "No height has been set yet. Enter your height above to get started."
+      "noHeightSet": "No height has been set yet. Enter your height above to get started.",
+      "warningTooHigh": "This height value seems unusually high (>250cm). Please verify your input.",
+      "warningTooLow": "This height value seems low (<150cm). Please verify your input."
     }
   }
 }
