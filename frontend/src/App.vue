@@ -181,11 +181,10 @@ watch(isMobileSidebarOpen, (open) => {
           <span class="nav-icon">⚖️</span>
           <span class="nav-text">{{ $t('nav.bodyMeasurements') }}</span>
         </router-link>
-        <!-- 
         <router-link to="/share" class="nav-item">
           <span class="nav-icon">📤</span>
           <span class="nav-text">{{ $t('nav.share') }}</span>
-        </router-link> -->
+        </router-link>
         <!-- Remove, since already included next to profile badge? -->
         <router-link to="/settings" class="nav-item" :title="$t('nav.settings')">
           <span class="nav-icon">⚙️</span>
