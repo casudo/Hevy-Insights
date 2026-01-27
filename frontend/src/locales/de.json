@@ -204,6 +204,56 @@
       }
     }
   },
+  "share": {
+    "title": "Teile deinen Fortschritt",
+    "subtitle": "Erstelle und teile individuelle Fitness-Statistikkarten.",
+    "downloadBtn": "Bild herunterladen",
+    "downloaded": "Bild erfolgreich heruntergeladen!",
+    "generating": "Wird generiert...",
+    "generateFailed": "Bild konnte nicht generiert werden. Bitte versuche es erneut.",
+    "sections": {
+      "cardGallery": "Wähle deinen Kartenstil",
+      "preview": "Vorschau & Teilen"
+    },
+    "cards": {
+      "workoutStreak": "Trainings Streak",
+      "totalVolume": "Gesamtvolumen",
+      "personalRecords": "Persönliche Rekorde",
+      "hoursTrained": "Trainingsstunden",
+      "topExercise": "Top Übung",
+      "yearWrapped": "Jahresrückblick"
+    },
+    "cardLabels": {
+      "streak": "Streak",
+      "totalVolume": "Gesamtvolumen",
+      "sessions": "Sitzungen",
+      "trained": "trainiert",
+      "personalRecords": "Persönliche Rekorde",
+      "prsAchieved": "PRs erreicht",
+      "workouts": "Workouts",
+      "timeInvested": "Investierte Zeit",
+      "hoursTrained": "Trainingsstunden",
+      "favoriteExercise": "Lieblingsübung",
+      "timesTrained": "Trainingsanzahl",
+      "totalWorkouts": "Gesamtanzahl Workouts",
+      "wrappedSubtitle": "Jahresrückblick",
+      "weekStreak": "Wochen-Streak"
+    },
+    "cardMottos": {
+      "workoutStreak": "Trainings Streak!",
+      "workoutStreakFooter": "Konstanz ist der Schlüssel zur Größe • Verfolge deine Reise", 
+      "strengthInNumbers": "Stärke in Zahlen!",
+      "strengthInNumbersFooter": "Jede Wiederholung zählt • Kraft aufbauen, ein Workout nach dem anderen",
+      "breakingBarriers": "Grenzen durchbrechen!",
+      "breakingBarriersFooter": "Grenzen verschieben • Neue Standards setzen • Niemals zufrieden geben",
+      "timeWellInvested": "Zeit gut investiert!",
+      "timeWellInvestedFooter": "Zeit für Selbstverbesserung • Fortschritt statt Perfektion",
+      "favoriteMove": "Deine Lieblingsübung!",
+      "favoriteMoveFooter": "Meistere dein Handwerk • Fokus und Hingabe zahlen sich aus",
+      "yearInReview": "Dein Jahr im Rückblick!",
+      "yearInReviewFooter": "Ein Jahr voller Wachstum und Veränderung • Auf das nächste Kapitel"
+    }
+  },
   "settings": {
     "title": "Einstellungen",
     "subtitle": "Passe dein Hevy Insights Erlebnis an.",
@@ -277,7 +327,8 @@
       "since": "Seit",
       "date": "Datum",
       "cancel": "Abbrechen",
-      "save": "Speichern"
+      "save": "Speichern",
+      "prs": "PR"
     },
     "days": {
       "mondayLong": "Montag",

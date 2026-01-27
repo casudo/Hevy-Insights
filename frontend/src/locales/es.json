@@ -204,6 +204,56 @@
       }
     }
   },
+  "share": {
+    "title": "Comparte tu Progreso",
+    "subtitle": "Crea tarjetas hermosas para compartir tus logros en redes sociales",
+    "downloadBtn": "Descargar Tarjeta",
+    "downloaded": "¡Imagen descargada exitosamente!",
+    "generating": "Generando...",
+    "generateFailed": "Error al generar la imagen. Inténtalo de nuevo.",
+    "sections": {
+      "cardGallery": "Elige tu Estilo de Tarjeta",
+      "preview": "Vista Previa y Compartir"
+    },
+    "cards": {
+      "workoutStreak": "Racha de Entrenamientos",
+      "totalVolume": "Volumen Total",
+      "personalRecords": "Récords Personales",
+      "hoursTrained": "Horas Entrenadas",
+      "topExercise": "Ejercicio Principal",
+      "yearWrapped": "Resumen del Año"
+    },
+    "cardLabels": {
+      "streak": "Racha",
+      "totalVolume": "Volumen Total",
+      "sessions": "sesiones",
+      "trained": "entrenado",
+      "personalRecords": "Récords Personales",
+      "prsAchieved": "PRs Logrados",
+      "workouts": "entrenamientos",
+      "timeInvested": "Tiempo Invertido",
+      "hoursTrained": "Horas Entrenadas",
+      "favoriteExercise": "Ejercicio Favorito",
+      "timesTrained": "veces entrenado",
+      "totalWorkouts": "entrenamientos totales",
+      "wrappedSubtitle": "Tu año en revisión",
+      "weekStreak": "Racha de Semanas"
+    },
+    "cardMottos": {
+      "workoutStreak": "¡Sigue así!",
+      "workoutStreakFooter": "La consistencia es la clave de la grandeza • Sigue tu camino",
+      "strengthInNumbers": "¡Fuerza en números!",
+      "strengthInNumbersFooter": "Cada repetición cuenta • Construyendo fuerza entreno a entreno",
+      "breakingBarriers": "¡Rompiendo barreras!",
+      "breakingBarriersFooter": "Superando límites • Estableciendo nuevos estándares • Nunca conformarse",
+      "timeWellInvested": "¡Tiempo bien invertido!",
+      "timeWellInvestedFooter": "Tiempo dedicado a la superación personal • Progreso sobre perfección",
+      "favoriteMove": "¡Tu movimiento favorito!",
+      "favoriteMoveFooter": "Dominando tu técnica • El enfoque y la dedicación dan frutos",
+      "yearInReview": "¡Tu año en revisión!",
+      "yearInReviewFooter": "Un año de crecimiento y transformación • Por el siguiente capítulo"
+    }
+  },
   "settings": {
     "title": "Ajustes",
     "subtitle": "Personaliza tu experiencia en Hevy Insights.",
@@ -277,7 +327,8 @@
       "since": "Desde",
       "date": "Fecha",
       "cancel": "Cancelar",
-      "save": "Guardar"
+      "save": "Guardar",
+      "prs": "RPs"
     },
     "days": {
       "mondayLong": "Lunes",
