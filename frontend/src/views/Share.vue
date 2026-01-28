@@ -713,7 +713,7 @@ onMounted(() => {
 .share-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 /* Dashboard Sections (Expandable/Collapsible) - Match Dashboard.vue */
@@ -824,7 +824,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.7rem;
 }
 
 /* Success Message */
@@ -1198,7 +1198,12 @@ onMounted(() => {
 /* Mobile Responsive - Preserve card appearance on all screen sizes */
 @media (max-width: 768px) {
   .share-page {
-    padding: 1rem;
+    padding: 1rem 0.3rem;
+  }
+
+  .share-header {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
   }
 
   .user-badge {
@@ -1317,7 +1322,7 @@ onMounted(() => {
   }
 
   .section-content {
-    padding: 0 1rem 1rem;
+    padding: 0 0.3rem 0.3rem;
   }
 }
 
