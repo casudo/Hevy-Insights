@@ -298,11 +298,11 @@ onMounted(() => {
                     <div class="stat-meta">
                       <div class="meta-item">
                         <span class="meta-icon">💪</span>
-                        <span class="meta-text">{{ totalWorkouts }} {{ t("global.sw.workouts") }}</span>
+                        <span class="meta-text">{{ totalWorkouts }} {{ t("share.cardLabels.workouts") }}</span>
                       </div>
                       <div class="meta-item">
                         <span class="meta-icon">⏱️</span>
-                        <span class="meta-text">{{ totalHoursAll }}h {{ t("global.sw.trained") }}</span>
+                        <span class="meta-text">{{ totalHoursAll }}h {{ t("share.cardLabels.trained") }}</span>
                       </div>
                     </div>
                   </div>
@@ -502,7 +502,7 @@ onMounted(() => {
                     <div class="wrapped-stat">
                       <div class="wrapped-emoji">🔥</div>
                       <div class="wrapped-number">{{ workoutStreakWeeks }}</div>
-                      <div class="wrapped-label">{{ t("global.sw.prs") }}</div>
+                      <div class="wrapped-label">{{ t("share.cardLabels.weekStreak") }}</div>
                     </div>
                   </div>
                   <div class="card-footer">
