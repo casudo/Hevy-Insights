@@ -204,6 +204,58 @@
       }
     }
   },
+  "share": {
+    "title": "Share Your Progress",
+    "subtitle": "Create beautiful cards to share your achievements on social media",
+    "downloadBtn": "Download Card",
+    "downloaded": "Image downloaded successfully!",
+    "generating": "Generating...",
+    "generateFailed": "Failed to generate image. Please try again.",
+    "sections": {
+      "cardGallery": "Choose Your Card Style",
+      "preview": "Preview & Share"
+    },
+    "cards": {
+      "workoutStreak": "Workout Streak",
+      "totalVolume": "Total Volume",
+      "personalRecords": "Personal Records",
+      "hoursTrained": "Hours Trained",
+      "topExercise": "Top Exercise",
+      "yearWrapped": "Year Wrapped"
+    },
+    "cardLabels": {
+      "streak": "Streak",
+      "totalVolume": "Total Volume",
+      "sessions": "sessions",
+      "trained": "trained",
+      "personalRecords": "Personal Records",
+      "prsAchieved": "PRs Achieved",
+      "workouts": "workouts",
+      "timeInvested": "Time Invested",
+      "hoursTrained": "Hours Trained",
+      "favoriteExercise": "Favorite Exercise",
+      "timesTrained": "times trained",
+      "totalWorkouts": "total workouts",
+      "wrappedTitle": "{year} wrapped",
+      "wrappedSubtitle": "Your year in review",
+      "weekStreak": "Week Streak",
+      "selectYear": "Select Year"
+    },
+    "cardMottos": {
+      "workoutStreak": "Keep crushing it!",
+      "workoutStreakFooter": "Consistency is the key to greatness • Track your journey", 
+      "strengthInNumbers": "Strength in numbers!",
+      "strengthInNumbersFooter": "Every rep counts • Building strength one workout at a time",
+      "breakingBarriers": "Breaking barriers!",
+      "breakingBarriersFooter": "Pushing limits • Setting new standards • Never settling",
+      "timeWellInvested": "Time well invested!",
+      "timeWellInvestedFooter": "Time dedicated to self-improvement • Progress over perfection",
+      "favoriteMove": "Your favorite move!",
+      "favoriteMoveFooter": "Mastering your craft • Focus and dedication pay off",
+      "yearInReview": "Your year in review!",
+      "yearInReviewFooter": "A year of growth and transformation • Here's to the next chapter"
+    }
+  },
   "settings": {
     "title": "Settings",
     "subtitle": "Customize your Hevy Insights experience.",
@@ -277,7 +329,8 @@
       "since": "Since",
       "date": "Date",
       "cancel": "Cancel",
-      "save": "Save"
+      "save": "Save",
+      "prs": "PRs"
     },
     "days": {
       "mondayLong": "Monday",

@@ -200,6 +200,8 @@ Clone/download the repository and follow these steps:
 - Add ability on profile page to change account privacy settings (public/private) and opt-in/out of settings like "comments_push_enabled"
 - "Clear all" button to flush localStorage?
 - Switch `requests` library to `httpx` to be consistent?
+- Let the user choose the primary and secondary colors in settings
+- Switch to per page localization instead of using `global.{n}.{y}` and reusing the same string from other pages
 
 ---
 

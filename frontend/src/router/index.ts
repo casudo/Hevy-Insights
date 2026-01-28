@@ -5,6 +5,7 @@ import WorkoutsCard from "../views/Workouts_Card.vue";
 import WorkoutsList from "../views/Workouts_List.vue";
 import Exercises from "../views/Exercises.vue";
 import Settings from "../views/Settings.vue";
+import Share from "../views/Share.vue";
 import BodyMeasurements from "../views/BodyMeasurements.vue";
 import Profile from "../views/Profile.vue";
 
@@ -47,6 +48,12 @@ const router = createRouter({
       component: Exercises,
       meta: { requiresAuth: true },
     },
+    {
+      path: "/share",
+      name: "Share",
+      component: Share,
+      meta: { requiresAuth: true },
+    },    
     {
       path: "/body-measurements",
       name: "BodyMeasurements",
