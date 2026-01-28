@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useHevyCache } from "../stores/hevy_cache";
 import { calculateCSVStats } from "../utils/csvCalculator";
+import { getWeightUnit } from "../utils/formatters";
 import html2canvas from "html2canvas";
 
 const { t } = useI18n();
@@ -36,6 +37,15 @@ const totalVolume = computed(() => {
     return csvStats.value.totalVolume || 0;
   }
   return workouts.value.reduce((sum, w) => sum + (w.estimated_volume_kg || 0), 0);
+});
+
+// Total Volume converted to user's preferred unit for display
+const totalVolumeDisplay = computed(() => {
+  const volumeKg = totalVolume.value;
+  if (store.weightUnit === "lbs") {
+    return Math.round(volumeKg * 2.20462);
+  }
+  return Math.round(volumeKg);
 });
 
 // Count PRs
@@ -329,8 +339,8 @@ onMounted(() => {
                   <div class="card-stat">
                     <div class="stat-badge">💪 {{ t("share.cardLabels.totalVolume") }}</div>
                     <div class="stat-number-wrapper">
-                      <div class="stat-number">{{ totalVolume > 0 ? Math.round(totalVolume).toLocaleString() : totalWorkouts }}</div>
-                      <div class="stat-unit">{{ totalVolume > 0 ? "kg" : "workouts" }}</div>
+                      <div class="stat-number">{{ totalVolume > 0 ? totalVolumeDisplay.toLocaleString() : totalWorkouts }}</div>
+                      <div class="stat-unit">{{ totalVolume > 0 ? getWeightUnit() : "workouts" }}</div>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-meta">
