@@ -236,8 +236,10 @@
       "favoriteExercise": "Lieblingsübung",
       "timesTrained": "Trainingsanzahl",
       "totalWorkouts": "Gesamtanzahl Workouts",
+      "wrappedTitle": "{year} zusammenfassung",
       "wrappedSubtitle": "Jahresrückblick",
-      "weekStreak": "Wochen-Streak"
+      "weekStreak": "Wochen-Streak",
+      "selectYear": "Jahr auswählen"
     },
     "cardMottos": {
       "workoutStreak": "Trainings Streak!",

@@ -131,6 +131,80 @@ const workoutStreakWeeks = computed(() => {
 // Selected card for preview
 const selectedCard = ref<string>("workout-streak");
 
+// Year selection for Year Wrapped card
+const availableYears = computed(() => {
+  const years = new Set<number>();
+  for (const w of workouts.value) {
+    const year = new Date((w.start_time || 0) * 1000).getFullYear();
+    years.add(year);
+  }
+  return Array.from(years).sort((a, b) => b - a); // Newest first
+});
+
+const selectedYear = ref<number>(new Date().getFullYear());
+
+// Filter workouts by selected year for Year Wrapped card
+const yearWorkouts = computed(() => {
+  return workouts.value.filter(w => {
+    const year = new Date((w.start_time || 0) * 1000).getFullYear();
+    return year === selectedYear.value;
+  });
+});
+
+// Year-specific stats
+const yearTotalWorkouts = computed(() => yearWorkouts.value.length);
+
+const yearTotalMinutes = computed(() => {
+  let mins = 0;
+  for (const w of yearWorkouts.value) {
+    const dur = Math.max(0, Math.floor(((w.end_time || w.start_time || 0) - (w.start_time || 0)) / 60));
+    mins += dur;
+  }
+  return mins;
+});
+
+const yearTotalHours = computed(() => Number((yearTotalMinutes.value / 60).toFixed(2)));
+
+const yearPRCount = computed(() => {
+  let count = 0;
+  for (const w of yearWorkouts.value) {
+    for (const ex of (w.exercises || [])) {
+      for (const s of (ex.sets || [])) {
+        const prsArr = Array.isArray(s?.prs) ? s.prs : (s?.prs ? [s.prs] : []);
+        const personalArr = Array.isArray(s?.personalRecords) ? s.personalRecords : (s?.personalRecords ? [s.personalRecords] : []);
+        count += [...prsArr, ...personalArr].filter(Boolean).length;
+      }
+    }
+  }
+  return count;
+});
+
+const yearWorkoutStreakWeeks = computed(() => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const weeks: Record<string, boolean> = {};
+  
+  // Mark all weeks that have workouts in the selected year
+  for (const w of yearWorkouts.value) {
+    const d = new Date((w.start_time || 0) * 1000);
+    weeks[weekKey(d)] = true;
+  }
+  
+  let streak = 0;
+  // Start from current date if selected year is current year, otherwise from Dec 31 of selected year
+  let current = selectedYear.value === currentYear 
+    ? startOfWeek(now) 
+    : startOfWeek(new Date(selectedYear.value, 11, 31)); // Dec 31 of selected year
+  
+  // Count backwards only within the selected year
+  while (weeks[weekKey(current)] && current.getFullYear() === selectedYear.value) {
+    streak++;
+    current.setDate(current.getDate() - 7);
+  }
+  
+  return streak;
+});
+
 // Card types with localization support
 const cardTypes = computed(() => [
   { id: "workout-streak", name: t("share.cards.workoutStreak"), emoji: "🔥", color: "#f59e0b" },
@@ -190,6 +264,10 @@ const downloadCard = async () => {
 const fetchData = async () => {
   await store.fetchWorkouts();
   await store.fetchUserAccount();
+  // Initialize selectedYear with the most recent year from available years
+  if (availableYears.value.length > 0) {
+    selectedYear.value = availableYears.value[0] ?? new Date().getFullYear(); // Most recent year
+  }
 };
 
 onMounted(() => {
@@ -476,6 +554,16 @@ onMounted(() => {
                 </div>
               </div>
 
+              <!-- Year Selector for Year Wrapped Card -->
+              <div v-if="selectedCard === 'year-wrapped'" class="year-selector">
+                <label for="year-select">{{ t("share.cardLabels.selectYear") }}:</label>
+                <select id="year-select" v-model="selectedYear" class="year-select">
+                  <option v-for="year in availableYears" :key="year" :value="year">
+                    {{ year }}
+                  </option>
+                </select>
+              </div>
+
               <!-- Year Wrapped Card -->
               <div v-if="selectedCard === 'year-wrapped'" ref="previewRef" class="preview-card wrapped-card">
                 <div class="card-background"></div>
@@ -490,28 +578,28 @@ onMounted(() => {
                     <span class="platform">Hevy Insights</span>
                   </div>
                   <div class="wrapped-header">
-                    <div class="wrapped-title">✨ 2026 WRAPPED</div>
+                    <div class="wrapped-title">✨ {{ t("share.cardLabels.wrappedTitle", { year: selectedYear }) }}</div>
                     <div class="wrapped-subtitle">{{ t("share.cardLabels.wrappedSubtitle") }}</div>
                   </div>
                   <div class="card-stat-grid-enhanced">
                     <div class="wrapped-stat">
                       <div class="wrapped-emoji">🏋️</div>
-                      <div class="wrapped-number">{{ totalWorkouts }}</div>
+                      <div class="wrapped-number">{{ yearTotalWorkouts }}</div>
                       <div class="wrapped-label">{{ t("share.cardLabels.workouts") }}</div>
                     </div>
                     <div class="wrapped-stat">
                       <div class="wrapped-emoji">⏱️</div>
-                      <div class="wrapped-number">{{ totalHoursAll }}h</div>
+                      <div class="wrapped-number">{{ yearTotalHours }}h</div>
                       <div class="wrapped-label">{{ t("share.cardLabels.trained") }}</div>
                     </div>
                     <div class="wrapped-stat">
                       <div class="wrapped-emoji">🏆</div>
-                      <div class="wrapped-number">{{ prCount }}</div>
+                      <div class="wrapped-number">{{ yearPRCount }}</div>
                       <div class="wrapped-label">{{ t("global.sw.prs") }}</div>
                     </div>
                     <div class="wrapped-stat">
                       <div class="wrapped-emoji">🔥</div>
-                      <div class="wrapped-number">{{ workoutStreakWeeks }}</div>
+                      <div class="wrapped-number">{{ yearWorkoutStreakWeeks }}</div>
                       <div class="wrapped-label">{{ t("share.cardLabels.weekStreak") }}</div>
                     </div>
                   </div>
@@ -837,6 +925,49 @@ onMounted(() => {
   gap: 0.7rem;
 }
 
+/* Year Selector */
+.year-selector {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.year-selector label {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.year-select {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.year-select:hover {
+  border-color: var(--color-primary, #10b981);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary, #10b981) 20%, transparent);
+}
+
+.year-select:focus {
+  outline: none;
+  border-color: var(--color-primary, #10b981);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #10b981) 20%, transparent);
+}
+
 /* Success Message */
 .share-message {
   padding: 1rem 1.5rem;
@@ -1115,6 +1246,7 @@ onMounted(() => {
   letter-spacing: 3px;
   text-shadow: 0 0 30px rgba(236, 72, 153, 0.4);
   margin-bottom: 0.5rem;
+  text-transform: uppercase;
 }
 
 .wrapped-subtitle {

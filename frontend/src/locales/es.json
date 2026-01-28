@@ -236,8 +236,10 @@
       "favoriteExercise": "Ejercicio Favorito",
       "timesTrained": "veces entrenado",
       "totalWorkouts": "entrenamientos totales",
+      "wrappedTitle": "{year} resumen",
       "wrappedSubtitle": "Tu año en revisión",
-      "weekStreak": "Racha de Semanas"
+      "weekStreak": "Racha de Semanas",
+      "selectYear": "Seleccionar Año"
     },
     "cardMottos": {
       "workoutStreak": "¡Sigue así!",

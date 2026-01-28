@@ -236,8 +236,10 @@
       "favoriteExercise": "Favorite Exercise",
       "timesTrained": "times trained",
       "totalWorkouts": "total workouts",
+      "wrappedTitle": "{year} wrapped",
       "wrappedSubtitle": "Your year in review",
-      "weekStreak": "Week Streak"
+      "weekStreak": "Week Streak",
+      "selectYear": "Select Year"
     },
     "cardMottos": {
       "workoutStreak": "Keep crushing it!",
