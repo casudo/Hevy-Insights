@@ -24,7 +24,7 @@ logging.basicConfig(
 )
 
 ### Version check configuration
-CURRENT_VERSION = "1.7.0"
+CURRENT_VERSION = "1.8.0"
 GITHUB_REPO = "casudo/Hevy-Insights"
 version_cache = {"latest_version": None, "checked_at": None}
 

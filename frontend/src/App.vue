@@ -9,7 +9,7 @@ const route = useRoute();
 const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
 const showNav = ref(false);
-const appVersion = "v1.7.0"; // Update version as needed
+const appVersion = "v1.8.0"; // Update version as needed
 const isMobileSidebarOpen = ref(false);
 const showTopbar = ref(true);
 const showScrollTop = ref(false);
@@ -181,11 +181,10 @@ watch(isMobileSidebarOpen, (open) => {
           <span class="nav-icon">⚖️</span>
           <span class="nav-text">{{ $t('nav.bodyMeasurements') }}</span>
         </router-link>
-        <!-- 
         <router-link to="/share" class="nav-item">
           <span class="nav-icon">📤</span>
           <span class="nav-text">{{ $t('nav.share') }}</span>
-        </router-link> -->
+        </router-link>
         <!-- Remove, since already included next to profile badge? -->
         <router-link to="/settings" class="nav-item" :title="$t('nav.settings')">
           <span class="nav-icon">⚙️</span>
