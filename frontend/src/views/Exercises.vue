@@ -124,6 +124,23 @@ function getLocalizedTitle(exercise: any): string {
   return exercise.title || "Unknown Exercise";
 }
 
+// Helper function to detect if an exercise is assisted (lower weight = more strength)
+function isAssistedExercise(ex: any): boolean {
+  // Check exercise_type from API
+  if (ex.exercise_type === "bodyweight_assisted_reps") {
+    return true;
+  }
+  
+  // Check title for assisted keywords in multiple languages
+  const title = (ex.title || "").toLowerCase();
+  const assistedKeywords = [
+    "assisted", "supported", // English
+    "unterstützt", // German
+  ];
+  
+  return assistedKeywords.some(keyword => title.includes(keyword));
+}
+
 // Analyze strength progress based on last N sessions (as set in settings)
 function analyzeStrengthProgress(ex: any) {
   const days = Object.keys(ex.byDay || {}).sort();
@@ -279,8 +296,16 @@ function analyzeStrengthProgress(ex: any) {
     const weightChange = secondAvgWeight - firstAvgWeight;
     const repsChange = secondAvgReps - firstAvgReps;
     
+    // Check if this is an assisted exercise (inverted weight logic)
+    const isAssisted = isAssistedExercise(ex);
+    
+    // For assisted exercises, decreasing weight = gaining strength (less assistance needed)
+    // For regular exercises, increasing weight = gaining strength
+    const effectiveWeightChange = isAssisted ? -weightChange : weightChange;
+    
     // Strength gain: weight increase >2kg or reps increase >2 with stable weight
-    if (weightChange > 2 || (repsChange > 2 && weightChange >= -0.5)) {
+    // For assisted exercises, this means weight DECREASE >2kg
+    if (effectiveWeightChange > 2 || (repsChange > 2 && effectiveWeightChange >= -0.5)) {
       return {
         type: "gaining",
         message: t("exercises.insights.gaining", {
@@ -292,7 +317,8 @@ function analyzeStrengthProgress(ex: any) {
     }
     
     // Strength loss: weight decrease >2kg or reps decrease >2 with stable weight
-    if (weightChange < -2 || (repsChange < -2 && weightChange <= 0.5)) {
+    // For assisted exercises, this means weight INCREASE >2kg
+    if (effectiveWeightChange < -2 || (repsChange < -2 && effectiveWeightChange <= 0.5)) {
       return {
         type: "losing",
         message: t("exercises.insights.losing", {
@@ -331,6 +357,7 @@ const exercises = computed(() => {
         video_url: ex.url || null,
         sets: [] as any[],
         prs: [] as any[],
+        exercise_type: ex.exercise_type || null,
       });
       for (const s of (ex.sets || [])) {
         const weight = Number((s as any).weight_kg ?? (s as any).weight ?? 0);
