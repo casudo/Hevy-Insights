@@ -472,12 +472,17 @@ const exercises = computed(() => {
         })
         .slice(0,3);
     } else {
+      // Check if this is an assisted exercise
+      const isAssisted = isAssistedExercise(ex);
+      
       // For strength: sort by weight × reps (total work)
+      // For assisted exercises: invert logic (lower weight = better)
       ex.topSets = [...ex.sets]
         .sort((a,b) => {
           const workA = (Number(a.weight)||0) * (Number(a.reps)||0);
           const workB = (Number(b.weight)||0) * (Number(b.reps)||0);
-          return workB - workA;
+          // For assisted exercises, lower weight is better (less assistance)
+          return isAssisted ? (workA - workB) : (workB - workA);
         })
         .slice(0,3);
     }
