@@ -306,7 +306,7 @@ onMounted(() => {
     <!-- Loading State -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
-      <p>{{ t("global.sw.loadingSpinnerText") }}</p>
+      <p>{{ t("global.loadingSpinnerText") }}</p>
     </div>
 
     <!-- Content -->
