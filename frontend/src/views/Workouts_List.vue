@@ -54,6 +54,23 @@ const filters = ref<{ workoutNumber: number | null; workoutName: string }>(
   { workoutNumber: null, workoutName: '' }
 );
 
+// Debounced workout name search
+let workoutNameDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function handleWorkoutNameInput(event: Event) {
+  const value = (event.target as HTMLInputElement).value;
+  
+  // Clear existing timeout
+  if (workoutNameDebounceTimeout) {
+    clearTimeout(workoutNameDebounceTimeout);
+  }
+  
+  // Set new timeout - only update filters.workoutName after 300ms of no typing
+  workoutNameDebounceTimeout = setTimeout(() => {
+    filters.value.workoutName = value;
+  }, 300);
+}
+
 // Combine date filter with creative filters
 const filteredAndSearchedWorkouts = computed(() => {
   const base = filteredWorkouts.value;
@@ -207,7 +224,12 @@ watch(() => route.query.day, async (d) => {
       </div>
       <div class="filter-group">
         <label class="filter-label">{{ $t('global.searchFilter.byName') }}</label>
-        <input class="filter-input" type="text" :placeholder="$t('workouts.list.searchContains')" v-model="filters.workoutName" />
+        <input 
+          class="filter-input" 
+          type="text" 
+          :placeholder="$t('workouts.list.searchContains')" 
+          @input="handleWorkoutNameInput"
+        />
       </div>
     </div>
 
