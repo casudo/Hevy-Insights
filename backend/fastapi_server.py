@@ -12,16 +12,27 @@ from slowapi.errors import RateLimitExceeded
 import httpx
 from datetime import datetime, timedelta
 from packaging import version
+import json
+from pathlib import Path
 
 ### ===============================================================================
 
 ### Load environment variables from .env file
 load_dotenv()
 
+### Demo Mode Configuration
+DEMO_MODE = getenv("DEMO_MODE", "false").lower() == "true"
+SAMPLE_DATA_DIR = Path(__file__).parent / "sample_data"
+
 ### Configure logging
 logging.basicConfig(
     level=getenv("LOG_LEVEL", "INFO"), format="%(asctime)s [%(levelname)s] - %(message)s", datefmt="%d.%m.%Y %H:%M:%S"
 )
+
+if DEMO_MODE:
+    logging.warning("=" * 80)
+    logging.warning("DEMO MODE ENABLED - Using sample data instead of real API calls")
+    logging.warning("=" * 80)
 
 ### Version check configuration
 CURRENT_VERSION = "1.8.0"
@@ -111,6 +122,39 @@ def get_hevy_client(auth_token: Optional[str] = None, api_key: Optional[str] = N
     return HevyClient(auth_token=auth_token, api_key=api_key)
 
 
+### Helper function to load sample data for demo mode
+def load_sample_data(filename: str) -> dict:
+    """Load sample data from JSON file in sample_data directory.
+    
+    Args:
+        filename: Name of the JSON file (e.g., "user_account.json")
+        
+    Returns:
+        dict: Loaded JSON data
+        
+    Raises:
+        HTTPException: If file not found or invalid JSON
+    """
+    file_path = SAMPLE_DATA_DIR / filename
+    
+    if not file_path.exists():
+        logging.error(f"Sample data file not found: {file_path}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Demo mode enabled but sample data file '{filename}' not found. Please create it in backend/sample_data/"
+        )
+    
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except json.JSONDecodeError as e:
+        logging.error(f"Invalid JSON in sample data file {filename}: {e}")
+        raise HTTPException(status_code=500, detail=f"Invalid JSON in sample data file '{filename}'")
+    except Exception as e:
+        logging.error(f"Error loading sample data file {filename}: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading sample data file '{filename}'")
+
+
 ### ===============================================================================
 ### Hevy Insights Backend API Endpoints
 
@@ -126,6 +170,16 @@ def login(credentials: LoginRequest, request: Request) -> LoginResponse:
 
     Returns auth token. Rate limited to 5 attempts per minute.
     """
+    ### Demo mode: accept any credentials
+    if DEMO_MODE:
+        logging.info("Demo mode: Login successful (any credentials accepted)")
+        return LoginResponse(
+            auth_token="demo-auth-token",
+            user_id="demo-user-id",
+            username="demo_user",
+            email="demo_user@demo.local"
+        )
+    
     try:
         client = HevyClient()
         user = client.login(credentials.emailOrUsername, credentials.password)
@@ -149,6 +203,11 @@ def validate_token(token_data: ValidateTokenRequest) -> ValidateTokenResponse:
 
     Returns validation status.
     """
+    ### Demo mode: always return valid
+    if DEMO_MODE:
+        logging.info("Demo mode: Token validation bypassed (always valid)")
+        return ValidateTokenResponse(valid=True)
+    
     try:
         client = HevyClient(token_data.auth_token)
         is_valid = client.validate_auth_token()
@@ -169,6 +228,11 @@ def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
 
     Returns validation status.
     """
+    ### Demo mode: always return valid
+    if DEMO_MODE:
+        logging.info("Demo mode: API key validation bypassed (always valid)")
+        return ValidateApiKeyResponse(valid=True)
+    
     try:
         client = HevyClient(api_key=key_data.api_key)
         is_valid = client.validate_api_key()
@@ -189,6 +253,11 @@ def get_user_account(
 
     Requires either auth-token or api-key header.
     """
+    ### Demo mode: return sample data
+    if DEMO_MODE:
+        logging.info("Demo mode: Serving sample user account")
+        return load_sample_data("user_account.json")
+    
     try:
         client = get_hevy_client(auth_token=auth_token, api_key=api_key)
         account = client.get_user_account()
@@ -223,6 +292,13 @@ def get_workouts(
 
     Requires either auth-token or api-key header.
     """
+    ### Demo mode: return complete sample data only on first request, empty afterwards
+    if DEMO_MODE:
+        if offset == 0 and page == 1:
+            return load_sample_data("user_workouts_paged.json")
+        else:
+            return {"workouts": []}
+    
     try:
         client = get_hevy_client(auth_token=auth_token, api_key=api_key)
 
@@ -254,6 +330,11 @@ def get_body_measurements(
 
     Requires auth-token header.
     """
+    ### Demo mode: return sample data
+    if DEMO_MODE:
+        logging.info("Demo mode: Serving sample body measurements")
+        return load_sample_data("body_measurements.json")
+    
     try:
         client = HevyClient(auth_token)
         measurements = client.get_body_measurements()
@@ -278,6 +359,11 @@ def post_body_measurements(
     Args:
         measurement: Body measurement data (date and weight_kg)
     """
+    ### Demo mode: simulate success without posting
+    if DEMO_MODE:
+        logging.info("Demo mode: Simulating body measurement post")
+        return {"message": "Body measurement posted successfully (demo mode)"}
+    
     try:
         client = HevyClient(auth_token)
         client.post_body_measurements(measurement.date, measurement.weight_kg)

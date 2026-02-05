@@ -230,3 +230,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+/backend/sample_data
