@@ -35,14 +35,14 @@ if DEMO_MODE:
     logging.warning("=" * 80)
 
 ### Version check configuration
-CURRENT_VERSION = "1.8.0"
+CURRENT_VERSION = "1.8.1"
 GITHUB_REPO = "casudo/Hevy-Insights"
 version_cache = {"latest_version": None, "checked_at": None}
 
 app = FastAPI(
     title="Hevy Insights API",
     description="Backend API for Hevy Insights",
-    version="1.3.0",
+    version="1.3.1",
     docs_url="/api/docs",  # Swagger
 )
 ### Initialize rate limiter
