@@ -2,7 +2,7 @@
 import { computed, ref, onMounted } from "vue";
 import { useHevyCache } from "../stores/hevy_cache";
 import { formatWeight, getWeightUnit, getDistanceUnit, formatPRValue, formatDate } from "../utils/formatters";
-import { detectExerciseType, formatDurationSeconds, formatDistance } from "../utils/exerciseTypeDetector";
+import { detectExerciseType, formatDurationSeconds, formatDistance, isBodyweightExercise } from "../utils/exerciseTypeDetector";
 import { Scatter, Bar, Line } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
 import {
@@ -44,6 +44,9 @@ const secondaryColor = computed(() => {
 // Collapsed state per exercise (default collapsed)
 const expanded = ref<Record<string, boolean>>({});
 
+// Body weight for rep volume calculations (bodyweight exercises)
+const userBodyWeight = ref<number>(0);
+
 // Search by exercise name (debounced)
 const search = ref("");
 let searchDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -73,7 +76,8 @@ const graphFilters = ref<Record<string, {
   maxWeight: { range: GraphRange, type: GraphType },
   avgVolume: { range: GraphRange, type: GraphType },
   weightVsReps: { range: GraphRange },
-  volumeSession: { range: GraphRange, type: GraphType }
+  volumeSession: { range: GraphRange, type: GraphType },
+  repCount: { range: GraphRange, type: GraphType }
 }>>({});
 
 // Initialize graph filters for an exercise
@@ -83,7 +87,8 @@ function getGraphFilter(exerciseId: string) {
       maxWeight: { range: 0, type: "line" },
       avgVolume: { range: 0, type: "line" },
       weightVsReps: { range: 0 },
-      volumeSession: { range: 0, type: "bar" }
+      volumeSession: { range: 0, type: "bar" },
+      repCount: { range: 0, type: "bar" }
     };
   }
   return graphFilters.value[exerciseId];
@@ -111,6 +116,24 @@ const allWorkouts = computed(() => store.workouts || []);
 
 onMounted(async () => {
   await store.fetchWorkouts();
+  
+  // Load body weight for rep volume calculations (free API only)
+  if (!isUsingProApi.value) {
+    try {
+      const { bodyMeasurementService } = await import("../services/api");
+      const measurements = await bodyMeasurementService.getMeasurements();
+      if (measurements && measurements.length > 0) {
+        // Get most recent measurement
+        const sorted = [...measurements].sort((a: any, b: any) => {
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        });
+        userBodyWeight.value = sorted[0].weight_kg || 0;
+      }
+    } catch (error) {
+      // Body measurements not available. TODO: Better error handling
+      console.log("Body measurements not available:", error);
+    }
+  }
   
   // Check if there's an exercise ID in the URL hash
   if (window.location.hash) {
@@ -347,6 +370,7 @@ const exercises = computed(() => {
         id,
         title,
         video_url: ex.url || null,
+        exercise_type: ex.exercise_type || null,
         sets: [] as any[],
         prs: [] as any[],
       });
@@ -379,9 +403,13 @@ const exercises = computed(() => {
     const exerciseType = detectExerciseType({ sets: ex.sets });
     ex.exerciseType = exerciseType;
     
+    // Detect if bodyweight exercise (for PRO API which doesn't include exercise_type)
+    ex.isBodyweight = ex.exercise_type === "reps_only" || isBodyweightExercise({ sets: ex.sets });
+    
     const byDay: Record<string, { 
       maxWeight: number; 
       repsAtMax: number; 
+      totalReps: number;
       volume: number; 
       setCount: number; 
       avgVolumePerSet: number;
@@ -395,6 +423,7 @@ const exercises = computed(() => {
       const cur = (byDay[s.day] ||= { 
         maxWeight: 0, 
         repsAtMax: 0, 
+        totalReps: 0,
         volume: 0, 
         setCount: 0, 
         avgVolumePerSet: 0,
@@ -408,6 +437,7 @@ const exercises = computed(() => {
       const setVolume = (Number(s.weight) || 0) * (Number(s.reps) || 0);
       cur.volume += setVolume;
       cur.setCount += 1;
+      cur.totalReps += (Number(s.reps) || 0);
       
       if ((Number(s.weight) || 0) > cur.maxWeight) {
         cur.maxWeight = Number(s.weight) || 0;
@@ -717,6 +747,77 @@ function getDurationOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
       {
         label: `${t("global.sw.duration")} (min)`,
         data: durationData,
+        backgroundColor: secondaryColor.value + "33",
+        borderColor: secondaryColor.value,
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+      },
+    ],
+  };
+}
+
+// Bodyweight exercise (reps_only) chart data builders
+// Check if using PRO API (no body measurements available)
+const isUsingProApi = computed(() => !!localStorage.getItem("hevy_api_key"));
+
+// Rep Volume chart for bodyweight exercises
+// Calculates volume as: reps × body_weight
+// Note: This requires body measurements which are only available with free Hevy API
+function getRepVolumeChartData(ex: any, graphRange: GraphRange = 0) {
+  const days = filterGraphDates(ex, graphRange);
+  const labels = days.map((d) => formatDate(new Date(d)));
+  
+  // Use loaded body weight from measurements
+  const bodyWeight = userBodyWeight.value;
+  
+  // Calculate rep volume for each day: total_reps × body_weight
+  const repVolumeData = days.map((d) => {
+    const dayData = ex.byDay[d];
+    if (!dayData || !bodyWeight) return 0;
+    
+    // For bodyweight exercises, volume = total reps × bodyweight
+    const totalReps = dayData.totalReps || 0;
+    const repVolume = totalReps * bodyWeight;
+    
+    // Convert to lbs if needed
+    return store.weightUnit === "lbs" ? repVolume * 2.20462 : repVolume;
+  });
+  
+  return {
+    labels,
+    datasets: [
+      {
+        label: `${t("exercises.graphs.labels.repVolume") || "Rep Volume"} (${getWeightUnit()})`,
+        data: repVolumeData,
+        backgroundColor: primaryColor.value + "33",
+        borderColor: primaryColor.value,
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+      },
+    ],
+  };
+}
+
+// Rep Count chart for bodyweight exercises
+// Shows total reps performed per workout day
+function getRepCountChartData(ex: any, graphRange: GraphRange = 0) {
+  const days = filterGraphDates(ex, graphRange);
+  const labels = days.map((d) => formatDate(new Date(d)));
+  
+  // Get total reps for each day
+  const repCountData = days.map((d) => {
+    const dayData = ex.byDay[d];
+    return dayData?.totalReps || 0;
+  });
+  
+  return {
+    labels,
+    datasets: [
+      {
+        label: t("exercises.graphs.labels.totalReps") || "Total Reps",
+        data: repCountData,
         backgroundColor: secondaryColor.value + "33",
         borderColor: secondaryColor.value,
         borderWidth: 2,
@@ -1105,10 +1206,10 @@ const barChartOptions = {
 
             <!-- Strength Graphs: Weight, Volume, Reps -->
             <template v-else>
-              <!-- Max Weight Over Time -->
+              <!-- Max Weight / Rep Volume Over Time -->
               <div class="graph">
                 <div class="graph-header">
-                  <h3>{{ $t("exercises.graphs.maxWeight") }}</h3>
+                  <h3>{{ ex.isBodyweight ? $t("exercises.graphs.repVolume") : $t("exercises.graphs.maxWeight") }}</h3>
                   <div class="graph-controls">
                     <div class="range-selector">
                       <button
@@ -1134,22 +1235,103 @@ const barChartOptions = {
                     </div>
                   </div>
                 </div>
+                
+                <!-- Warning for bodyweight exercises if using Hevy PRO API -->
+                <div v-if="ex.isBodyweight && isUsingProApi" class="graph-warning">
+                  <span class="warning-icon">⚠️</span>
+                  <span>{{ $t("exercises.warnings.repVolumeProApi") }}</span>
+                </div>
+                
+                <!-- Warning for bodyweight exercises with no body weight data -->
+                <div v-else-if="ex.isBodyweight && userBodyWeight === 0" class="graph-warning">
+                  <span class="warning-icon">⚠️</span>
+                  <span>{{ $t("exercises.warnings.noBodyWeight") }}</span>
+                </div>
+                
+                <div class="graph-grid chart-container" :class="{ 'chart-placeholder-small': ex.isBodyweight && (isUsingProApi || userBodyWeight === 0) }">
+                  <!-- For bodyweight exercises, show rep volume chart -->
+                  <template v-if="ex.isBodyweight">
+                    <!-- Show chart if body weight is available -->
+                    <template v-if="!isUsingProApi && userBodyWeight > 0">
+                      <Line
+                        v-if="getGraphFilter(ex.id).maxWeight.type === 'line'"
+                        :data="getRepVolumeChartData(ex, getGraphFilter(ex.id).maxWeight.range)"
+                        :options="lineChartOptions"
+                      />
+                      <Bar
+                        v-else
+                        :data="getRepVolumeChartData(ex, getGraphFilter(ex.id).maxWeight.range)"
+                        :options="barChartOptions"
+                      />
+                    </template>
+                    <!-- Show placeholder if no body weight data -->
+                    <div v-else class="chart-placeholder">
+                      <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                        {{ isUsingProApi ? $t("exercises.warnings.repVolumeProApi") : $t("exercises.warnings.noBodyWeight") }}
+                      </p>
+                    </div>
+                  </template>
+                  <!-- For regular strength exercises, show max weight chart -->
+                  <template v-else>
+                    <Line
+                      v-if="getGraphFilter(ex.id).maxWeight.type === 'line'"
+                      :data="getMaxWeightOverTimeChartData(ex, getGraphFilter(ex.id).maxWeight.range)"
+                      :options="lineChartOptions"
+                    />
+                    <Bar
+                      v-else
+                      :data="getMaxWeightOverTimeChartData(ex, getGraphFilter(ex.id).maxWeight.range)"
+                      :options="barChartOptions"
+                    />
+                  </template>
+                </div>
+              </div>
+
+              <!-- Total Reps (for bodyweight exercises only) -->
+              <div v-if="ex.isBodyweight" class="graph">
+                <div class="graph-header">
+                  <h3>{{ $t("exercises.graphs.totalReps") }}</h3>
+                  <div class="graph-controls">
+                    <div class="range-selector">
+                      <button
+                        v-for="range in [30, 60, 90, 365, 0]"
+                        :key="range"
+                        :class="['range-btn', { active: getGraphFilter(ex.id).repCount.range === range }]"
+                        @click="getGraphFilter(ex.id).repCount.range = range as GraphRange"
+                      >
+                        {{ getRangeLabel(range as GraphRange) }}
+                      </button>
+                    </div>
+                    <div class="type-selector">
+                      <button
+                        :class="['type-btn', { active: getGraphFilter(ex.id).repCount.type === 'line' }]"
+                        @click="getGraphFilter(ex.id).repCount.type = 'line'"
+                        title="Line chart"
+                      >📈</button>
+                      <button
+                        :class="['type-btn', { active: getGraphFilter(ex.id).repCount.type === 'bar' }]"
+                        @click="getGraphFilter(ex.id).repCount.type = 'bar'"
+                        title="Bar chart"
+                      >📊</button>
+                    </div>
+                  </div>
+                </div>
                 <div class="graph-grid chart-container">
                   <Line
-                    v-if="getGraphFilter(ex.id).maxWeight.type === 'line'"
-                    :data="getMaxWeightOverTimeChartData(ex, getGraphFilter(ex.id).maxWeight.range)"
+                    v-if="getGraphFilter(ex.id).repCount.type === 'line'"
+                    :data="getRepCountChartData(ex, getGraphFilter(ex.id).repCount.range)"
                     :options="lineChartOptions"
                   />
                   <Bar
                     v-else
-                    :data="getMaxWeightOverTimeChartData(ex, getGraphFilter(ex.id).maxWeight.range)"
+                    :data="getRepCountChartData(ex, getGraphFilter(ex.id).repCount.range)"
                     :options="barChartOptions"
                   />
                 </div>
               </div>
 
-              <!-- Average Volume Per Set -->
-              <div class="graph">
+              <!-- Average Volume Per Set (hide for bodyweight exercises) -->
+              <div v-if="!ex.isBodyweight" class="graph">
                 <div class="graph-header">
                   <h3>{{ $t("exercises.graphs.avgVolume") }}</h3>
                   <div class="graph-controls">
@@ -1191,8 +1373,8 @@ const barChartOptions = {
                 </div>
               </div>
 
-              <!-- Weight vs Reps Scatter -->
-              <div class="graph">
+              <!-- Weight vs Reps Scatter (hide for bodyweight exercises) -->
+              <div v-if="!ex.isBodyweight" class="graph">
                 <div class="graph-header">
                   <h3>{{ $t("exercises.graphs.weightVsReps") }}</h3>
                   <div class="graph-controls">
@@ -1213,8 +1395,8 @@ const barChartOptions = {
                 </div>
               </div>
 
-              <!-- Volume Per Session -->
-              <div class="graph">
+              <!-- Volume Per Session (hide for bodyweight exercises) -->
+              <div v-if="!ex.isBodyweight" class="graph">
                 <div class="graph-header">
                   <h3>{{ $t("exercises.graphs.volumeSession") }}</h3>
                   <div class="graph-controls">
@@ -1704,6 +1886,37 @@ const barChartOptions = {
 .chart-container { 
   height: 220px;
   overflow: hidden; /* Prevent overflow on mobile when switching chart types */
+}
+
+/* Smaller chart container for placeholder/warning state */
+.chart-placeholder-small {
+  height: 100px !important;
+  min-height: 100px;
+}
+
+.chart-placeholder-small .chart-placeholder p {
+  padding: 1rem !important;
+  font-size: 0.875rem;
+}
+
+/* Graph warnings for bodyweight exercises */
+.graph-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1.5px solid #f59e0b;
+  border-radius: 8px;
+  color: #fbbf24;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.graph-warning .warning-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
 .top-sets h3 { margin: 0 0 0.5rem 0; font-size: 1rem; color: var(--text-primary); }
