@@ -15,7 +15,7 @@ import {
   Filler
 } from "chart.js";
 import { bodyMeasurementService } from "../services/api";
-import { formatWeight, getWeightUnit, formatDate } from "../utils/formatters";
+import { formatWeightPrecise, getWeightUnit, formatDate } from "../utils/formatters";
 import { useHevyCache } from "../stores/hevy_cache";
 
 // Register Chart.js components
@@ -128,7 +128,7 @@ const weightTrend = computed(() => {
   if (Math.abs(diff) < 0.1) return t("global.sw.stable");
   
   const sign = diff > 0 ? "↑" : "↓";
-  return `${sign} ${formatWeight(Math.abs(diff))} ${getWeightUnit()}`;
+  return `${sign} ${formatWeightPrecise(Math.abs(diff))} ${getWeightUnit()}`;
 });
 
 const weightChangeFormatted = computed(() => {
@@ -143,7 +143,7 @@ const weightChangeFormatted = computed(() => {
   const diff = latest - earliest;
   
   const sign = diff > 0 ? "+" : "";
-  return `${sign}${formatWeight(diff)} ${getWeightUnit()}`;
+  return `${sign}${formatWeightPrecise(diff)} ${getWeightUnit()}`;
 });
 
 const earliestDate = computed(() => {
@@ -299,7 +299,7 @@ const chartData = computed(() => {
   });
 
   const labels = sorted.map(m => formatDate(m.date));
-  const data = sorted.map(m => parseFloat(formatWeight(m.weight_kg)));
+  const data = sorted.map(m => parseFloat(formatWeightPrecise(m.weight_kg)));
 
   return {
     labels,
@@ -432,8 +432,8 @@ const formatDateDisplay = (measurement: any) => {
   return measurement.date ? formatDate(measurement.date) : "-";
 };
 
-const formatWeightValue = (weightKg: number) => {
-  return `${formatWeight(weightKg)} ${getWeightUnit()}`;
+const formatWeightPreciseValue = (weightKg: number) => {
+  return `${formatWeightPrecise(weightKg)} ${getWeightUnit()}`;
 };
 
 // https://de.wikipedia.org/wiki/Body-Mass-Index
@@ -473,7 +473,7 @@ const getWeightChange = (index: number) => {
   if (Math.abs(diff) < 0.1) return "—";
   
   const sign = diff > 0 ? "+" : "";
-  return `${sign}${formatWeight(diff)} ${getWeightUnit()}`;
+  return `${sign}${formatWeightPrecise(diff)} ${getWeightUnit()}`;
 };
 
 const getChangeClass = (index: number) => {
@@ -731,7 +731,7 @@ onMounted(async () => {
               <tbody>
                 <tr v-for="(measurement, index) in sortedMeasurements" :key="measurement.id">
                   <td>{{ formatDateDisplay(measurement) }}</td>
-                  <td class="weight-cell">{{ formatWeightValue(measurement.weight_kg) }}</td>
+                  <td class="weight-cell">{{ formatWeightPreciseValue(measurement.weight_kg) }}</td>
                   <td>{{ calculateBMI(measurement.weight_kg) }}</td>
                   <td>{{ getBodyFat(measurement.date) }}</td>
                   <td>{{ calculateFFMI(measurement.weight_kg, measurement.date) }}</td>
