@@ -75,6 +75,9 @@ const today = new Date().toISOString().split("T")[0];
 // Computed Properties
 const userAccount = computed(() => store.userAccount);
 
+// Check if user is using PRO API key
+const isUsingProApi = computed(() => !!localStorage.getItem("hevy_api_key"));
+
 const sortedMeasurements = computed(() => {
   return [...measurements.value].sort((a, b) => {
     const dateA = new Date(a.date).getTime();
@@ -91,7 +94,7 @@ const currentWeight = computed(() => {
 
 const currentWeightFormatted = computed(() => {
   if (currentWeight.value === 0) return "-";
-  return `${formatWeight(currentWeight.value)} ${getWeightUnit()}`;
+  return `${formatWeightPrecise(currentWeight.value)} ${getWeightUnit()}`;
 });
 
 const bmiValue = computed(() => {
@@ -508,7 +511,7 @@ onMounted(async () => {
           <p class="subtitle">{{ t("bodyMeasurements.subtitle") }}</p>
         </div>
         <div class="header-actions">
-          <button class="add-btn" @click="showAddModal = true">
+          <button class="add-btn" @click="showAddModal = true" :disabled="isUsingProApi">
             <span>+</span>
             {{ t("bodyMeasurements.addMeasurement") }}
           </button>
@@ -525,6 +528,15 @@ onMounted(async () => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- PRO API Warning Banner -->
+    <div v-if="isUsingProApi" class="pro-api-warning">
+      <div class="warning-icon">⚠️</div>
+      <div class="warning-content">
+        <strong>{{ t("bodyMeasurements.proApiWarning.title") }}</strong>
+        <p>{{ t("bodyMeasurements.proApiWarning.message") }}</p>
       </div>
     </div>
 
@@ -838,6 +850,43 @@ onMounted(async () => {
   margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-color);
+}
+
+/* PRO API Warning Banner */
+.pro-api-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  background: rgba(245, 158, 11, 0.1);
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  color: #fbbf24;
+}
+
+.warning-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.warning-content {
+  flex: 1;
+}
+
+.warning-content strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  color: #fbbf24;
+}
+
+.warning-content p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #fcd34d;
+  line-height: 1.5;
 }
 
 .header-content {
