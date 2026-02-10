@@ -119,10 +119,12 @@ const startOfWeek = (d: Date) => {
 };
 const weekKey = (d: Date) => {
   const m = startOfWeek(d);
-  return m.toISOString().slice(0,10);
+  // Use local date for week grouping
+  return `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}-${String(m.getDate()).padStart(2, '0')}`;
 };
 const monthKey = (d: Date) => {
-  return d.toISOString().slice(0,7); // "YYYY-MM"
+  // Use local date for month grouping
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; // "YYYY-MM"
 };
 
 // Map individual muscles to larger groups
@@ -371,12 +373,13 @@ const weeklyRhythm_Data = computed(() => {
 
 // ========== CALENDAR HEATMAP (12-Month Contribution Graph) ==========
 
-// Group workouts by date (YYYY-MM-DD)
+// Group workouts by date (YYYY-MM-DD) using local timezone
 const workoutsByDay = computed(() => {
   const map: Record<string, number> = {};
   for (const w of workouts.value) {
     const date = new Date((w.start_time || 0) * 1000);
-    const dayKey = date.toISOString().slice(0, 10);
+    // Use local date instead of UTC to avoid timezone grouping issues
+    const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     map[dayKey] = (map[dayKey] || 0) + 1;
   }
   return map;
@@ -658,7 +661,8 @@ const plateauExercises = computed(() => {
   
   for (const w of workouts.value) {
     const date = new Date((w.start_time || 0) * 1000);
-    const dayKey = date.toISOString().slice(0,10);
+    // Use local date instead of UTC to avoid timezone grouping issues
+    const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     
     for (const ex of (w.exercises || [])) {
       const title = ex.title || "Unknown Exercise";
@@ -757,7 +761,8 @@ const recentPRs = computed(() => {
   
   for (const w of workouts.value) {
     const date = new Date((w.start_time || 0) * 1000);
-    const dateStr = date.toISOString().slice(0, 10); // TODO: Use localized date settings from Settings.vue
+    // Use local date instead of UTC for display consistency
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     
     for (const ex of (w.exercises || [])) {
       const exerciseName = ex.title || "Unknown Exercise";

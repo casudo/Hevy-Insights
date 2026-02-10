@@ -108,7 +108,8 @@ const startOfWeek = (d: Date) => {
 
 const weekKey = (d: Date) => {
   const m = startOfWeek(d);
-  return m.toISOString().slice(0,10);
+  // Use local date for week grouping
+  return `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}-${String(m.getDate()).padStart(2, '0')}`;
 };
 
 // Workout streak (consecutive weeks with at least 1 workout) - Match Dashboard.vue

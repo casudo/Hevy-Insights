@@ -341,7 +341,8 @@ const exercises = computed(() => {
   const map: Record<string, any> = {};
   for (const w of allWorkouts.value) {
     const date = new Date((w.start_time || 0) * 1000);
-    const dayKey = date.toISOString().slice(0,10);
+    // Use local date instead of UTC to avoid timezone grouping issues
+    const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     
     for (const ex of (w.exercises || [])) {
       // Use localized title based on user's language preference
