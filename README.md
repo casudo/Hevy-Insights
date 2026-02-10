@@ -206,6 +206,8 @@ Clone/download the repository and follow these steps:
 - Switch `requests` library to `httpx` to be consistent?
 - Let the user choose the primary and secondary colors in settings
 - Switch to per page localization instead of using `global.{n}.{y}` and reusing the same string from other pages
+- Support for distance-based workouts (running, cycling, etc.) and their specific stats (e.g., pace, distance)
+  - Seperate distance stats for duraion-based workouts (e.g. Dead Hang)
 
 ---
 
