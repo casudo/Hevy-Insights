@@ -129,6 +129,10 @@ You can decide based on your needs which login method suits you best:
 | Plateu Detection             | ✅ Yes                        | ✅ Yes                        | ✅ Yes                        |
 | Workout Streaks              | ✅ Yes                        | ✅ Yes                        | ❌ No                         |
 | Calories & Heart Rate Data   | ✅ Yes                        | ❌ No                         | ❌ No                         |
+| Body Measurements            | ✅ Yes                        | ❌ No                         | ❌ No                         |
+
+> [!IMPORTANT]
+> **Why the differences in the login modes?** It's because not every login method provides the same data to use. The [Hevy PRO API](https://api.hevyapp.com/docs/#/) key login only provides data for a small amount of features compared to what you can see inside the Hevy app (which is using the **Hevy Credentials** login method). The CSV upload is the most basic one, it only provides the data that is contained in the CSV file you can export from the Hevy app, which is by far not everything that the Hevy API provides.
 
 # Usage
 
