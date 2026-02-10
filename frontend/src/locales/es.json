@@ -185,11 +185,15 @@
     },
     "graphs": {
       "maxWeight": "Peso Máximo (Tiempo)",
+      "repVolume": "Volumen de Repeticiones (Tiempo)",
+      "totalReps": "Repeticiones Totales",
       "avgVolume": "Volumen Promedio por Serie",
       "weightVsReps": "Peso Máximo vs Reps",
       "volumeSession": "Volumen (Sesión - todas las series)",
       "labels": {
         "maxWeight": "Peso Máximo",
+        "repVolume": "Volumen de Reps",
+        "totalReps": "Repeticiones Totales",
         "avgVolume": "Volumen Prom./Serie"
       },
       "axis": {

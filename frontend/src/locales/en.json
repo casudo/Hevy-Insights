@@ -185,11 +185,15 @@
     },
     "graphs": {
       "maxWeight": "Max Weight (Over Time)",
+      "repVolume": "Rep Volume (Over Time)",
+      "totalReps": "Total Reps",
       "avgVolume": "Avg Volume per Set",
       "weightVsReps": "Max Weight vs Reps",
       "volumeSession": "Volume (Session - all sets that day)",
       "labels": {
         "maxWeight": "Max Weight",
+        "repVolume": "Rep Volume",
+        "totalReps": "Total Reps",
         "avgVolume": "Avg Volume per Set"
       },
       "axis": {
@@ -285,9 +289,9 @@
     },
     "plateauDetection": {
       "title": "Plateau Detection",
-      "description": "Customize how many of your latest workouts should be used to detect plateaus",
+      "description": "Customize how many recent sessions to analyze for plateau detection",
       "sessionsLabel": "Number of sessions to analyze:",
-      "hint": "Analyze the last N sessions to detect plateaus (minimum 3, maximum 100). Default is 5."
+      "hint": "Analyze your last N sessions to detect plateaus (minimum 3, maximum 100). Default is 5."
     },
     "updateCheck": {
       "title": "Update Notifications",

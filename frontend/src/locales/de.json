@@ -185,11 +185,15 @@
     },
     "graphs": {
       "maxWeight": "Max. Gewicht (Zeitverlauf)",
+      "repVolume": "Wiederholungsvolumen (Zeitverlauf)",
+      "totalReps": "Gesamtwiederholungen",
       "avgVolume": "Durchschn. Volumen pro Satz",
       "weightVsReps": "Max. Gewicht vs. Wiederholungen",
       "volumeSession": "Volumen (Sitzung - alle Sätze)",
       "labels": {
         "maxWeight": "Max. Gewicht",
+        "repVolume": "Wiederholungsvolumen",
+        "totalReps": "Gesamtwiederholungen",
         "avgVolume": "Durchschn. Volumen/Satz"
       },
       "axis": {
