@@ -452,6 +452,10 @@
       "excellent": "Exzellent",
       "superior": "Überlegen"
     },
+    "proApiWarning": {
+      "title": "Feature nicht verfügbar mit Hevy PRO API-Key Login-Modus!",
+      "message": "Um Körpermaße zu verfolgen, musst du dich mit der Hevy Benutzername/Passwort-Anmeldemethode anmelden, da diese Methode die API-Endpunkte für Körpermaße verwendet."
+    },
     "currentWeight": "Aktuelles Gewicht",
     "bmi": "BMI",
     "bfp": "Körperfett %",

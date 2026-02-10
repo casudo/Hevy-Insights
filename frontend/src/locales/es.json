@@ -452,6 +452,10 @@
       "excellent": "Excelente",
       "superior": "Superior"
     },
+    "proApiWarning": {
+      "title": "Funcionalidad no disponible con el modo de inicio de sesión con clave API de Hevy PRO.",
+      "message": "Para rastrear las medidas corporales, debes iniciar sesión con el método de nombre de usuario/contraseña de Hevy, ya que ese método utiliza los puntos finales de la API de medidas corporales."
+    },    
     "currentWeight": "Peso Actual",
     "bmi": "IMC",
     "bfp": "Porcentaje de Grasa Corporal",

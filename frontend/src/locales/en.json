@@ -452,6 +452,10 @@
       "excellent": "Excellent",
       "superior": "Superior"
     },
+    "proApiWarning": {
+      "title": "Feature not available with Hevy PRO API key login mode!",
+      "message": "To track body measurements, you need to login with Hevy username/password login method since that method uses the body measurement API endpoints."
+    },
     "currentWeight": "Current Weight",
     "bmi": "BMI",
     "bfp": "Body Fat %",
