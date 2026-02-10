@@ -198,24 +198,8 @@ function analyzeStrengthProgress(ex: any) {
     };
   }
   
-  // Filter out sessions older than 60 days for analysis
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - 60);
-  const recentDays = days.filter(d => new Date(d) >= cutoffDate);
-  
-  // Need at least the configured number of recent sessions for analysis
-  if (recentDays.length < minSessions) {
-    return {
-      type: "insufficient",
-      message: t("exercises.insights.insufficient", {
-        sessions: recentDays.length,
-        needed: minSessions
-      })
-    };
-  }
-  
-  // Get last N recent sessions (based on setting)
-  const lastNDays = recentDays.slice(-minSessions);
+  // Get last N sessions (regardless of when they were done)
+  const lastNDays = days.slice(-minSessions);
   
   // Handle cardio vs strength exercises differently
   const isCardio = ex.exerciseType === "cardio";
