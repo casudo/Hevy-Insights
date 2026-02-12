@@ -15,7 +15,7 @@ import {
   Filler
 } from "chart.js";
 import { bodyMeasurementService } from "../services/api";
-import { formatWeight, getWeightUnit, formatDate } from "../utils/formatters";
+import { formatWeightPrecise, getWeightUnit, formatDate } from "../utils/formatters";
 import { useHevyCache } from "../stores/hevy_cache";
 
 // Register Chart.js components
@@ -75,6 +75,9 @@ const today = new Date().toISOString().split("T")[0];
 // Computed Properties
 const userAccount = computed(() => store.userAccount);
 
+// Check if user is using PRO API key
+const isUsingProApi = computed(() => !!localStorage.getItem("hevy_api_key"));
+
 const sortedMeasurements = computed(() => {
   return [...measurements.value].sort((a, b) => {
     const dateA = new Date(a.date).getTime();
@@ -91,7 +94,7 @@ const currentWeight = computed(() => {
 
 const currentWeightFormatted = computed(() => {
   if (currentWeight.value === 0) return "-";
-  return `${formatWeight(currentWeight.value)} ${getWeightUnit()}`;
+  return `${formatWeightPrecise(currentWeight.value)} ${getWeightUnit()}`;
 });
 
 const bmiValue = computed(() => {
@@ -128,7 +131,7 @@ const weightTrend = computed(() => {
   if (Math.abs(diff) < 0.1) return t("global.sw.stable");
   
   const sign = diff > 0 ? "↑" : "↓";
-  return `${sign} ${formatWeight(Math.abs(diff))} ${getWeightUnit()}`;
+  return `${sign} ${formatWeightPrecise(Math.abs(diff))} ${getWeightUnit()}`;
 });
 
 const weightChangeFormatted = computed(() => {
@@ -143,7 +146,7 @@ const weightChangeFormatted = computed(() => {
   const diff = latest - earliest;
   
   const sign = diff > 0 ? "+" : "";
-  return `${sign}${formatWeight(diff)} ${getWeightUnit()}`;
+  return `${sign}${formatWeightPrecise(diff)} ${getWeightUnit()}`;
 });
 
 const earliestDate = computed(() => {
@@ -299,7 +302,7 @@ const chartData = computed(() => {
   });
 
   const labels = sorted.map(m => formatDate(m.date));
-  const data = sorted.map(m => parseFloat(formatWeight(m.weight_kg)));
+  const data = sorted.map(m => parseFloat(formatWeightPrecise(m.weight_kg)));
 
   return {
     labels,
@@ -432,8 +435,8 @@ const formatDateDisplay = (measurement: any) => {
   return measurement.date ? formatDate(measurement.date) : "-";
 };
 
-const formatWeightValue = (weightKg: number) => {
-  return `${formatWeight(weightKg)} ${getWeightUnit()}`;
+const formatWeightPreciseValue = (weightKg: number) => {
+  return `${formatWeightPrecise(weightKg)} ${getWeightUnit()}`;
 };
 
 // https://de.wikipedia.org/wiki/Body-Mass-Index
@@ -473,7 +476,7 @@ const getWeightChange = (index: number) => {
   if (Math.abs(diff) < 0.1) return "—";
   
   const sign = diff > 0 ? "+" : "";
-  return `${sign}${formatWeight(diff)} ${getWeightUnit()}`;
+  return `${sign}${formatWeightPrecise(diff)} ${getWeightUnit()}`;
 };
 
 const getChangeClass = (index: number) => {
@@ -508,7 +511,7 @@ onMounted(async () => {
           <p class="subtitle">{{ t("bodyMeasurements.subtitle") }}</p>
         </div>
         <div class="header-actions">
-          <button class="add-btn" @click="showAddModal = true">
+          <button class="add-btn" @click="showAddModal = true" :disabled="isUsingProApi">
             <span>+</span>
             {{ t("bodyMeasurements.addMeasurement") }}
           </button>
@@ -525,6 +528,15 @@ onMounted(async () => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- PRO API Warning Banner -->
+    <div v-if="isUsingProApi" class="pro-api-warning">
+      <div class="warning-icon">⚠️</div>
+      <div class="warning-content">
+        <strong>{{ t("bodyMeasurements.proApiWarning.title") }}</strong>
+        <p>{{ t("bodyMeasurements.proApiWarning.message") }}</p>
       </div>
     </div>
 
@@ -731,7 +743,7 @@ onMounted(async () => {
               <tbody>
                 <tr v-for="(measurement, index) in sortedMeasurements" :key="measurement.id">
                   <td>{{ formatDateDisplay(measurement) }}</td>
-                  <td class="weight-cell">{{ formatWeightValue(measurement.weight_kg) }}</td>
+                  <td class="weight-cell">{{ formatWeightPreciseValue(measurement.weight_kg) }}</td>
                   <td>{{ calculateBMI(measurement.weight_kg) }}</td>
                   <td>{{ getBodyFat(measurement.date) }}</td>
                   <td>{{ calculateFFMI(measurement.weight_kg, measurement.date) }}</td>
@@ -838,6 +850,43 @@ onMounted(async () => {
   margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-color);
+}
+
+/* PRO API Warning Banner */
+.pro-api-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  background: rgba(245, 158, 11, 0.1);
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  color: #fbbf24;
+}
+
+.warning-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.warning-content {
+  flex: 1;
+}
+
+.warning-content strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  color: #fbbf24;
+}
+
+.warning-content p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #fcd34d;
+  line-height: 1.5;
 }
 
 .header-content {

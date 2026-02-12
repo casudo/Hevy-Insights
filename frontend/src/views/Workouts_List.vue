@@ -153,7 +153,9 @@ function getLocalizedPRType(prType: string): string {
 const scrollToDay = async (day: string) => {
   // Find workouts in the current filtered/search list that match the date
   const workouts = filteredAndSearchedWorkouts.value.filter((w: any) => {
-    const key = new Date((w.start_time || 0) * 1000).toISOString().slice(0,10);
+    const date = new Date((w.start_time || 0) * 1000);
+    // Use local date instead of UTC to avoid timezone grouping issues
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     return key === day;
   });
   for (const w of workouts) expanded.value[w.id] = true;
@@ -240,7 +242,7 @@ watch(() => route.query.day, async (d) => {
     </div>
 
     <div v-else class="list">
-      <div v-for="workout in filteredAndSearchedWorkouts" :key="workout.id" class="item" :data-day="new Date(workout.start_time * 1000).toISOString().slice(0,10)">
+      <div v-for="workout in filteredAndSearchedWorkouts" :key="workout.id" class="item" :data-day="(() => { const d = new Date(workout.start_time * 1000); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })()">
         <!-- Collapsed line -->
         <button class="item-toggle" @click="toggleItem(workout.id)">
           <div class="line">

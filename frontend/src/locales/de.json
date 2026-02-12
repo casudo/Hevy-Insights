@@ -117,6 +117,7 @@
       "muscleRegions": "Muskelregionen",
       "muscleRegionsDescription": "Gestapelte Aufschlüsselung nach Zeitraum",
       "calendarWeek": "KW",
+      "notSupported": "Dieses Diagramm ist nicht verfügbar, wenn du den Hevy PRO API Key verwendest. Dieses Feature erfordert die Anmeldung mit Benutzername/Passwort (OAuth).",     
       "muscleFilters": {
         "groups": "GRUPPEN",
         "muscles": "MUSKEL"
@@ -186,11 +187,15 @@
     },
     "graphs": {
       "maxWeight": "Max. Gewicht (Zeitverlauf)",
+      "repVolume": "Wiederholungsvolumen (Zeitverlauf)",
+      "totalReps": "Gesamtwiederholungen",
       "avgVolume": "Durchschn. Volumen pro Satz",
       "weightVsReps": "Max. Gewicht vs. Wiederholungen",
       "volumeSession": "Volumen (Sitzung - alle Sätze)",
       "labels": {
         "maxWeight": "Max. Gewicht",
+        "repVolume": "Wiederholungsvolumen",
+        "totalReps": "Gesamtwiederholungen",
         "avgVolume": "Durchschn. Volumen/Satz"
       },
       "axis": {
@@ -448,6 +453,10 @@
       "aboveAverage": "Überdurchschnittlich",
       "excellent": "Exzellent",
       "superior": "Überlegen"
+    },
+    "proApiWarning": {
+      "title": "Feature nicht verfügbar mit Hevy PRO API-Key Login-Modus!",
+      "message": "Um Körpermaße zu verfolgen, musst du dich mit der Hevy Benutzername/Passwort-Anmeldemethode anmelden, da diese Methode die API-Endpunkte für Körpermaße verwendet."
     },
     "currentWeight": "Aktuelles Gewicht",
     "bmi": "BMI",

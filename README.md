@@ -129,6 +129,10 @@ You can decide based on your needs which login method suits you best:
 | Plateu Detection             | ✅ Yes                        | ✅ Yes                        | ✅ Yes                        |
 | Workout Streaks              | ✅ Yes                        | ✅ Yes                        | ❌ No                         |
 | Calories & Heart Rate Data   | ✅ Yes                        | ❌ No                         | ❌ No                         |
+| Body Measurements            | ✅ Yes                        | ❌ No                         | ❌ No                         |
+
+> [!IMPORTANT]
+> **Why the differences in the login modes?** It's because not every login method provides the same data to use. The [Hevy PRO API](https://api.hevyapp.com/docs/#/) key login only provides data for a small amount of features compared to what you can see inside the Hevy app (which is using the **Hevy Credentials** login method). The CSV upload is the most basic one, it only provides the data that is contained in the CSV file you can export from the Hevy app, which is by far not everything that the Hevy API provides.
 
 # Usage
 
@@ -196,11 +200,14 @@ Clone/download the repository and follow these steps:
 - Better tablet screen responsiveness
 - Dashboard recent PRs: Add unit (seconds/formatted minutes) for "Best Duration" stat
 - Workouts pages: PR "best duration" not localized and no unit shown
+- Plateu detection not working correctly in Hevy PRO API key login mode
 - Add ability on profile page to change account privacy settings (public/private) and opt-in/out of settings like "comments_push_enabled"
 - "Clear all" button to flush localStorage?
 - Switch `requests` library to `httpx` to be consistent?
 - Let the user choose the primary and secondary colors in settings
 - Switch to per page localization instead of using `global.{n}.{y}` and reusing the same string from other pages
+- Support for distance-based workouts (running, cycling, etc.) and their specific stats (e.g., pace, distance)
+  - Seperate distance stats for duraion-based workouts (e.g. Dead Hang)
 
 ---
 

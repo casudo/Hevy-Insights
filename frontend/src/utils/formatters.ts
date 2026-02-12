@@ -4,7 +4,7 @@ import { useI18n } from "vue-i18n";
 /**
  * Convert weight from kg to the user's preferred unit
  * @param weightKg - Weight in kilograms
- * @returns Formatted weight in user's preferred unit
+ * @returns Formatted weight in user's preferred unit (1 decimal place)
 **/
 export function formatWeight(weightKg: number): string {
   const store = useHevyCache();
@@ -13,6 +13,20 @@ export function formatWeight(weightKg: number): string {
     return lbs.toFixed(1);
   }
   return weightKg.toFixed(1);
+}
+
+/**
+ * Convert weight from kg to the user's preferred unit with higher precision
+ * @param weightKg - Weight in kilograms
+ * @returns Formatted weight in user's preferred unit (2 decimal places)
+**/
+export function formatWeightPrecise(weightKg: number): string {
+  const store = useHevyCache();
+  if (store.weightUnit === "lbs") {
+    const lbs = weightKg * 2.20462;
+    return lbs.toFixed(2);
+  }
+  return weightKg.toFixed(2);
 }
 
 /**

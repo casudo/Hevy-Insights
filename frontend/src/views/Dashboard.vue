@@ -42,6 +42,9 @@ const loading = computed(() => store.isLoadingWorkouts || store.isLoadingUser);
 const userAccount = computed(() => store.userAccount);
 const workouts = computed(() => store.workouts);
 
+// Detect if user is using PRO API Key mode
+const isProApiMode = computed(() => !!localStorage.getItem("hevy_api_key"));
+
 // Collapsible sections state (saved to localStorage)
 const expandedSections = ref<Record<string, boolean>>({
   plateaus: true, // Plateaus expanded by default
@@ -119,10 +122,12 @@ const startOfWeek = (d: Date) => {
 };
 const weekKey = (d: Date) => {
   const m = startOfWeek(d);
-  return m.toISOString().slice(0,10);
+  // Use local date for week grouping
+  return `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}-${String(m.getDate()).padStart(2, '0')}`;
 };
 const monthKey = (d: Date) => {
-  return d.toISOString().slice(0,7); // "YYYY-MM"
+  // Use local date for month grouping
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; // "YYYY-MM"
 };
 
 // Map individual muscles to larger groups
@@ -371,12 +376,13 @@ const weeklyRhythm_Data = computed(() => {
 
 // ========== CALENDAR HEATMAP (12-Month Contribution Graph) ==========
 
-// Group workouts by date (YYYY-MM-DD)
+// Group workouts by date (YYYY-MM-DD) using local timezone
 const workoutsByDay = computed(() => {
   const map: Record<string, number> = {};
   for (const w of workouts.value) {
     const date = new Date((w.start_time || 0) * 1000);
-    const dayKey = date.toISOString().slice(0, 10);
+    // Use local date instead of UTC to avoid timezone grouping issues
+    const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     map[dayKey] = (map[dayKey] || 0) + 1;
   }
   return map;
@@ -658,7 +664,8 @@ const plateauExercises = computed(() => {
   
   for (const w of workouts.value) {
     const date = new Date((w.start_time || 0) * 1000);
-    const dayKey = date.toISOString().slice(0,10);
+    // Use local date instead of UTC to avoid timezone grouping issues
+    const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     
     for (const ex of (w.exercises || [])) {
       const title = ex.title || "Unknown Exercise";
@@ -757,7 +764,8 @@ const recentPRs = computed(() => {
   
   for (const w of workouts.value) {
     const date = new Date((w.start_time || 0) * 1000);
-    const dateStr = date.toISOString().slice(0, 10); // TODO: Use localized date settings from Settings.vue
+    // Use local date instead of UTC for display consistency
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     
     for (const ex of (w.exercises || [])) {
       const exerciseName = ex.title || "Unknown Exercise";
@@ -1389,7 +1397,12 @@ onMounted(() => {
                   </div>
                 </div>
                 <div class="chart-body">
+                  <div v-if="isProApiMode" class="chart-info-message">
+                    <span class="info-icon">ℹ️</span>
+                    <p>{{ $t('dashboard.charts.notSupported') }}</p>
+                  </div>
                   <Line 
+                    v-else
                     :key="'prs-' + prsOverTime_Range" 
                     :data="{ 
                       labels: prsOverTime_Data.labels, 
@@ -1605,7 +1618,12 @@ onMounted(() => {
                   </div>
                 </div>
                 <div class="chart-body doughnut-body">
+                  <div v-if="isProApiMode" class="chart-info-message">
+                    <span class="info-icon">ℹ️</span>
+                    <p>{{ $t('dashboard.charts.notSupported') }}</p>
+                  </div>
                   <Doughnut 
+                    v-else
                     :key="'muscle-' + muscleDistribution_Range + '-' + muscleDistribution_Grouping"
                     :data="{
                       labels: muscleDistribution_Data.labels,
@@ -1646,7 +1664,12 @@ onMounted(() => {
                   </div>
                 </div>
                 <div class="chart-body">
+                  <div v-if="isProApiMode" class="chart-info-message">
+                    <span class="info-icon">ℹ️</span>
+                    <p>{{ $t('dashboard.charts.notSupported') }}</p>
+                  </div>
                   <Bar
+                    v-else
                     :key="'muscle-regions-' + muscleRegions_Range + '-' + muscleRegions_Display + '-' + muscleRegions_Grouping"
                     :data="muscleRegions_Data"
                     :options="{
@@ -2473,6 +2496,32 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.chart-info-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  border-left: 4px solid #06b6d4;
+  border-radius: 12px;
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.chart-info-message .info-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.chart-info-message p {
+  margin: 0;
+  color: #9dd7e5;
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
 .doughnut-body {
