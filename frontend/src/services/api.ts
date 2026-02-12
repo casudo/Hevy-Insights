@@ -96,7 +96,7 @@ export const authService = {
   },
 
   async validateApiKey(apiKey: string) {
-    const response = await api.post("/validate-api-key", {
+    const response = await api.post("/validate_api_key", {
       api_key: apiKey,
     });
     return response.data;

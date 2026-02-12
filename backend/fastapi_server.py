@@ -266,7 +266,7 @@ def refresh_token(token_request: RefreshTokenRequest, request: Request) -> Login
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
-@app.post("/api/validate-api-key", response_model=ValidateApiKeyResponse, tags=["Authentication"])
+@app.post("/api/validate_api_key", response_model=ValidateApiKeyResponse, tags=["Authentication"])
 def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
     """
     Validate a Hevy PRO API key.
