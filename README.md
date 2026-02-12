@@ -200,6 +200,7 @@ Clone/download the repository and follow these steps:
 - Better tablet screen responsiveness
 - Dashboard recent PRs: Add unit (seconds/formatted minutes) for "Best Duration" stat
 - Workouts pages: PR "best duration" not localized and no unit shown
+- Plateu detection not working correctly in Hevy PRO API key login mode
 - Add ability on profile page to change account privacy settings (public/private) and opt-in/out of settings like "comments_push_enabled"
 - "Clear all" button to flush localStorage?
 - Switch `requests` library to `httpx` to be consistent?
