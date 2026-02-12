@@ -12,6 +12,7 @@ services:
     environment:
       - X_API_KEY=klean_kanteen_insulated
       - LOG_LEVEL=INFO
+      - RECAPTCHA_SITE_KEY=6LfkQG0jAAAAANTrIkVXKPfSPHyJnt4hYPWqxh0R
     hostname: hevy_backend
     networks:
       - YOUR_EXISTING_NETWORK
