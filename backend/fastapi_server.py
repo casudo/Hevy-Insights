@@ -99,24 +99,32 @@ class HealthResponse(BaseModel):
     status: str
 
 
-### Helper function to get client with either auth token or PRO API key
-def get_hevy_client(auth_token: Optional[str] = None, api_key: Optional[str] = None) -> HevyClient:
-    """Creates a HevyClient with either auth token or API key.
+### Helper function to get client with OAuth2 Bearer token or PRO API key
+def get_hevy_client(authorization: Optional[str] = None, api_key: Optional[str] = None) -> HevyClient:
+    """Creates a HevyClient with OAuth2 Bearer token or API key.
 
     Args:
-        auth_token (Optional[str]): The auth-token header value.
-        api_key (Optional[str]): The pro-api-key header value.
+        authorization (Optional[str]): The Authorization header value (e.g., "Bearer <token>").
+        api_key (Optional[str]): The api-key header value for PRO users.
 
     Raises:
-        HTTPException: If neither auth_token nor api_key header is provided.
+        HTTPException: If neither authorization nor api_key header is provided.
 
     Returns:
         HevyClient: Configured Hevy client.
     """
-    if not auth_token and not api_key:
-        raise HTTPException(status_code=401, detail="Missing authentication: provide either auth-token or pro-api-key header")
+    ### Extract Bearer token from Authorization header
+    access_token = None
+    if authorization:
+        if authorization.startswith("Bearer "):
+            access_token = authorization[7:]  # Remove "Bearer " prefix
+        else:
+            access_token = authorization  # Fallback for direct token
+    
+    if not access_token and not api_key:
+        raise HTTPException(status_code=401, detail="Missing authentication: provide either Authorization Bearer token or api-key header")
 
-    return HevyClient(auth_token=auth_token, api_key=api_key)
+    return HevyClient(access_token=access_token, api_key=api_key)
 
 
 ### Helper function to load sample data for demo mode
