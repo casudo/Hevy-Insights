@@ -117,6 +117,7 @@
       "muscleRegions": "Regiones Musculares",
       "muscleRegionsDescription": "Desglose acumulado por período",
       "calendarWeek": "Sem",
+      "notSupported": "Este gráfico no está disponible al usar la clave API de Hevy PRO. Esta función requiere inicio de sesión con nombre de usuario/contraseña (OAuth).",
       "muscleFilters": {
         "groups": "GRUPOS",
         "muscles": "MÚSCULO"
@@ -186,11 +187,15 @@
     },
     "graphs": {
       "maxWeight": "Peso Máximo (Tiempo)",
+      "repVolume": "Volumen de Repeticiones (Tiempo)",
+      "totalReps": "Repeticiones Totales",
       "avgVolume": "Volumen Promedio por Serie",
       "weightVsReps": "Peso Máximo vs Reps",
       "volumeSession": "Volumen (Sesión - todas las series)",
       "labels": {
         "maxWeight": "Peso Máximo",
+        "repVolume": "Volumen de Reps",
+        "totalReps": "Repeticiones Totales",
         "avgVolume": "Volumen Prom./Serie"
       },
       "axis": {
@@ -449,6 +454,10 @@
       "excellent": "Excelente",
       "superior": "Superior"
     },
+    "proApiWarning": {
+      "title": "Funcionalidad no disponible con el modo de inicio de sesión con clave API de Hevy PRO.",
+      "message": "Para rastrear las medidas corporales, debes iniciar sesión con el método de nombre de usuario/contraseña de Hevy, ya que ese método utiliza los puntos finales de la API de medidas corporales."
+    },    
     "currentWeight": "Peso Actual",
     "bmi": "IMC",
     "bfp": "Porcentaje de Grasa Corporal",

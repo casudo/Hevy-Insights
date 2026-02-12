@@ -1,7 +1,7 @@
 /**
  * Exercise Type Detector Utility
  * 
- * Determines if an exercise is strength-based (weight/reps) or cardio/time-based (distance/duration).
+ * Determines if an exercise is strength-based (weight/reps) or cardio/time-based (distance/duration) or if it is a bodyweight exercise.
  * This helps display appropriate metrics and graphs for each exercise type.
  * https://github.com/casudo/Hevy-Insights/issues/26
 **/
@@ -136,4 +136,39 @@ export function formatDistance(km: number | null | undefined): string {
   }
   
   return `${km.toFixed(2)} km`;
+}
+
+/**
+ * Detects if an exercise is bodyweight-only (reps without weight).
+ * 
+ * This is needed for Hevy PRO API which doesn't include the "exercise_type" field in the API response.
+ * Bodyweight exercises have reps but no weight.
+ * 
+ * Examples: Pull Up, Chin Up, Dip, Push Up (without "Weighted" in title)
+ * 
+ * @param exercise - Exercise object containing sets
+ * @returns true if exercise is bodyweight-only
+**/
+export function isBodyweightExercise(exercise: Exercise): boolean {
+  if (!exercise?.sets || exercise.sets.length === 0) {
+    return false;
+  }
+
+  let hasReps = false;
+  let hasWeight = false;
+
+  for (const set of exercise.sets) {
+    const reps = set.reps ?? 0;
+    const weight = (set as any).weight ?? 0;
+    
+    if (reps > 0) {
+      hasReps = true;
+    }
+    if (weight > 0) {
+      hasWeight = true;
+    }
+  }
+
+  // Bodyweight exercise: has reps but no weight
+  return hasReps && !hasWeight;
 }

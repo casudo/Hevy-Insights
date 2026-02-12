@@ -117,6 +117,7 @@
       "muscleRegions": "Muscle Regions",
       "muscleRegionsDescription": "Stacked breakdown by period",
       "calendarWeek": "CW",
+      "notSupported": "This chart is not available when using Hevy PRO API Key. This feature requires username/password (OAuth) login.",
       "muscleFilters": {
         "groups": "GROUPS",
         "muscles": "MUSCLE"
@@ -186,11 +187,15 @@
     },
     "graphs": {
       "maxWeight": "Max Weight (Over Time)",
+      "repVolume": "Rep Volume (Over Time)",
+      "totalReps": "Total Reps",
       "avgVolume": "Avg Volume per Set",
       "weightVsReps": "Max Weight vs Reps",
       "volumeSession": "Volume (Session - all sets that day)",
       "labels": {
         "maxWeight": "Max Weight",
+        "repVolume": "Rep Volume",
+        "totalReps": "Total Reps",
         "avgVolume": "Avg Volume per Set"
       },
       "axis": {
@@ -286,9 +291,9 @@
     },
     "plateauDetection": {
       "title": "Plateau Detection",
-      "description": "Customize how many of your latest workouts should be used to detect plateaus",
+      "description": "Customize how many recent sessions to analyze for plateau detection",
       "sessionsLabel": "Number of sessions to analyze:",
-      "hint": "Analyze the last N sessions to detect plateaus (minimum 3, maximum 100). Default is 5."
+      "hint": "Analyze your last N sessions to detect plateaus (minimum 3, maximum 100). Default is 5."
     },
     "updateCheck": {
       "title": "Update Notifications",
@@ -448,6 +453,10 @@
       "aboveAverage": "Above Average",
       "excellent": "Excellent",
       "superior": "Superior"
+    },
+    "proApiWarning": {
+      "title": "Feature not available with Hevy PRO API key login mode!",
+      "message": "To track body measurements, you need to login with Hevy username/password login method since that method uses the body measurement API endpoints."
     },
     "currentWeight": "Current Weight",
     "bmi": "BMI",

@@ -222,8 +222,8 @@ export function calculatePRsGrouped(
   for (const workout of sorted) {
     const date = new Date(workout.start_time * 1000);
     const periodKey = groupBy === "week" 
-      ? startOfWeek(date).toISOString().slice(0, 10) // Week start date (Monday)
-      : date.toISOString().slice(0, 7);  // YYYY-MM for month
+      ? (() => { const w = startOfWeek(date); return `${w.getFullYear()}-${String(w.getMonth() + 1).padStart(2, '0')}-${String(w.getDate()).padStart(2, '0')}`; })() // Week start date (Monday)
+      : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;  // YYYY-MM for month
     
     let prsInWorkout = 0;
 
