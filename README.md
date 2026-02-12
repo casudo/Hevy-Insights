@@ -45,7 +45,7 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 # Features
 
 - **Authentication**: Multiple login options for flexibility:
-  - **Hevy Credentials**: Login with your Hevy username/email and password (no PRO membership required)
+  - **Hevy Credentials (OAuth2)**: Login with your Hevy username/email and password using OAuth2 with automatic reCAPTCHA v3 handling (no PRO membership required)
   - **Hevy PRO API Key**: Use your revokable Hevy PRO API key from [hevy.com/settings?developer](https://hevy.com/settings?developer)
   - **CSV Upload**: Upload your exported workout CSV file from the Hevy app
   - All credentials are stored in your browser's local storage **only**
@@ -60,7 +60,7 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 
 ## Plateau & Strength Detection
 
-Hevy Insights includes an intelligent analysis system that tracks your performance across the **last 5 sessions** for each exercise and provides real-time feedback:
+Hevy Insights includes an intelligent analysis system that tracks your performance across the last 5 sessions (configurable) for each exercise and provides real-time feedback:
 
 ### Detection Types <!-- omit from toc -->
 
@@ -80,7 +80,7 @@ Hevy Insights includes an intelligent analysis system that tracks your performan
 
 The analysis algorithm:
 
-1. Collects data from your last 5 workout sessions for each exercise
+1. Collects data from your last N workout sessions for each exercise
 2. Tracks the **maximum weight** and **reps at max weight** for each session
 3. Compares the first half of sessions against the second half to identify trends
 4. Displays a colored badge on each exercise card with the current status
@@ -196,7 +196,6 @@ Clone/download the repository and follow these steps:
 - Resort/group CSS styles better
 - Dashboard: Top stats: Display them more in rows instead of big "buttons". Maybe like "🏋️ 25 Total Workouts * 💪 282.741,5 kg Total Volume * ⏱️ 34h 15m Total Time Trained"
 - CSV upload: PRs not shown and muscle regions missing
-- [Debounce typeahead search boxes](https://github.com/casudo/Hevy-Insights/issues/29)
 - To get more space on mobile: Dashboard charts: Hide Filters. Add something similar to the „i“ button which shows the filters
 - Better tablet screen responsiveness
 - Dashboard recent PRs: Add unit (seconds/formatted minutes) for "Best Duration" stat
@@ -214,20 +213,23 @@ Clone/download the repository and follow these steps:
 # Technical Documentation
 
 > [!NOTE]
-> As of 19.12.2025, **v1.3.0**
+> As of February 2026, **v1.8.2**
 
 ## Project Structure
 
 ```bash
 hevy-insights/
 ├── backend/                   # Backend Components
+│   ├── .dockerignore          # Docker ignore file for backend
+│   ├── Dockerfile_backend     # Dockerfile for backend
 │   ├── fastapi_server.py      # FastAPI server with REST endpoints
 │   ├── hevy_api.py            # Hevy API module
+│   ├── hevy_recaptcha.py      # reCAPTCHA v3 automation via Playwright
 │   └── requirements.txt       # Python backend dependencies
 └── frontend/                  # Frontend Components
     ├── public/                # Static assets
     ├── src/                   # Vue 3 TypeScript application
-    │   ├── locales/          # i18n language files
+    │   ├── locales/           # i18n language files
     │   ├── router/            # Vue Router configuration with auth guards
     │   │   └── index.ts       # Router entry point
     │   ├── services/          # API communication layer (Axios)
@@ -236,11 +238,15 @@ hevy-insights/
     │   │   └── hevy_cache.ts  # Hevy data caching
     │   ├── utils/             # Utility functions
     │   │   ├── csvCalculator.ts  # CSV data calculation 
-    │   │   └── csvParser.ts   # CSV data parsing
+    │   │   ├── csvParser.ts   # CSV data parsing
+    │   │   ├── exerciseTypeDetector.ts  # Exercise type detection logic
+    │   │   └── formatter.ts   # Data formatting functions
     │   ├── views/             # Page components (Login, Dashboard, Workouts, ...)
     │   ├── App.vue            # Root Vue component
     │   ├── main.ts            # Vue app entry point
     │   └── style.css          # Global styles
+    ├── .dockerignore          # Docker ignore file for frontend
+    ├── Dockerfile_frontend    # Dockerfile for frontend
     ├── index.html             # HTML entry point
     ├── nginx.conf             # Nginx configuration for production
     ├── package-lock.json      # npm package lock file
@@ -255,20 +261,31 @@ hevy-insights/
 
 - **index.html**: Browser loads this HTML document first. It defines the root node `<div id="app"></div>` and includes `<script type="module" src="/src/main.ts">`.
 - **main.ts**: Entry script runs. Vite serves ES modules and applies HMR in dev. We `createApp(App)`, install `Pinia` and the `Router`, then `mount("#app")`.
-- **App.vue**: Root component renders the global shell (fixed sidebar + main). On mount and after each route change it checks `localStorage` for `hevy_auth_token` to toggle sidebar visibility and protect routes.
+- **App.vue**: Root component renders the global shell (fixed sidebar + main). On mount and after each route change it checks `localStorage` for `hevy_access_token` to toggle sidebar visibility and protect routes.
 - **Router**: Resolves the current URL (`/login`, `/dashboard`, `/workouts-card`, `/workouts-list`) and renders the matched view inside `<router-view />`. Auth guards prevent accessing protected routes without a token.
 - **View Components**: The matched page component (`Login.vue`, `Dashboard.vue`, `Workouts_Card.vue`, `.....vue`) runs `setup()` and lifecycle hooks (`onMounted`).
 - **Pinia Store** (*frontend/src/stores/hevy_cache.ts*): Centralized state with 5‑minute caching for workouts (`workoutsLastFetched`). Exposes actions `fetchUserAccount()`, `fetchWorkouts(force)` and getters like `username`, `hasWorkouts`. Prevents redundant API calls when navigating.
-- **Axios Service** (*frontend/src/services/api.ts*): Configures base URL and injects the `auth-token` header via interceptors. All frontend API calls to the backend go through these typed helpers.
-- **Backend** (FastAPI): Serves `/api` endpoints. Validates `auth-token` and proxies requests to the official Hevy API. Frontend receives JSON responses and Vue reactivity updates the UI.
+- **Axios Service** (*frontend/src/services/api.ts*): Configures base URL and injects authentication headers (`Authorization: Bearer <token>` or `api-key: <key>`) via interceptors. Includes automatic OAuth2 token refresh on 401 errors. All frontend API calls to the backend go through these typed helpers.
+- **Backend** (FastAPI): Serves `/api` endpoints. Supports dual authentication (OAuth2 Bearer tokens or PRO API keys) and proxies requests to the official Hevy API. Frontend receives JSON responses and Vue reactivity updates the UI.
 
 ### API Authentication Flow
 
+**OAuth2 Authentication (Credentials):**
+
 1. User logs in via `/api/login` endpoint with Hevy credentials
-2. Backend receives `auth_token` from Hevy API
-3. Frontend stores token in localStorage
-4. Subsequent API requests include token in `auth-token` header
-5. Backend uses token to authenticate requests to Hevy API  
+2. Backend automatically generates reCAPTCHA v3 token using Playwright (headless Chrome)
+3. Backend authenticates with Hevy API using OAuth2 and receives `access_token` + `refresh_token`
+4. Frontend stores tokens in localStorage (`hevy_access_token`, `hevy_refresh_token`, `hevy_token_expires_at`)
+5. Subsequent API requests include `Authorization: Bearer <access_token>` header
+6. On 401 errors, frontend automatically refreshes token via `/api/refresh_token` and retries request
+7. Backend uses access token to authenticate requests to Hevy API
+
+**PRO API Key Authentication:**
+
+1. User validates API key via `/api/validate_api_key` endpoint
+2. Frontend stores API key in localStorage (`hevy_api_key`)
+3. Subsequent API requests include `api-key: <key>` header
+4. Backend routes requests to Hevy PRO API endpoints
 
 ## API in Dev vs Prod
 

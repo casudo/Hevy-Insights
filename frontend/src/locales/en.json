@@ -9,6 +9,7 @@
       "passwordPlaceholder": "Enter your password",
       "loginButton": "Login",
       "loggingIn": "Logging in...",
+      "waitText": "Login is taking longer than usual. Obtaining token...",
       "errors": {
         "emptyFields": "Please enter both username/email and password",
         "loginFailed": "Login failed. Please try again.",

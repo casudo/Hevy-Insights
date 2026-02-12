@@ -9,6 +9,7 @@
       "passwordPlaceholder": "Introduce tu contraseña",
       "loginButton": "Iniciar Sesión",
       "loggingIn": "Iniciando sesión...",
+      "waitText": "El inicio de sesión está tardando más de lo habitual. Obteniendo token...",
       "errors": {
         "emptyFields": "Por favor, introduce usuario/email y contraseña",
         "loginFailed": "Error al iniciar sesión. Inténtalo de nuevo.",

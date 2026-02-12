@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional
 from hevy_api import HevyClient, HevyError
+from hevy_recaptcha import get_recaptcha_token, invalidate_recaptcha_cache
 from dotenv import load_dotenv
 from os import getenv
 import logging
@@ -35,14 +36,14 @@ if DEMO_MODE:
     logging.warning("=" * 80)
 
 ### Version check configuration
-CURRENT_VERSION = "1.8.1"
+CURRENT_VERSION = "1.8.2"
 GITHUB_REPO = "casudo/Hevy-Insights"
 version_cache = {"latest_version": None, "checked_at": None}
 
 app = FastAPI(
     title="Hevy Insights API",
     description="Backend API for Hevy Insights",
-    version="1.3.1",
+    version="1.4.0",
     docs_url="/api/docs",  # Swagger
 )
 ### Initialize rate limiter
@@ -69,19 +70,16 @@ class LoginRequest(BaseModel):
 
 
 class LoginResponse(BaseModel):
-    auth_token: str
+    access_token: str  # OAuth2 access token
     user_id: str
     username: Optional[str] = None
     email: Optional[str] = None
+    refresh_token: Optional[str] = None  # OAuth2 refresh token for token renewal
+    expires_at: Optional[str] = None  # Token expiration timestamp
 
 
-class ValidateTokenRequest(BaseModel):
-    auth_token: str
-
-
-class ValidateTokenResponse(BaseModel):
-    valid: bool
-    error: Optional[str] = None
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str = Field(..., description="OAuth2 refresh token")
 
 
 class ValidateApiKeyRequest(BaseModel):
@@ -102,24 +100,32 @@ class HealthResponse(BaseModel):
     status: str
 
 
-### Helper function to get client with either auth token or PRO API key
-def get_hevy_client(auth_token: Optional[str] = None, api_key: Optional[str] = None) -> HevyClient:
-    """Creates a HevyClient with either auth token or API key.
+### Helper function to get client with OAuth2 Bearer token or PRO API key
+def get_hevy_client(authorization: Optional[str] = None, api_key: Optional[str] = None) -> HevyClient:
+    """Creates a HevyClient with OAuth2 Bearer token or API key.
 
     Args:
-        auth_token (Optional[str]): The auth-token header value.
-        api_key (Optional[str]): The pro-api-key header value.
+        authorization (Optional[str]): The Authorization header value (e.g., "Bearer <token>").
+        api_key (Optional[str]): The api-key header value for PRO users.
 
     Raises:
-        HTTPException: If neither auth_token nor api_key header is provided.
+        HTTPException: If neither authorization nor api_key header is provided.
 
     Returns:
         HevyClient: Configured Hevy client.
     """
-    if not auth_token and not api_key:
-        raise HTTPException(status_code=401, detail="Missing authentication: provide either auth-token or pro-api-key header")
+    ### Extract Bearer token from Authorization header
+    access_token = None
+    if authorization:
+        if authorization.startswith("Bearer "):
+            access_token = authorization[7:]  # Remove "Bearer " prefix
+        else:
+            access_token = authorization  # Fallback for direct token
+    
+    if not access_token and not api_key:
+        raise HTTPException(status_code=401, detail="Missing authentication: provide either Authorization Bearer token or api-key header")
 
-    return HevyClient(auth_token=auth_token, api_key=api_key)
+    return HevyClient(access_token=access_token, api_key=api_key)
 
 
 ### Helper function to load sample data for demo mode
@@ -161,65 +167,106 @@ def load_sample_data(filename: str) -> dict:
 
 @app.post("/api/login", response_model=LoginResponse, tags=["Authentication"])
 @limiter.limit("5/minute")  # Max 5 login attempts per minute per IP
-def login(credentials: LoginRequest, request: Request) -> LoginResponse:
+async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
     """
-    Login with Hevy credentials to obtain an authentication token.
+    Login with Hevy credentials using OAuth2 authentication.
 
     - **emailOrUsername**: Your Hevy username or email
     - **password**: Your Hevy password
 
-    Returns auth token. Rate limited to 5 attempts per minute.
+    Returns OAuth2 access token with refresh token. Rate limited to 5 attempts per minute.
     """
     ### Demo mode: accept any credentials
     if DEMO_MODE:
         logging.info("Demo mode: Login successful (any credentials accepted)")
         return LoginResponse(
-            auth_token="demo-auth-token",
+            access_token="demo-access-token",
+            refresh_token="demo-refresh-token",
             user_id="demo-user-id",
             username="demo_user",
-            email="demo_user@demo.local"
+            email="demo_user@demo.local",
+            expires_at=int((datetime.now() + timedelta(days=30)).timestamp())
         )
     
     try:
-        client = HevyClient()
-        user = client.login(credentials.emailOrUsername, credentials.password)
+        ### Step 1: Get reCAPTCHA token automatically
+        recaptcha_token = await get_recaptcha_token()
 
-        return LoginResponse(auth_token=user.auth_token, user_id=user.user_id, username=user.username, email=user.email)
+        ### Step 2: Login using OAuth2 with reCAPTCHA token
+        client = HevyClient()
+        user = client.login(credentials.emailOrUsername, credentials.password, recaptcha_token)
+        
+        return LoginResponse(
+            access_token=user.access_token,
+            refresh_token=user.refresh_token,
+            user_id=user.user_id,
+            username=user.username,
+            email=user.email,
+            expires_at=user.expires_at
+        )
 
     except HevyError as e:
         logging.error(f"Login error: {e}")
         raise HTTPException(status_code=401, detail=str(e))
     except Exception as e:
         logging.error(f"Unexpected login error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    finally:
+        ### Always invalidate cache after login attempt to prevent token reuse
+        invalidate_recaptcha_cache()
 
 
-@app.post("/api/validate-auth-token", response_model=ValidateTokenResponse, tags=["Authentication"])
-def validate_token(token_data: ValidateTokenRequest) -> ValidateTokenResponse:
+@app.post("/api/refresh_token", response_model=LoginResponse, tags=["Authentication"])
+@limiter.limit("10/minute")  # Max 10 refresh attempts per minute per IP
+def refresh_token(token_request: RefreshTokenRequest, request: Request) -> LoginResponse:
     """
-    Validate an authentication token.
+    Refresh an expired or expiring OAuth2 access token.
 
-    - **auth_token**: The token to validate
+    - **refresh_token**: The refresh token received during login
 
-    Returns validation status.
+    Returns new OAuth2 access token with updated expiration.
+    Rate limited to 10 attempts per minute.
     """
-    ### Demo mode: always return valid
+    ### Demo mode: return demo tokens
     if DEMO_MODE:
-        logging.info("Demo mode: Token validation bypassed (always valid)")
-        return ValidateTokenResponse(valid=True)
+        logging.info("Demo mode: Token refresh successful")
+        return LoginResponse(
+            access_token="demo-access-token-refreshed",
+            refresh_token="demo-refresh-token-refreshed",
+            user_id="demo-user-id",
+            username="demo_user",
+            email="demo_user@demo.local",
+            expires_at=int((datetime.now() + timedelta(days=30)).timestamp())
+        )
     
     try:
-        client = HevyClient(token_data.auth_token)
-        is_valid = client.validate_auth_token()
+        ### Refresh the access token using the refresh token
+        client = HevyClient()
+        user = client.refresh_access_token(
+            refresh_token=token_request.refresh_token,
+            current_access_token=token_request.access_token
+        )
+        
+        ### TODO: Add same response checks as in hevy_api.login()
 
-        return ValidateTokenResponse(valid=is_valid)
+        return LoginResponse(
+            access_token=user.access_token,
+            refresh_token=user.refresh_token,
+            user_id=user.user_id,
+            username=user.username,
+            email=user.email,
+            expires_at=user.expires_at
+        )
 
     except HevyError as e:
-        logging.error(f"Token validation error: {e}")
-        return ValidateTokenResponse(valid=False, error=str(e))
+        logging.error(f"Token refresh error: {e}")
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        logging.error(f"Unexpected token refresh error: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
-@app.post("/api/validate-api-key", response_model=ValidateApiKeyResponse, tags=["Authentication"])
+@app.post("/api/validate_api_key", response_model=ValidateApiKeyResponse, tags=["Authentication"])
 def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
     """
     Validate a Hevy PRO API key.
@@ -246,12 +293,13 @@ def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
 
 @app.get("/api/user/account", tags=["User"])
 def get_user_account(
-    auth_token: Optional[str] = Header(None, alias="auth-token"), api_key: Optional[str] = Header(None, alias="api-key")
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    api_key: Optional[str] = Header(None, alias="api-key")
 ) -> dict:
     """
     Get authenticated user's account information.
 
-    Requires either auth-token or api-key header.
+    Requires either Authorization Bearer token or api-key header.
     """
     ### Demo mode: return sample data
     if DEMO_MODE:
@@ -259,7 +307,7 @@ def get_user_account(
         return load_sample_data("user_account.json")
     
     try:
-        client = get_hevy_client(auth_token=auth_token, api_key=api_key)
+        client = get_hevy_client(authorization=authorization, api_key=api_key)
         account = client.get_user_account()
 
         return account
@@ -272,17 +320,17 @@ def get_user_account(
 
 @app.get("/api/workouts", tags=["Workouts"])
 def get_workouts(
-    auth_token: Optional[str] = Header(None, alias="auth-token"),
+    authorization: Optional[str] = Header(None, alias="Authorization"),
     api_key: Optional[str] = Header(None, alias="api-key"),
-    offset: int = Query(0, ge=0, description="Pagination offset (increments of 5) - for auth-token mode"),
-    username: Optional[str] = Query(None, description="Filter by username - for auth-token mode"),
+    offset: int = Query(0, ge=0, description="Pagination offset (increments of 5) - for OAuth2 mode"),
+    username: Optional[str] = Query(None, description="Filter by username - for OAuth2 mode"),
     page: int = Query(1, ge=1, description="Page number - for api-key mode"),
     page_size: int = Query(10, ge=1, le=50, description="Page size - for api-key mode"),
 ):
     """
     Get paginated workout history.
 
-    **Auth-token mode:**
+    **OAuth2 mode (Bearer token):**
     - **offset**: Pagination offset (0, 5, 10, 15, ...)
     - **username**: Username filter (required)
 
@@ -290,7 +338,7 @@ def get_workouts(
     - **page**: Page number (default: 1)
     - **page_size**: Number of workouts per page (default: 10)
 
-    Requires either auth-token or api-key header.
+    Requires either Authorization Bearer token or api-key header.
     """
     ### Demo mode: return complete sample data only on first request, empty afterwards
     if DEMO_MODE:
@@ -300,15 +348,15 @@ def get_workouts(
             return {"workouts": []}
     
     try:
-        client = get_hevy_client(auth_token=auth_token, api_key=api_key)
+        client = get_hevy_client(authorization=authorization, api_key=api_key)
 
         ### Use PRO API if API key is provided
         if api_key:
             workouts = client.get_pro_workouts(page=page, page_size=page_size)
         else:
-            ### Use free API with auth token
+            ### Use OAuth2 API with Bearer token
             if not username:
-                raise HTTPException(status_code=400, detail="username parameter is required for auth-token mode")
+                raise HTTPException(status_code=400, detail="username parameter is required for OAuth2 mode")
             workouts = client.get_workouts(username=username, offset=offset)
 
         return workouts
@@ -321,14 +369,14 @@ def get_workouts(
 
 @app.get("/api/body_measurements", tags=["Body Measurements"])
 def get_body_measurements(
-    auth_token: str = Header(..., alias="auth-token"),
+    authorization: str = Header(..., alias="Authorization"),
 ):
     """
     Get body measurements (weight tracking).
 
     Returns list of measurements with id, weight_kg, date, and created_at.
 
-    Requires auth-token header.
+    Requires Authorization Bearer token header. PRO API does not support body measurements.
     """
     ### Demo mode: return sample data
     if DEMO_MODE:
@@ -336,7 +384,9 @@ def get_body_measurements(
         return load_sample_data("body_measurements.json")
     
     try:
-        client = HevyClient(auth_token)
+        ### Extract Bearer token
+        access_token = authorization[7:] if authorization.startswith("Bearer ") else authorization
+        client = HevyClient(access_token=access_token)
         measurements = client.get_body_measurements()
         return measurements
 
@@ -349,12 +399,12 @@ def get_body_measurements(
 @app.post("/api/body_measurements_batch", tags=["Body Measurements"])
 def post_body_measurements(
     measurement: BodyMeasurementRequest,
-    auth_token: str = Header(..., alias="auth-token"),
+    authorization: str = Header(..., alias="Authorization"),
 ):
     """
     Post a new body measurement (weight tracking).
 
-    Requires auth-token header.
+    Requires Authorization Bearer token header. PRO API does not support body measurements.
 
     Args:
         measurement: Body measurement data (date and weight_kg)
@@ -365,7 +415,9 @@ def post_body_measurements(
         return {"message": "Body measurement posted successfully (demo mode)"}
     
     try:
-        client = HevyClient(auth_token)
+        ### Extract Bearer token
+        access_token = authorization[7:] if authorization.startswith("Bearer ") else authorization
+        client = HevyClient(access_token=access_token)
         client.post_body_measurements(measurement.date, measurement.weight_kg)
         return {"message": "Body measurement posted successfully"}
 

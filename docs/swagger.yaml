@@ -90,35 +90,6 @@ paths:
               schema:
                 type: string
                 example: Unauthorized
-  /validate_auth_token:
-    post:
-      tags: [Authentication]
-      summary: Validate Auth Token
-      description: Validate an "auth_token" to check if it is valid.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                authToken:
-                  type: string
-                  description: The authentication token to validate
-      responses:
-        "200":
-          description: OK - Token is valid
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  auth_token:
-                    type: string
-                    description: Returns the same token if valid
-                    example: "abc123"
-        "404":
-          description: Token is invalid
   /user/account:
     get:
       tags: [User]
