@@ -121,9 +121,11 @@ def get_hevy_client(authorization: Optional[str] = None, api_key: Optional[str] 
             access_token = authorization[7:]  # Remove "Bearer " prefix
         else:
             access_token = authorization  # Fallback for direct token
-    
+
     if not access_token and not api_key:
-        raise HTTPException(status_code=401, detail="Missing authentication: provide either Authorization Bearer token or api-key header")
+        raise HTTPException(
+            status_code=401, detail="Missing authentication: provide either Authorization Bearer token or api-key header"
+        )
 
     return HevyClient(access_token=access_token, api_key=api_key)
 
@@ -131,25 +133,25 @@ def get_hevy_client(authorization: Optional[str] = None, api_key: Optional[str] 
 ### Helper function to load sample data for demo mode
 def load_sample_data(filename: str) -> dict:
     """Load sample data from JSON file in sample_data directory.
-    
+
     Args:
         filename: Name of the JSON file (e.g., "user_account.json")
-        
+
     Returns:
         dict: Loaded JSON data
-        
+
     Raises:
         HTTPException: If file not found or invalid JSON
     """
     file_path = SAMPLE_DATA_DIR / filename
-    
+
     if not file_path.exists():
         logging.error(f"Sample data file not found: {file_path}")
         raise HTTPException(
-            status_code=500, 
-            detail=f"Demo mode enabled but sample data file '{filename}' not found. Please create it in backend/sample_data/"
+            status_code=500,
+            detail=f"Demo mode enabled but sample data file '{filename}' not found. Please create it in backend/sample_data/",
         )
-    
+
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -185,9 +187,9 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
             user_id="demo-user-id",
             username="demo_user",
             email="demo_user@demo.local",
-            expires_at=int((datetime.now() + timedelta(days=30)).timestamp())
+            expires_at=int((datetime.now() + timedelta(days=30)).timestamp()),
         )
-    
+
     try:
         ### Step 1: Get reCAPTCHA token automatically
         recaptcha_token = await get_recaptcha_token()
@@ -195,14 +197,14 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
         ### Step 2: Login using OAuth2 with reCAPTCHA token
         client = HevyClient()
         user = client.login(credentials.emailOrUsername, credentials.password, recaptcha_token)
-        
+
         return LoginResponse(
             access_token=user.access_token,
             refresh_token=user.refresh_token,
             user_id=user.user_id,
             username=user.username,
             email=user.email,
-            expires_at=user.expires_at
+            expires_at=user.expires_at,
         )
 
     except HevyError as e:
@@ -236,17 +238,16 @@ def refresh_token(token_request: RefreshTokenRequest, request: Request) -> Login
             user_id="demo-user-id",
             username="demo_user",
             email="demo_user@demo.local",
-            expires_at=int((datetime.now() + timedelta(days=30)).timestamp())
+            expires_at=int((datetime.now() + timedelta(days=30)).timestamp()),
         )
-    
+
     try:
         ### Refresh the access token using the refresh token
         client = HevyClient()
         user = client.refresh_access_token(
-            refresh_token=token_request.refresh_token,
-            current_access_token=token_request.access_token
+            refresh_token=token_request.refresh_token, current_access_token=token_request.access_token
         )
-        
+
         ### TODO: Add same response checks as in hevy_api.login()
 
         return LoginResponse(
@@ -255,7 +256,7 @@ def refresh_token(token_request: RefreshTokenRequest, request: Request) -> Login
             user_id=user.user_id,
             username=user.username,
             email=user.email,
-            expires_at=user.expires_at
+            expires_at=user.expires_at,
         )
 
     except HevyError as e:
@@ -279,7 +280,7 @@ def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
     if DEMO_MODE:
         logging.info("Demo mode: API key validation bypassed (always valid)")
         return ValidateApiKeyResponse(valid=True)
-    
+
     try:
         client = HevyClient(api_key=key_data.api_key)
         is_valid = client.validate_api_key()
@@ -293,8 +294,7 @@ def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
 
 @app.get("/api/user/account", tags=["User"])
 def get_user_account(
-    authorization: Optional[str] = Header(None, alias="Authorization"),
-    api_key: Optional[str] = Header(None, alias="api-key")
+    authorization: Optional[str] = Header(None, alias="Authorization"), api_key: Optional[str] = Header(None, alias="api-key")
 ) -> dict:
     """
     Get authenticated user's account information.
@@ -305,7 +305,7 @@ def get_user_account(
     if DEMO_MODE:
         logging.info("Demo mode: Serving sample user account")
         return load_sample_data("user_account.json")
-    
+
     try:
         client = get_hevy_client(authorization=authorization, api_key=api_key)
         account = client.get_user_account()
@@ -346,7 +346,7 @@ def get_workouts(
             return load_sample_data("user_workouts_paged.json")
         else:
             return {"workouts": []}
-    
+
     try:
         client = get_hevy_client(authorization=authorization, api_key=api_key)
 
@@ -382,7 +382,7 @@ def get_body_measurements(
     if DEMO_MODE:
         logging.info("Demo mode: Serving sample body measurements")
         return load_sample_data("body_measurements.json")
-    
+
     try:
         ### Extract Bearer token
         access_token = authorization[7:] if authorization.startswith("Bearer ") else authorization
@@ -413,7 +413,7 @@ def post_body_measurements(
     if DEMO_MODE:
         logging.info("Demo mode: Simulating body measurement post")
         return {"message": "Body measurement posted successfully (demo mode)"}
-    
+
     try:
         ### Extract Bearer token
         access_token = authorization[7:] if authorization.startswith("Bearer ") else authorization

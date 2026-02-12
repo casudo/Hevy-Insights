@@ -17,6 +17,7 @@ load_dotenv()  # Load environment variables from .env file
 @dataclass
 class HevyUser:
     """User data returned from Hevy API login (OAuth2)"""
+
     access_token: str  # OAuth2 access token
     user_id: str
     username: Optional[str] = None
@@ -66,7 +67,7 @@ class HevyConfig:
 class HevyClient:
     """
     Main API client to interact with Hevy services.
-    
+
     Seperated into two authentication methods:
     1. OAuth2 Bearer token (for username/password login)
     2. Hevy PRO API key (for PRO subscribers)
@@ -103,11 +104,11 @@ class HevyClient:
     def login(self, email_or_username: str, password: str, recaptcha_token: str) -> HevyUser:
         """
         Login with OAuth2 and reCAPTCHA token.
-        
+
         Args:
             email_or_username: User's email or username
             password: User's password
-            recaptcha_token: reCAPTCHA v3 Enterprise token 
+            recaptcha_token: reCAPTCHA v3 Enterprise token
 
         Returns:
             HevyUser: User data with OAuth2 tokens
@@ -117,29 +118,20 @@ class HevyClient:
         """
         logging.debug(f"Attempting OAuth2 login for user: {email_or_username}")
 
-        headers = {
-            "x-api-key": self.config.x_api_key,
-            "Content-Type": "application/json",
-            "Hevy-Platform": "web"
-        }
+        headers = {"x-api-key": self.config.x_api_key, "Content-Type": "application/json", "Hevy-Platform": "web"}
 
-        body = {
-            "emailOrUsername": email_or_username,
-            "password": password,
-            "recaptchaToken": recaptcha_token,
-            "useAuth2_0": True 
-        }
+        body = {"emailOrUsername": email_or_username, "password": password, "recaptchaToken": recaptcha_token, "useAuth2_0": True}
 
         try:
             response = self.session.post(self.config.login_url, headers=headers, json=body, timeout=30)
             response.raise_for_status()
 
             data = response.json()
-            
+
             ### Extract response and validate
-            access_token = data.get("access_token") or data.get("auth_token") # fallback
+            access_token = data.get("access_token") or data.get("auth_token")  # fallback
             refresh_token = data.get("refresh_token")
-            
+
             ### Validate response
             if not access_token or not refresh_token:
                 logging.error(f"Missing access/refresh token in response. Keys: {list(data.keys())}")
@@ -148,14 +140,14 @@ class HevyClient:
             ### Update client's access token and headers after successful login
             self.access_token = access_token
             self._update_headers()
-            
+
             return HevyUser(
                 access_token=access_token,
                 user_id=data.get("user_id"),
                 username=email_or_username if "@" not in email_or_username else None,
                 email=email_or_username if "@" in email_or_username else None,
                 refresh_token=refresh_token,
-                expires_at=data.get("expires_at")
+                expires_at=data.get("expires_at"),
             )
 
         except requests.JSONDecodeError as e:
@@ -181,7 +173,7 @@ class HevyClient:
     def refresh_access_token(self, refresh_token: str) -> HevyUser:
         """
         Refresh OAuth2 access token using refresh token.
-        
+
         Args:
             refresh_token: The refresh token from previous login
 
@@ -193,26 +185,20 @@ class HevyClient:
         """
         logging.debug("Refreshing OAuth2 access token...")
 
-        headers = {
-            "x-api-key": self.config.x_api_key,
-            "Content-Type": "application/json",
-            "Hevy-Platform": "web"
-        }
-    
-        body = {
-            "refresh_token": refresh_token
-        }
-    
+        headers = {"x-api-key": self.config.x_api_key, "Content-Type": "application/json", "Hevy-Platform": "web"}
+
+        body = {"refresh_token": refresh_token}
+
         try:
             response = self.session.post(self.config.refresh_token_url, headers=headers, json=body, timeout=30)
             response.raise_for_status()
 
             data = response.json()
-            
+
             ### Extract response and validate
-            access_token = data.get("access_token") or data.get("auth_token") # fallback
+            access_token = data.get("access_token") or data.get("auth_token")  # fallback
             new_refresh_token = data.get("refresh_token")
-            
+
             ### Validate response
             if not access_token or not new_refresh_token:
                 logging.error(f"Missing access/refresh token in response. Keys: {list(data.keys())}")
@@ -221,12 +207,12 @@ class HevyClient:
             ### Update client's access token and headers after successful login
             self.access_token = access_token
             self._update_headers()
-            
+
             return HevyUser(
                 access_token=access_token,
                 user_id=data.get("user_id"),
                 refresh_token=new_refresh_token,
-                expires_at=data.get("expires_at")
+                expires_at=data.get("expires_at"),
             )
 
         except requests.HTTPError as e:
