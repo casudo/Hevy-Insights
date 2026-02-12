@@ -117,6 +117,7 @@
       "muscleRegions": "Muscle Regions",
       "muscleRegionsDescription": "Stacked breakdown by period",
       "calendarWeek": "CW",
+      "notSupported": "This chart is not available when using Hevy PRO API Key. This feature requires username/password (OAuth) login.",
       "muscleFilters": {
         "groups": "GROUPS",
         "muscles": "MUSCLE"

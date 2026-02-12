@@ -117,6 +117,7 @@
       "muscleRegions": "Muskelregionen",
       "muscleRegionsDescription": "Gestapelte Aufschlüsselung nach Zeitraum",
       "calendarWeek": "KW",
+      "notSupported": "Dieses Diagramm ist nicht verfügbar, wenn du den Hevy PRO API Key verwendest. Dieses Feature erfordert die Anmeldung mit Benutzername/Passwort (OAuth).",     
       "muscleFilters": {
         "groups": "GRUPPEN",
         "muscles": "MUSKEL"

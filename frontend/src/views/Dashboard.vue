@@ -42,6 +42,9 @@ const loading = computed(() => store.isLoadingWorkouts || store.isLoadingUser);
 const userAccount = computed(() => store.userAccount);
 const workouts = computed(() => store.workouts);
 
+// Detect if user is using PRO API Key mode
+const isProApiMode = computed(() => !!localStorage.getItem("hevy_api_key"));
+
 // Collapsible sections state (saved to localStorage)
 const expandedSections = ref<Record<string, boolean>>({
   plateaus: true, // Plateaus expanded by default
@@ -1394,7 +1397,12 @@ onMounted(() => {
                   </div>
                 </div>
                 <div class="chart-body">
+                  <div v-if="isProApiMode" class="chart-info-message">
+                    <span class="info-icon">ℹ️</span>
+                    <p>{{ $t('dashboard.charts.notSupported') }}</p>
+                  </div>
                   <Line 
+                    v-else
                     :key="'prs-' + prsOverTime_Range" 
                     :data="{ 
                       labels: prsOverTime_Data.labels, 
@@ -1610,7 +1618,12 @@ onMounted(() => {
                   </div>
                 </div>
                 <div class="chart-body doughnut-body">
+                  <div v-if="isProApiMode" class="chart-info-message">
+                    <span class="info-icon">ℹ️</span>
+                    <p>{{ $t('dashboard.charts.notSupported') }}</p>
+                  </div>
                   <Doughnut 
+                    v-else
                     :key="'muscle-' + muscleDistribution_Range + '-' + muscleDistribution_Grouping"
                     :data="{
                       labels: muscleDistribution_Data.labels,
@@ -1651,7 +1664,12 @@ onMounted(() => {
                   </div>
                 </div>
                 <div class="chart-body">
+                  <div v-if="isProApiMode" class="chart-info-message">
+                    <span class="info-icon">ℹ️</span>
+                    <p>{{ $t('dashboard.charts.notSupported') }}</p>
+                  </div>
                   <Bar
+                    v-else
                     :key="'muscle-regions-' + muscleRegions_Range + '-' + muscleRegions_Display + '-' + muscleRegions_Grouping"
                     :data="muscleRegions_Data"
                     :options="{
@@ -2478,6 +2496,32 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.chart-info-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  border-left: 4px solid #06b6d4;
+  border-radius: 12px;
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.chart-info-message .info-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.chart-info-message p {
+  margin: 0;
+  color: #9dd7e5;
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
 .doughnut-body {

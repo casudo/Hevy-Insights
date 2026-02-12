@@ -117,6 +117,7 @@
       "muscleRegions": "Regiones Musculares",
       "muscleRegionsDescription": "Desglose acumulado por período",
       "calendarWeek": "Sem",
+      "notSupported": "Este gráfico no está disponible al usar la clave API de Hevy PRO. Esta función requiere inicio de sesión con nombre de usuario/contraseña (OAuth).",
       "muscleFilters": {
         "groups": "GRUPOS",
         "muscles": "MÚSCULO"
