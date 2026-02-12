@@ -95,13 +95,6 @@ export const authService = {
     return response.data;
   },
 
-  async validateToken(accessToken: string) {
-    const response = await api.post("/validate-auth-token", {
-      auth_token: authToken,
-    });
-    return response.data;
-  },
-
   async validateApiKey(apiKey: string) {
     const response = await api.post("/validate-api-key", {
       api_key: apiKey,
