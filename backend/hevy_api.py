@@ -131,7 +131,7 @@ class HevyClient:
         }
 
         try:
-            response = self.session.post(self.config.login_url, headers=headers, json=body)
+            response = self.session.post(self.config.login_url, headers=headers, json=body, timeout=30)
             response.raise_for_status()
 
             data = response.json()
@@ -255,7 +255,7 @@ class HevyClient:
             raise HevyError("No access token available. Please login first.")
 
         try:
-            response = self.session.get(self.config.user_account_url)
+            response = self.session.get(self.config.user_account_url, timeout=30)
             response.raise_for_status()
 
             data = response.json()
@@ -302,7 +302,7 @@ class HevyClient:
         params = {"offset": offset, "username": username}
 
         try:
-            response = self.session.get(self.config.user_workouts_paged_url, params=params)
+            response = self.session.get(self.config.user_workouts_paged_url, params=params, timeout=30)
             response.raise_for_status()
 
             data = response.json()
@@ -344,7 +344,7 @@ class HevyClient:
             raise HevyError("No access token available. Please login first.")
 
         try:
-            response = self.session.get(self.config.body_measurements_url)
+            response = self.session.get(self.config.body_measurements_url, timeout=30)
             response.raise_for_status()
 
             data = response.json()
@@ -388,15 +388,7 @@ class HevyClient:
         try:
             body = {"measurementsBatch": [{"date": date, "weight_kg": weight_kg, "_unsyncedObjectId": "zitronenkuchen"}]}
 
-            logging.debug(f"POST request body: {body}")
-            logging.debug(f"POST URL: {self.config.body_measurements_url}_batch")
-
-            response = self.session.post(f"{self.config.body_measurements_url}_batch", json=body)
-            logging.debug(f"Response status: {response.status_code}")
-            logging.debug(f"Response headers: {dict(response.headers)}")
-            logging.debug(f"Response content length: {len(response.content)}")
-            logging.debug(f"Response text: '{response.text}'")
-
+            response = self.session.post(f"{self.config.body_measurements_url}_batch", json=body, timeout=30)
             response.raise_for_status()
 
             ### Hevy API returns 200 OK with empty body on successful POST
