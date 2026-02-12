@@ -69,19 +69,16 @@ class LoginRequest(BaseModel):
 
 
 class LoginResponse(BaseModel):
-    auth_token: str
+    access_token: str  # OAuth2 access token
     user_id: str
     username: Optional[str] = None
     email: Optional[str] = None
+    refresh_token: Optional[str] = None  # OAuth2 refresh token for token renewal
+    expires_at: Optional[str] = None  # Token expiration timestamp
 
 
-class ValidateTokenRequest(BaseModel):
-    auth_token: str
-
-
-class ValidateTokenResponse(BaseModel):
-    valid: bool
-    error: Optional[str] = None
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str = Field(..., description="OAuth2 refresh token")
 
 
 class ValidateApiKeyRequest(BaseModel):
