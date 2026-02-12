@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional
 from hevy_api import HevyClient, HevyError
+from hevy_recaptcha import get_recaptcha_token, invalidate_recaptcha_cache
 from dotenv import load_dotenv
 from os import getenv
 import logging
@@ -166,37 +167,51 @@ def load_sample_data(filename: str) -> dict:
 
 @app.post("/api/login", response_model=LoginResponse, tags=["Authentication"])
 @limiter.limit("5/minute")  # Max 5 login attempts per minute per IP
-def login(credentials: LoginRequest, request: Request) -> LoginResponse:
+async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
     """
-    Login with Hevy credentials to obtain an authentication token.
+    Login with Hevy credentials using OAuth2 authentication.
 
     - **emailOrUsername**: Your Hevy username or email
     - **password**: Your Hevy password
 
-    Returns auth token. Rate limited to 5 attempts per minute.
+    Returns OAuth2 access token with refresh token. Rate limited to 5 attempts per minute.
     """
     ### Demo mode: accept any credentials
     if DEMO_MODE:
         logging.info("Demo mode: Login successful (any credentials accepted)")
         return LoginResponse(
-            auth_token="demo-auth-token",
+            access_token="demo-access-token",
+            refresh_token="demo-refresh-token",
             user_id="demo-user-id",
             username="demo_user",
-            email="demo_user@demo.local"
+            email="demo_user@demo.local",
+            expires_at=int((datetime.now() + timedelta(days=30)).timestamp())
         )
     
     try:
+        ### Step 1: Get reCAPTCHA token automatically
+        recaptcha_token = await get_recaptcha_token()
+        ### Step 2: Login using OAuth2 with reCAPTCHA token
         client = HevyClient()
-        user = client.login(credentials.emailOrUsername, credentials.password)
-
-        return LoginResponse(auth_token=user.auth_token, user_id=user.user_id, username=user.username, email=user.email)
+        user = client.login(credentials.emailOrUsername, credentials.password, recaptcha_token)
+        return LoginResponse(
+            access_token=user.access_token,
+            refresh_token=user.refresh_token,
+            user_id=user.user_id,
+            username=user.username,
+            email=user.email,
+            expires_at=user.expires_at
+        )
 
     except HevyError as e:
         logging.error(f"Login error: {e}")
         raise HTTPException(status_code=401, detail=str(e))
     except Exception as e:
         logging.error(f"Unexpected login error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    finally:
+        ### Always invalidate cache after login attempt to prevent token reuse
+        invalidate_recaptcha_cache()
 
 
 @app.post("/api/validate-auth-token", response_model=ValidateTokenResponse, tags=["Authentication"])
