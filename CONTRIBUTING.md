@@ -12,6 +12,9 @@ Thanks for your potential interest in contributing to Hevy Insights! There are s
   - [Setup development environment](#setup-development-environment)
     - [Backend Setup](#backend-setup)
     - [Frontend Setup](#frontend-setup)
+  - [Playwright for reCAPTCHA Automation](#playwright-for-recaptcha-automation)
+    - [What does Playwright do?](#what-does-playwright-do)
+    - [Performance Considerations](#performance-considerations)
   - [Swagger Documentation](#swagger-documentation)
 
 ## Translations
@@ -87,7 +90,16 @@ Clone/download the repository and follow the [Setup development environment](#se
    pip install -r backend\requirements.txt
    ```
 
-3. Run the FastAPI backend:
+3. Install Playwright and browser binaries (for reCAPTCHA automation):
+
+   ```bash
+   playwright install chromium
+   ```
+
+   > [!NOTE]
+   > The `playwright install chromium` command downloads the Chromium browser (~300MB). This only needs to be done once per environment.
+
+4. Run the FastAPI backend:
 
    ```bash
    python backend/fastapi_server.py
@@ -116,6 +128,27 @@ Clone/download the repository and follow the [Setup development environment](#se
    ```
 
    Frontend will run on `http://localhost:5173`
+
+### Playwright for reCAPTCHA Automation
+
+Hevy Insights uses [Playwright](https://playwright.dev/) to automate reCAPTCHA v3 token generation during OAuth2 login. This section covers how to work with Playwright during development.
+
+#### What does Playwright do?
+
+The `backend/hevy_recaptcha.py` module uses Playwright to:
+
+1. Launch a headless Chrome browser
+2. Navigate to Hevy's login page
+3. Execute JavaScript to generate/fetch a reCAPTCHA v3 Enterprise token
+4. Return the token to the backend for authentication
+
+This happens automatically when users log in with Hevy credentials.
+
+#### Performance Considerations
+
+- **Browser Reuse**: Playwright browser stays open during FastAPI's lifetime (not launched per request)
+- **Token Caching**: reCAPTCHA tokens are cached for 15 seconds to reduce browser usage
+- **Cache Invalidation**: Cache is cleared after each login attempt to prevent token reuse errors
 
 ### Swagger Documentation
 
