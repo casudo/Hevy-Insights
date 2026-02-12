@@ -44,9 +44,18 @@ const handleLogin = async () => {
   try {
     const result = await authService.login(emailOrUsername.value, password.value);
     
-    if (result.auth_token) {
-      localStorage.setItem("hevy_auth_token", result.auth_token);
+    if (result.access_token) {
+      // Store OAuth2 tokens
+      localStorage.setItem("hevy_access_token", result.access_token);
+      if (result.refresh_token) {
+        localStorage.setItem("hevy_refresh_token", result.refresh_token);
+      }
+      if (result.expires_at) {
+        localStorage.setItem("hevy_token_expires_at", result.expires_at.toString());
+      }
+      
       await store.switchToAPIMode();
+      
       router.push("/dashboard");
     } else {
       error.value = t("login.api.errors.loginFailed");
@@ -73,7 +82,7 @@ const handleApiKeyLogin = async () => {
     
     if (result.valid) {
       localStorage.setItem("hevy_api_key", apiKey.value);
-      localStorage.setItem("hevy_auth_token", "api_key_mode");
+      localStorage.setItem("hevy_access_token", "api_key_mode");
       await store.switchToAPIMode();
       router.push("/dashboard");
     } else {
@@ -129,7 +138,7 @@ const handleCSVUpload = async () => {
 
     // Store data and switch to CSV mode
     store.loadCSVWorkouts(workouts);
-    localStorage.setItem("hevy_auth_token", "csv_mode");
+    localStorage.setItem("hevy_access_token", "csv_mode");
 
     // Navigate to dashboard
     router.push("/dashboard");
