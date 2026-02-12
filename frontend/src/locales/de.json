@@ -9,6 +9,7 @@
       "passwordPlaceholder": "Passwort eingeben",
       "loginButton": "Anmelden",
       "loggingIn": "Anmeldung läuft...",
+      "waitText": "Die Anmeldung dauert länger als üblich. Token wird abgerufen...",
       "errors": {
         "emptyFields": "Bitte Benutzername/E-Mail und Passwort eingeben",
         "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",

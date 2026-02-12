@@ -43,8 +43,26 @@ const secondaryColor = computed(() => {
 
 // Collapsed state per exercise (default collapsed)
 const expanded = ref<Record<string, boolean>>({});
-// Search by exercise name
+
+// Search by exercise name (debounced)
 const search = ref("");
+let searchDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
+
+// Debounce function for search input - updates search ref only after delay
+function handleSearchInput(event: Event) {
+  const value = (event.target as HTMLInputElement).value;
+  
+  // Clear existing timeout
+  if (searchDebounceTimeout) {
+    clearTimeout(searchDebounceTimeout);
+  }
+  
+  // Set new timeout - only update search ref after 300ms of no typing
+  searchDebounceTimeout = setTimeout(() => {
+    search.value = value;
+  }, 300);
+}
+
 // Plateau filter state
 const plateauFilter = ref<string | null>(null);
 
@@ -866,7 +884,12 @@ const barChartOptions = {
 
     <!-- Search Section -->
     <div v-if="!loading" class="search-section">
-      <input class="search-input" type="text" v-model="search" :placeholder="`🔍 ${$t('exercises.searchFilter')}`" />
+      <input 
+        class="search-input" 
+        type="text" 
+        @input="handleSearchInput"
+        :placeholder="`🔍 ${$t('exercises.searchFilter')}`" 
+      />
       
       <!-- Exercise Statistics Summary -->
       <div class="exercise-stats-summary">
