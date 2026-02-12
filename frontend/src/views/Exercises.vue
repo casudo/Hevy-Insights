@@ -384,7 +384,6 @@ const exercises = computed(() => {
         exercise_type: ex.exercise_type || null,
         sets: [] as any[],
         prs: [] as any[],
-        exercise_type: ex.exercise_type || null,
       });
       for (const s of (ex.sets || [])) {
         const weight = Number((s as any).weight_kg ?? (s as any).weight ?? 0);
