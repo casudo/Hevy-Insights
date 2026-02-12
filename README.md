@@ -208,6 +208,7 @@ Clone/download the repository and follow these steps:
 - Switch to per page localization instead of using `global.{n}.{y}` and reusing the same string from other pages
 - Support for distance-based workouts (running, cycling, etc.) and their specific stats (e.g., pace, distance)
   - Seperate distance stats for duraion-based workouts (e.g. Dead Hang)
+- "Top 3 Best Sets" not actually showing the best sets for bodyweight exercises
 
 ---
 
