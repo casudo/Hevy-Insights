@@ -4,6 +4,9 @@ FROM python:3.13-slim
 ### Prevent Python from writing .pyc files to disc
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
+### Set Playwright browsers to system-wide location (accessible to all users)
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
 WORKDIR /app
 
 ### Create a non-privileged user
@@ -18,6 +21,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ### Install Python dependencies
 COPY backend/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
+
+### Install Playwright browser to system-wide location
+RUN playwright install --with-deps chromium \
+ && chmod -R 755 /ms-playwright
 
 ### Copy backend sources
 COPY backend /app
