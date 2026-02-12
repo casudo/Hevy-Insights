@@ -214,29 +214,54 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
         invalidate_recaptcha_cache()
 
 
-@app.post("/api/validate-auth-token", response_model=ValidateTokenResponse, tags=["Authentication"])
-def validate_token(token_data: ValidateTokenRequest) -> ValidateTokenResponse:
+@app.post("/api/refresh_token", response_model=LoginResponse, tags=["Authentication"])
+@limiter.limit("10/minute")  # Max 10 refresh attempts per minute per IP
+def refresh_token(token_request: RefreshTokenRequest, request: Request) -> LoginResponse:
     """
-    Validate an authentication token.
+    Refresh an expired or expiring OAuth2 access token.
 
-    - **auth_token**: The token to validate
+    - **refresh_token**: The refresh token received during login
 
-    Returns validation status.
+    Returns new OAuth2 access token with updated expiration.
+    Rate limited to 10 attempts per minute.
     """
-    ### Demo mode: always return valid
+    ### Demo mode: return demo tokens
     if DEMO_MODE:
-        logging.info("Demo mode: Token validation bypassed (always valid)")
-        return ValidateTokenResponse(valid=True)
+        logging.info("Demo mode: Token refresh successful")
+        return LoginResponse(
+            access_token="demo-access-token-refreshed",
+            refresh_token="demo-refresh-token-refreshed",
+            user_id="demo-user-id",
+            username="demo_user",
+            email="demo_user@demo.local",
+            expires_at=int((datetime.now() + timedelta(days=30)).timestamp())
+        )
     
     try:
-        client = HevyClient(token_data.auth_token)
-        is_valid = client.validate_auth_token()
+        ### Refresh the access token using the refresh token
+        client = HevyClient()
+        user = client.refresh_access_token(
+            refresh_token=token_request.refresh_token,
+            current_access_token=token_request.access_token
+        )
+        
+        ### TODO: Add same response checks as in hevy_api.login()
 
-        return ValidateTokenResponse(valid=is_valid)
+        return LoginResponse(
+            access_token=user.access_token,
+            refresh_token=user.refresh_token,
+            user_id=user.user_id,
+            username=user.username,
+            email=user.email,
+            expires_at=user.expires_at
+        )
 
     except HevyError as e:
-        logging.error(f"Token validation error: {e}")
-        return ValidateTokenResponse(valid=False, error=str(e))
+        logging.error(f"Token refresh error: {e}")
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        logging.error(f"Unexpected token refresh error: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @app.post("/api/validate-api-key", response_model=ValidateApiKeyResponse, tags=["Authentication"])
