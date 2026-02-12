@@ -191,9 +191,11 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
     try:
         ### Step 1: Get reCAPTCHA token automatically
         recaptcha_token = await get_recaptcha_token()
+
         ### Step 2: Login using OAuth2 with reCAPTCHA token
         client = HevyClient()
         user = client.login(credentials.emailOrUsername, credentials.password, recaptcha_token)
+        
         return LoginResponse(
             access_token=user.access_token,
             refresh_token=user.refresh_token,
@@ -291,12 +293,13 @@ def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
 
 @app.get("/api/user/account", tags=["User"])
 def get_user_account(
-    auth_token: Optional[str] = Header(None, alias="auth-token"), api_key: Optional[str] = Header(None, alias="api-key")
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    api_key: Optional[str] = Header(None, alias="api-key")
 ) -> dict:
     """
     Get authenticated user's account information.
 
-    Requires either auth-token or api-key header.
+    Requires either Authorization Bearer token or api-key header.
     """
     ### Demo mode: return sample data
     if DEMO_MODE:
@@ -304,7 +307,7 @@ def get_user_account(
         return load_sample_data("user_account.json")
     
     try:
-        client = get_hevy_client(auth_token=auth_token, api_key=api_key)
+        client = get_hevy_client(authorization=authorization, api_key=api_key)
         account = client.get_user_account()
 
         return account
@@ -317,17 +320,17 @@ def get_user_account(
 
 @app.get("/api/workouts", tags=["Workouts"])
 def get_workouts(
-    auth_token: Optional[str] = Header(None, alias="auth-token"),
+    authorization: Optional[str] = Header(None, alias="Authorization"),
     api_key: Optional[str] = Header(None, alias="api-key"),
-    offset: int = Query(0, ge=0, description="Pagination offset (increments of 5) - for auth-token mode"),
-    username: Optional[str] = Query(None, description="Filter by username - for auth-token mode"),
+    offset: int = Query(0, ge=0, description="Pagination offset (increments of 5) - for OAuth2 mode"),
+    username: Optional[str] = Query(None, description="Filter by username - for OAuth2 mode"),
     page: int = Query(1, ge=1, description="Page number - for api-key mode"),
     page_size: int = Query(10, ge=1, le=50, description="Page size - for api-key mode"),
 ):
     """
     Get paginated workout history.
 
-    **Auth-token mode:**
+    **OAuth2 mode (Bearer token):**
     - **offset**: Pagination offset (0, 5, 10, 15, ...)
     - **username**: Username filter (required)
 
@@ -335,7 +338,7 @@ def get_workouts(
     - **page**: Page number (default: 1)
     - **page_size**: Number of workouts per page (default: 10)
 
-    Requires either auth-token or api-key header.
+    Requires either Authorization Bearer token or api-key header.
     """
     ### Demo mode: return complete sample data only on first request, empty afterwards
     if DEMO_MODE:
@@ -345,15 +348,15 @@ def get_workouts(
             return {"workouts": []}
     
     try:
-        client = get_hevy_client(auth_token=auth_token, api_key=api_key)
+        client = get_hevy_client(authorization=authorization, api_key=api_key)
 
         ### Use PRO API if API key is provided
         if api_key:
             workouts = client.get_pro_workouts(page=page, page_size=page_size)
         else:
-            ### Use free API with auth token
+            ### Use OAuth2 API with Bearer token
             if not username:
-                raise HTTPException(status_code=400, detail="username parameter is required for auth-token mode")
+                raise HTTPException(status_code=400, detail="username parameter is required for OAuth2 mode")
             workouts = client.get_workouts(username=username, offset=offset)
 
         return workouts
@@ -366,14 +369,14 @@ def get_workouts(
 
 @app.get("/api/body_measurements", tags=["Body Measurements"])
 def get_body_measurements(
-    auth_token: str = Header(..., alias="auth-token"),
+    authorization: str = Header(..., alias="Authorization"),
 ):
     """
     Get body measurements (weight tracking).
 
     Returns list of measurements with id, weight_kg, date, and created_at.
 
-    Requires auth-token header.
+    Requires Authorization Bearer token header. PRO API does not support body measurements.
     """
     ### Demo mode: return sample data
     if DEMO_MODE:
@@ -381,7 +384,9 @@ def get_body_measurements(
         return load_sample_data("body_measurements.json")
     
     try:
-        client = HevyClient(auth_token)
+        ### Extract Bearer token
+        access_token = authorization[7:] if authorization.startswith("Bearer ") else authorization
+        client = HevyClient(access_token=access_token)
         measurements = client.get_body_measurements()
         return measurements
 
@@ -394,12 +399,12 @@ def get_body_measurements(
 @app.post("/api/body_measurements_batch", tags=["Body Measurements"])
 def post_body_measurements(
     measurement: BodyMeasurementRequest,
-    auth_token: str = Header(..., alias="auth-token"),
+    authorization: str = Header(..., alias="Authorization"),
 ):
     """
     Post a new body measurement (weight tracking).
 
-    Requires auth-token header.
+    Requires Authorization Bearer token header. PRO API does not support body measurements.
 
     Args:
         measurement: Body measurement data (date and weight_kg)
@@ -410,7 +415,9 @@ def post_body_measurements(
         return {"message": "Body measurement posted successfully (demo mode)"}
     
     try:
-        client = HevyClient(auth_token)
+        ### Extract Bearer token
+        access_token = authorization[7:] if authorization.startswith("Bearer ") else authorization
+        client = HevyClient(access_token=access_token)
         client.post_body_measurements(measurement.date, measurement.weight_kg)
         return {"message": "Body measurement posted successfully"}
 
