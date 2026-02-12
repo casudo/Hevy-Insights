@@ -19,6 +19,7 @@ const emailOrUsername = ref("");
 const password = ref("");
 const loading = ref(false);
 const error = ref("");
+const slowLoginMessage = ref("");
 
 // API Key login
 const apiKey = ref("");
@@ -39,10 +40,17 @@ const handleLogin = async () => {
 
   loading.value = true;
   error.value = "";
+  slowLoginMessage.value = "";
+
+  // Show message if login takes >5 seconds (reCAPTCHA + OAuth2)
+  const slowLoginTimer = setTimeout(() => {
+    slowLoginMessage.value = t("login.api.waitText");
+  }, 5000);
 
   // Attempt login via API service
   try {
     const result = await authService.login(emailOrUsername.value, password.value);
+    clearTimeout(slowLoginTimer);
     
     if (result.access_token) {
       // Store OAuth2 tokens
@@ -61,9 +69,11 @@ const handleLogin = async () => {
       error.value = t("login.api.errors.loginFailed");
     }
   } catch (err: any) {
+    clearTimeout(slowLoginTimer);
     error.value = err.response?.data?.detail || t("login.api.errors.invalidCredentials");
   } finally {
     loading.value = false;
+    slowLoginMessage.value = "";
   }
 };
 
@@ -255,6 +265,14 @@ const removeFile = () => {
             <div v-if="error" class="error-alert">
               <span class="error-icon">⚠️</span>
               <span class="error-text">{{ error }}</span>
+            </div>
+          </transition>
+
+          <!-- Slow Login Info Message -->
+          <transition name="fade">
+            <div v-if="slowLoginMessage && loading" class="info-alert">
+              <span class="info-icon">⏳</span>
+              <span class="info-text">{{ slowLoginMessage }}</span>
             </div>
           </transition>
 
@@ -732,6 +750,59 @@ const removeFile = () => {
   to { transform: rotate(360deg); }
 }
 
+/* Divider with text */
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+  color: #6c6c80;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(16, 185, 129, 0.3),
+    transparent
+  );
+}
+
+.divider span {
+  padding: 0 1rem;
+}
+
+/* Info Alert */
+.info-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: 12px;
+  margin-top: 1rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+.info-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.info-text {
+  color: #a5f3fc;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  flex: 1;
+}
+
 /* Mode Toggle */
 .mode-toggle {
   display: flex;
@@ -766,11 +837,6 @@ const removeFile = () => {
 .api-key-link:hover {
   color: #10b981;
   background: rgba(16, 185, 129, 0.05);
-}
-
-.api-key-link .link-icon {
-  font-size: 0.9rem;
-  opacity: 0.8;
 }
 
 .mode-button {
@@ -984,7 +1050,7 @@ const removeFile = () => {
   margin-top: 2.5rem;
 }
 
-.divider {
+.login-footer .divider {
   height: 1px;
   background: linear-gradient(
     90deg,
@@ -993,6 +1059,11 @@ const removeFile = () => {
     transparent
   );
   margin-bottom: 1.5rem;
+}
+
+.login-footer .divider::before,
+.login-footer .divider::after {
+  display: none;
 }
 
 .footer-text {
