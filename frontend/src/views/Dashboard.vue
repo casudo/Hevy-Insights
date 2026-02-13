@@ -2582,12 +2582,13 @@ onMounted(() => {
 
 .calendar-month-weeks {
   display: flex;
+  flex-direction: column;
   gap: 4px;
 }
 
 .calendar-week {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 4px;
 }
 
