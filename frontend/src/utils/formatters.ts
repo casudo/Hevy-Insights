@@ -7,12 +7,16 @@ import { useI18n } from "vue-i18n";
  * @returns Formatted weight in user's preferred unit (1 decimal place)
 **/
 export function formatWeight(weightKg: number): string {
+  // Handle invalid inputs
+  const weight = Number(weightKg);
+  if (!isFinite(weight)) return "0.0";
+  
   const store = useHevyCache();
   if (store.weightUnit === "lbs") {
-    const lbs = weightKg * 2.20462;
+    const lbs = weight * 2.20462;
     return lbs.toFixed(1);
   }
-  return weightKg.toFixed(1);
+  return weight.toFixed(1);
 }
 
 /**
@@ -21,12 +25,16 @@ export function formatWeight(weightKg: number): string {
  * @returns Formatted weight in user's preferred unit (2 decimal places)
 **/
 export function formatWeightPrecise(weightKg: number): string {
+  // Handle invalid inputs
+  const weight = Number(weightKg);
+  if (!isFinite(weight)) return "0.00";
+  
   const store = useHevyCache();
   if (store.weightUnit === "lbs") {
-    const lbs = weightKg * 2.20462;
+    const lbs = weight * 2.20462;
     return lbs.toFixed(2);
   }
-  return weightKg.toFixed(2);
+  return weight.toFixed(2);
 }
 
 /**
@@ -53,13 +61,17 @@ export function getDistanceUnit(): string {
  * @returns Formatted duration string (e.g., "1h 15m" or "45m")
 **/
 export function formatDuration(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const mins = Math.round(minutes % 60);
+  // Handle invalid inputs
+  const mins = Number(minutes);
+  if (!isFinite(mins) || mins < 0) return "0m";
+  
+  const hours = Math.floor(mins / 60);
+  const remainingMins = Math.round(mins % 60);
   
   if (hours > 0) {
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    return remainingMins > 0 ? `${hours}h ${remainingMins}m` : `${hours}h`;
   }
-  return `${mins}m`;
+  return `${remainingMins}m`;
 }
 
 /**
@@ -69,7 +81,9 @@ export function formatDuration(minutes: number): string {
  * @returns Formatted duration string (e.g., "1h 15m")
 **/
 export function formatDurationFromTimestamps(startTime: number, endTime: number): string {
-  const durationMinutes = Math.floor((endTime - startTime) / 60);
+  const start = Number(startTime) || 0;
+  const end = Number(endTime) || 0;
+  const durationMinutes = Math.floor((end - start) / 60);
   return formatDuration(durationMinutes);
 }
 
