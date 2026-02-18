@@ -1,4 +1,4 @@
-name: Build and Publish Docker Image on Release
+name: Build and Publish Docker Images on Release
 
 on:
   release:
@@ -28,20 +28,39 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate image name and tags
+      - name: Generate image names and version
         id: meta
         run: |
-          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          BASE="ghcr.io/${GITHUB_REPOSITORY,,}"
           VERSION="${{ github.event.release.tag_name }}"
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          echo "frontend=${BASE}-frontend" >> $GITHUB_OUTPUT
+          echo "backend=${BASE}-backend" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Build and push multi-arch image
+      # -----------------
+      # Build frontend
+      # -----------------
+      - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./frontend
+          file: ./frontend/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}
-            ${{ steps.meta.outputs.image }}:latest
+            ${{ steps.meta.outputs.frontend }}:${{ steps.meta.outputs.version }}
+            ${{ steps.meta.outputs.frontend }}:latest
+
+      # -----------------
+      # Build backend
+      # -----------------
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ steps.meta.outputs.backend }}:${{ steps.meta.outputs.version }}
+            ${{ steps.meta.outputs.backend }}:latest
