@@ -36,7 +36,7 @@ if DEMO_MODE:
     logging.warning("=" * 80)
 
 ### Version check configuration
-CURRENT_VERSION = "1.8.2"
+CURRENT_VERSION = "1.8.3"
 GITHUB_REPO = "casudo/Hevy-Insights"
 version_cache = {"latest_version": None, "checked_at": None}
 
