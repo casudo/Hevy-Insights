@@ -491,12 +491,13 @@ def auth_status(
 
 @app.get("/api/user/account", tags=["User"])
 def get_user_account(
-    authorization: Optional[str] = Header(None, alias="Authorization"), api_key: Optional[str] = Header(None, alias="api-key")
+    hevy_access_token: Optional[str] = Cookie(None),
+    hevy_api_key: Optional[str] = Cookie(None),
 ) -> dict:
     """
     Get authenticated user's account information.
 
-    Requires either Authorization Bearer token or api-key header.
+    Requires authentication cookie (OAuth2 token or Hevy PRO API key).
     """
     ### Demo mode: return sample data
     if DEMO_MODE:
@@ -504,7 +505,7 @@ def get_user_account(
         return load_sample_data("user_account.json")
 
     try:
-        client = get_hevy_client(authorization=authorization, api_key=api_key)
+        client = get_hevy_client(access_token_cookie=hevy_access_token, api_key_cookie=hevy_api_key)
         account = client.get_user_account()
 
         return account
