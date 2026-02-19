@@ -100,6 +100,11 @@ class HealthResponse(BaseModel):
     status: str
 
 
+class AuthStatusResponse(BaseModel):
+    authenticated: bool
+    auth_mode: Optional[str] = None  # "oauth2", "api_key", or "csv"
+
+
 ### Cookie configuration
 COOKIE_SECURE = getenv("COOKIE_SECURE", "false").lower() == "true"  # Set to True in production with HTTPS
 COOKIE_SAMESITE = "lax"  # "lax, strict, none: Lax for balance
