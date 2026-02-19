@@ -105,6 +105,70 @@ COOKIE_SECURE = getenv("COOKIE_SECURE", "false").lower() == "true"  # Set to Tru
 COOKIE_SAMESITE = "lax"  # "lax, strict, none: Lax for balance
 COOKIE_MAX_AGE = 60 * 60  # 1 hour max.
 
+
+### Helper function to set authentication cookies
+def set_auth_cookies(
+    response: Response,
+    access_token: Optional[str] = None,
+    refresh_token: Optional[str] = None,
+    api_key: Optional[str] = None,
+    expires_at: Optional[int] = None,
+):
+    """Set authentication cookies with secure attributes.
+
+    Args:
+        response: FastAPI Response object to set cookies on
+        access_token: OAuth2 access token
+        refresh_token: OAuth2 refresh token
+        api_key: Hevy PRO API key
+        expires_at: Token expiration timestamp
+    """
+    ### "Free" HEVY API login
+    if access_token:
+        response.set_cookie(
+            key="hevy_access_token",
+            value=access_token,
+            max_age=COOKIE_MAX_AGE,
+            httponly=True,  # Prevents JavaScript access (XSS protection)
+            secure=COOKIE_SECURE,  # HTTPS only in production
+            samesite=COOKIE_SAMESITE,  # CSRF protection
+            path="/",
+        )
+
+    if refresh_token:
+        response.set_cookie(
+            key="hevy_refresh_token",
+            value=refresh_token,
+            max_age=COOKIE_MAX_AGE,
+            httponly=True,
+            secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE,
+            path="/",
+        )
+
+    if expires_at:
+        response.set_cookie(
+            key="hevy_token_expires_at",
+            value=str(expires_at),
+            max_age=COOKIE_MAX_AGE,
+            httponly=True,
+            secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE,
+            path="/",
+        )
+
+    ### Hevy PRO API key login
+    if api_key:
+        response.set_cookie(
+            key="hevy_api_key",
+            value=api_key,
+            max_age=COOKIE_MAX_AGE,
+            httponly=True,
+            secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE,
+            path="/",
+        )
+
     Args:
         authorization (Optional[str]): The Authorization header value (e.g., "Bearer <token>").
         api_key (Optional[str]): The api-key header value for PRO users.
