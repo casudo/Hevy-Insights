@@ -208,6 +208,11 @@
           "y": "Volume"
         }
       }
+    },
+    "warnings": {
+      "repVolumeTitle": "Not available with Hevy PRO API key login mode!",
+      "repVolumeMessage": "Cannot calculate bodyweight exercise rep volume without bodyweight data. This feature requires username/password (OAuth) login since that method uses the body measurement API endpoints.",
+      "noBodyweight": "No bodyweight has been set."
     }
   },
   "share": {

@@ -208,6 +208,11 @@
           "y": "Volumen"
         }
       }
+    },
+    "warnings": {
+      "repVolumeTitle": "¡No disponible con el modo de inicio de sesión con clave API de Hevy PRO!",
+      "repVolumeMessage": "No se puede calcular el volumen de repeticiones para ejercicios con peso corporal sin datos de peso corporal. Esta función requiere inicio de sesión con nombre de usuario/contraseña (OAuth) ya que ese método utiliza los puntos finales de la API de medidas corporales.",
+      "noBodyweight": "No se ha establecido ningún peso corporal."
     }
   },
   "share": {

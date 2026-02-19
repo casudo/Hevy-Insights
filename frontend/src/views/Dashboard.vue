@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import { useHevyCache } from "../stores/hevy_cache";
 import { calculateCSVStats, calculatePRsGrouped, calculateMuscleDistribution } from "../utils/csvCalculator";
 import { formatDuration, formatWeight, getWeightUnit, formatPRValue, formatDate, formatMonthYear } from "../utils/formatters";
+import { authService } from "../services/api";
 import { Line, Doughnut, Radar, Bar } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
 import {
@@ -43,7 +44,7 @@ const userAccount = computed(() => store.userAccount);
 const workouts = computed(() => store.workouts);
 
 // Detect if user is using PRO API Key mode
-const isProApiMode = computed(() => !!localStorage.getItem("hevy_api_key"));
+const isProApiMode = ref<boolean>(false);
 
 // Collapsible sections state (saved to localStorage)
 const expandedSections = ref<Record<string, boolean>>({
@@ -104,7 +105,11 @@ const showTooltip = (chartId: string, event: Event) => {
 };
 
 // Close tooltip when clicking outside
-onMounted(() => {
+onMounted(async () => {
+  // Check auth mode from backend
+  const authStatus = await authService.getAuthStatus();
+  isProApiMode.value = authStatus.auth_mode === "api_key";
+  
   document.addEventListener("click", () => {
     activeTooltip.value = null;
   });
@@ -1380,6 +1385,7 @@ onMounted(() => {
                   <div class="chart-title-section">
                     <h3>
                       🏆 {{ $t('dashboard.charts.PRsOverTime') }}
+                      <span v-if="isProApiMode" class="pro-lock-badge" title="Not available with Hevy PRO API Key">🔒</span>
                       <button class="mobile-info-btn" @click="showTooltip('prsOverTime', $event)" title="Toggle info">ℹ️</button>
                       <div v-if="activeTooltip === 'prsOverTime'" class="info-popup" @click.stop>
                         {{ $t('dashboard.charts.PRsOverTimeDescription') }}
@@ -1601,6 +1607,7 @@ onMounted(() => {
                   <div class="chart-title-section">
                     <h3>
                       🎯 {{$t('dashboard.charts.muscleDistribution')}}
+                      <span v-if="isProApiMode" class="pro-lock-badge" title="Not available with Hevy PRO API Key">🔒</span>
                       <button class="mobile-info-btn" @click="showTooltip('muscleDistribution', $event)" title="Toggle info">ℹ️</button>
                       <div v-if="activeTooltip === 'muscleDistribution'" class="info-popup" @click.stop>
                         {{$t('dashboard.charts.muscleDistributionDescription')}}
@@ -1644,6 +1651,7 @@ onMounted(() => {
                   <div class="chart-title-section">
                     <h3>
                       📊 {{ $t("dashboard.charts.muscleRegions") }}
+                      <span v-if="isProApiMode" class="pro-lock-badge" title="Not available with Hevy PRO API Key">🔒</span>
                       <button class="mobile-info-btn" @click="showTooltip('muscleRegions', $event)" title="Toggle info">ℹ️</button>
                       <div v-if="activeTooltip === 'muscleRegions'" class="info-popup" @click.stop>
                         {{ $t("dashboard.charts.muscleRegionsDescription") }}
@@ -2425,6 +2433,17 @@ onMounted(() => {
 }
 
 .mobile-info-btn:hover {
+  opacity: 1;
+}
+
+.pro-lock-badge {
+  font-size: 1rem;
+  opacity: 0.6;
+  cursor: help;
+  transition: opacity 0.2s;
+}
+
+.pro-lock-badge:hover {
   opacity: 1;
 }
 

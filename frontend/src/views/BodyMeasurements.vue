@@ -14,7 +14,7 @@ import {
   Legend,
   Filler
 } from "chart.js";
-import { bodyMeasurementService } from "../services/api";
+import { bodyMeasurementService, authService } from "../services/api";
 import { formatWeightPrecise, getWeightUnit, formatDate } from "../utils/formatters";
 import { useHevyCache } from "../stores/hevy_cache";
 
@@ -76,7 +76,7 @@ const today = new Date().toISOString().split("T")[0];
 const userAccount = computed(() => store.userAccount);
 
 // Check if user is using PRO API key
-const isUsingProApi = computed(() => !!localStorage.getItem("hevy_api_key"));
+const isUsingProApi = ref<boolean>(false);
 
 const sortedMeasurements = computed(() => {
   return [...measurements.value].sort((a, b) => {
@@ -494,6 +494,10 @@ const getChangeClass = (index: number) => {
 
 // Lifecycle
 onMounted(async () => {
+  // Check auth mode from backend
+  const authStatus = await authService.getAuthStatus();
+  isUsingProApi.value = authStatus.auth_mode === "api_key";
+  
   await store.fetchUserAccount();
   loadMeasurements();
 });

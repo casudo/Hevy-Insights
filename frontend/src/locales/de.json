@@ -208,6 +208,11 @@
           "y": "Volumen"
         }
       }
+    },
+    "warnings": {
+      "repVolumeTitle": "Nicht verfügbar mit Hevy PRO API Schlüssel Login Modus!",
+      "repVolumeMessage": "Kann das Wiederholungsvolumen für Übungen mit Körpergewicht nicht berechnen, ohne Daten zum Körpergewicht. Diese Funktion erfordert einen Login mit Benutzername/Passwort (OAuth), da diese Methode die API Endpunkte für Körpermaße verwendet.",
+      "noBodyweight": "Es wurde kein Körpergewicht festgelegt."
     }
   },
   "share": {

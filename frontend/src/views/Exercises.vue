@@ -1261,13 +1261,13 @@ const barChartOptions = {
                 <!-- Warning for bodyweight exercises if using Hevy PRO API -->
                 <div v-if="ex.isBodyweight && isUsingProApi" class="graph-warning">
                   <span class="warning-icon">⚠️</span>
-                  <span>{{ $t("exercises.warnings.repVolumeProApi") }}</span>
+                  <span>{{ $t("exercises.warnings.repVolumeTitle") }}</span>
                 </div>
                 
                 <!-- Warning for bodyweight exercises with no body weight data -->
                 <div v-else-if="ex.isBodyweight && userBodyWeight === 0" class="graph-warning">
                   <span class="warning-icon">⚠️</span>
-                  <span>{{ $t("exercises.warnings.noBodyWeight") }}</span>
+                  <span>{{ $t("exercises.warnings.noBodyweight") }}</span>
                 </div>
                 
                 <div class="graph-grid chart-container" :class="{ 'chart-placeholder-small': ex.isBodyweight && (isUsingProApi || userBodyWeight === 0) }">
@@ -1289,7 +1289,7 @@ const barChartOptions = {
                     <!-- Show placeholder if no body weight data -->
                     <div v-else class="chart-placeholder">
                       <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
-                        {{ isUsingProApi ? $t("exercises.warnings.repVolumeProApi") : $t("exercises.warnings.noBodyWeight") }}
+                        {{ isUsingProApi ? $t("exercises.warnings.repVolumeMessage") : $t("exercises.warnings.noBodyweight") }}
                       </p>
                     </div>
                   </template>
