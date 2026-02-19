@@ -185,30 +185,45 @@ def clear_auth_cookies(response: Response) -> None:
             secure=COOKIE_SECURE,
             samesite=COOKIE_SAMESITE,
         )
+
+
+### Helper function to get client with OAuth2 Bearer token or PRO API key from cookies
+def get_hevy_client(
+    access_token_cookie: Optional[str] = None,
+    api_key_cookie: Optional[str] = None,
+) -> HevyClient:
+    """Creates a HevyClient with OAuth2 Bearer token or API key from cookies.
+
     Args:
-        authorization (Optional[str]): The Authorization header value (e.g., "Bearer <token>").
-        api_key (Optional[str]): The api-key header value for PRO users.
+        access_token_cookie: The hevy_access_token cookie value (Free API OAuth2 token)
+        api_key_cookie: The hevy_api_key cookie value (Hevy PRO API key)
 
     Raises:
-        HTTPException: If neither authorization nor api_key header is provided.
+        HTTPException: If neither cookie is provided or tokens are invalid.
 
     Returns:
         HevyClient: Configured Hevy client.
     """
-    ### Extract Bearer token from Authorization header
-    access_token = None
-    if authorization:
-        if authorization.startswith("Bearer "):
-            access_token = authorization[7:]  # Remove "Bearer " prefix
-        else:
-            access_token = authorization  # Fallback for direct token
-
-    if not access_token and not api_key:
+    ### Check for CSV mode (frontend-only, no backend authentication needed)
+    if access_token_cookie == "csv_mode":
         raise HTTPException(
-            status_code=401, detail="Missing authentication: provide either Authorization Bearer token or api-key header"
+            status_code=400,
+            detail="CSV mode does not support backend API calls. Data is stored client-side only.",
         )
 
-    return HevyClient(access_token=access_token, api_key=api_key)
+    ### Hevy PRO API key takes precedence
+    if api_key_cookie:
+        return HevyClient(api_key=api_key_cookie)
+
+    ### Use OAuth2 access token
+    if access_token_cookie and access_token_cookie != "api_key_mode":
+        return HevyClient(access_token=access_token_cookie)
+
+    ### No valid authentication
+    raise HTTPException(
+        status_code=401,
+        detail="Missing authentication: please login again",
+    )
 
 
 ### Helper function to load sample data for demo mode
