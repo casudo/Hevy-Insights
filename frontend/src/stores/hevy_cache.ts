@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { userService, workoutService } from "../services/api";
+import { userService, workoutService, authService } from "../services/api";
 
 interface UserAccount {
   username: string;
@@ -34,10 +34,7 @@ export const useHevyCache = defineStore("hevyCache", {
       if (state.dataSource === "csv") {
         return "CSV User";
       }
-      // For PRO API, username is not available
-      if (localStorage.getItem("hevy_api_key")) {
-        return state.userAccount?.username || "PRO User";
-      }
+      // Username comes from user account or is null
       return state.userAccount?.username || null;
     },
     hasWorkouts: (state) => state.workouts.length > 0,
@@ -64,16 +61,21 @@ export const useHevyCache = defineStore("hevyCache", {
         return this.userAccount;
       }
 
-      // In API key mode, create a mock user account (no username endpoint in PRO API)
-      const isApiKeyMode = !!localStorage.getItem("hevy_api_key");
-      if (isApiKeyMode) {
-        if (!this.userAccount || force) {
-          this.userAccount = {
-            username: "PRO User",
-            email: "pro@hevy.app",
-          };
+      // Check auth mode from backend to handle Hevy PRO API key mode
+      try {
+        const authStatus = await authService.getAuthStatus();
+        if (authStatus.auth_mode === "api_key") {
+          // In Hevy PROAPI key mode, create a mock user account (no username endpoint in PRO API)
+          if (!this.userAccount || force) {
+            this.userAccount = {
+              username: "PRO User",
+              email: "pro@hevy.app",
+            };
+          }
+          return this.userAccount;
         }
-        return this.userAccount;
+      } catch (error) {
+        console.error("Failed to check auth status:", error);
       }
 
       if (this.userAccount && !force) return this.userAccount;
@@ -130,7 +132,9 @@ export const useHevyCache = defineStore("hevyCache", {
 
       try {
         const allWorkouts: Workout[] = [];
-        const isProMode = !!localStorage.getItem("hevy_api_key");
+        // Check auth mode from backend
+        const authStatus = await authService.getAuthStatus();
+        const isProMode = authStatus.auth_mode === "api_key";
 
         if (isProMode) {
           // PRO API: page-based pagination
