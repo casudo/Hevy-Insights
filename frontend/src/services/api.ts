@@ -8,6 +8,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Enable sending cookies with requests
 });
 
 // ===============================================================================
@@ -16,6 +17,7 @@ const api = axios.create({
 export const authService = {
   async login(emailOrUsername: string, password: string) {
     // OAuth2 login with automatic reCAPTCHA token generation
+    // Backend will set HttpOnly cookies automatically
     const response = await api.post("/login", {
       emailOrUsername,
       password,
@@ -32,6 +34,8 @@ export const authService = {
   },
 
   async validateApiKey(apiKey: string) {
+    // Validate Hevy PRO API key
+    // Backend will set HttpOnly cookies if valid
     const response = await api.post("/validate_api_key", {
       api_key: apiKey,
     });
@@ -57,23 +61,13 @@ export const userService = {
 // Workout Service
 export const workoutService = {
   async getWorkouts(username: string, offset: number = 0) {
-    // Check if using API key (PRO mode)
-    const apiKey = localStorage.getItem("hevy_api_key");
-    
-    if (apiKey) {
-      // Use page-based pagination for PRO API
-      const page = Math.floor(offset / 10) + 1; // Convert offset to page number
-      const response = await api.get("/workouts", {
-        params: { page, page_size: 10 },
-      });
-      return response.data;
-    } else {
-      // Use offset-based pagination for free API
-      const response = await api.get("/workouts", {
-        params: { username, offset },
-      });
-      return response.data;
-    }
+    // Backend determines OAuth2 vs API key mode from cookies
+    // Hevy PRO API key mode uses page-based pagination
+    const page = Math.floor(offset / 10) + 1;
+    const response = await api.get("/workouts", {
+      params: { username, offset, page, page_size: 10 },
+    });
+    return response.data;
   },
 };
 
