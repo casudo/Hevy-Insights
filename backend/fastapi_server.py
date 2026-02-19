@@ -518,8 +518,8 @@ def get_user_account(
 
 @app.get("/api/workouts", tags=["Workouts"])
 def get_workouts(
-    authorization: Optional[str] = Header(None, alias="Authorization"),
-    api_key: Optional[str] = Header(None, alias="api-key"),
+    hevy_access_token: Optional[str] = Cookie(None),
+    hevy_api_key: Optional[str] = Cookie(None),
     offset: int = Query(0, ge=0, description="Pagination offset (increments of 5) - for OAuth2 mode"),
     username: Optional[str] = Query(None, description="Filter by username - for OAuth2 mode"),
     page: int = Query(1, ge=1, description="Page number - for api-key mode"),
@@ -536,7 +536,7 @@ def get_workouts(
     - **page**: Page number (default: 1)
     - **page_size**: Number of workouts per page (default: 10)
 
-    Requires either Authorization Bearer token or api-key header.
+    Requires authentication cookie (OAuth2 token or API key).
     """
     ### Demo mode: return complete sample data only on first request, empty afterwards
     if DEMO_MODE:
@@ -546,10 +546,10 @@ def get_workouts(
             return {"workouts": []}
 
     try:
-        client = get_hevy_client(authorization=authorization, api_key=api_key)
+        client = get_hevy_client(access_token_cookie=hevy_access_token, api_key_cookie=hevy_api_key)
 
         ### Use PRO API if API key is provided
-        if api_key:
+        if hevy_api_key:
             workouts = client.get_pro_workouts(page=page, page_size=page_size)
         else:
             ### Use OAuth2 API with Bearer token
