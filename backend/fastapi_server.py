@@ -265,7 +265,7 @@ def load_sample_data(filename: str) -> dict:
 
 @app.post("/api/login", response_model=LoginResponse, tags=["Authentication"])
 @limiter.limit("5/minute")  # Max 5 login attempts per minute per IP
-async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
+async def login(credentials: LoginRequest, request: Request, response: Response) -> LoginResponse:
     """
     Login with Hevy credentials using OAuth2 authentication.
 
@@ -273,11 +273,12 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
     - **password**: Your Hevy password
 
     Returns OAuth2 access token with refresh token. Rate limited to 5 attempts per minute.
+    Sets HttpOnly cookies for secure token storage.
     """
     ### Demo mode: accept any credentials
     if DEMO_MODE:
         logging.info("Demo mode: Login successful (any credentials accepted)")
-        return LoginResponse(
+        login_response = LoginResponse(
             access_token="demo-access-token",
             refresh_token="demo-refresh-token",
             user_id="demo-user-id",
@@ -285,6 +286,14 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
             email="demo_user@demo.local",
             expires_at=int((datetime.now() + timedelta(days=30)).timestamp()),
         )
+        ### Set cookies for demo mode
+        set_auth_cookies(
+            response,
+            access_token=login_response.access_token,
+            refresh_token=login_response.refresh_token,
+            expires_at=login_response.expires_at,
+        )
+        return login_response
 
     try:
         ### Step 1: Get reCAPTCHA token automatically
@@ -294,7 +303,7 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
         client = HevyClient()
         user = client.login(credentials.emailOrUsername, credentials.password, recaptcha_token)
 
-        return LoginResponse(
+        login_response = LoginResponse(
             access_token=user.access_token,
             refresh_token=user.refresh_token,
             user_id=user.user_id,
@@ -302,6 +311,16 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
             email=user.email,
             expires_at=user.expires_at,
         )
+
+        ### Set authentication cookies
+        set_auth_cookies(
+            response,
+            access_token=user.access_token,
+            refresh_token=user.refresh_token,
+            expires_at=user.expires_at,
+        )
+
+        return login_response
 
     except HevyError as e:
         logging.error(f"Login error: {e}")
