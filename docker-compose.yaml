@@ -13,6 +13,7 @@ services:
       - X_API_KEY=klean_kanteen_insulated
       - LOG_LEVEL=INFO
       - RECAPTCHA_SITE_KEY=6LfkQG0jAAAAANTrIkVXKPfSPHyJnt4hYPWqxh0R
+      - COOKIE_SECURE=true # True for Production with HTTPS, false for local testing
     hostname: hevy_backend
     networks:
       - YOUR_EXISTING_NETWORK

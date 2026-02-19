@@ -100,9 +100,10 @@ class HealthResponse(BaseModel):
     status: str
 
 
-### Helper function to get client with OAuth2 Bearer token or PRO API key
-def get_hevy_client(authorization: Optional[str] = None, api_key: Optional[str] = None) -> HevyClient:
-    """Creates a HevyClient with OAuth2 Bearer token or API key.
+### Cookie configuration
+COOKIE_SECURE = getenv("COOKIE_SECURE", "false").lower() == "true"  # Set to True in production with HTTPS
+COOKIE_SAMESITE = "lax"  # "lax, strict, none: Lax for balance
+COOKIE_MAX_AGE = 60 * 60  # 1 hour max.
 
     Args:
         authorization (Optional[str]): The Authorization header value (e.g., "Bearer <token>").
