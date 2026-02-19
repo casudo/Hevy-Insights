@@ -408,22 +408,29 @@ def refresh_token(
 
 
 @app.post("/api/validate_api_key", response_model=ValidateApiKeyResponse, tags=["Authentication"])
-def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
+def validate_api_key(key_data: ValidateApiKeyRequest, response: Response) -> ValidateApiKeyResponse:
     """
     Validate a Hevy PRO API key.
 
     - **api_key**: The API key to validate
 
-    Returns validation status.
+    Returns validation status and sets HttpOnly cookie if valid.
     """
     ### Demo mode: always return valid
     if DEMO_MODE:
         logging.info("Demo mode: API key validation bypassed (always valid)")
+        set_auth_cookies(response, api_key="demo-api-key")
         return ValidateApiKeyResponse(valid=True)
 
     try:
         client = HevyClient(api_key=key_data.api_key)
         is_valid = client.validate_api_key()
+
+        if is_valid:
+            ### Set API key cookie
+            set_auth_cookies(response, api_key=key_data.api_key)
+            ### Also set a marker to indicate API key mode
+            set_auth_cookies(response, access_token="api_key_mode")
 
         return ValidateApiKeyResponse(valid=is_valid)
 
