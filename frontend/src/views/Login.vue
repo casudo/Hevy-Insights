@@ -53,15 +53,6 @@ const handleLogin = async () => {
     clearTimeout(slowLoginTimer);
     
     if (result.access_token) {
-      // Store OAuth2 tokens
-      localStorage.setItem("hevy_access_token", result.access_token);
-      if (result.refresh_token) {
-        localStorage.setItem("hevy_refresh_token", result.refresh_token);
-      }
-      if (result.expires_at) {
-        localStorage.setItem("hevy_token_expires_at", result.expires_at.toString());
-      }
-      
       await store.switchToAPIMode();
       
       router.push("/dashboard");
@@ -91,8 +82,6 @@ const handleApiKeyLogin = async () => {
     const result = await authService.validateApiKey(apiKey.value);
     
     if (result.valid) {
-      localStorage.setItem("hevy_api_key", apiKey.value);
-      localStorage.setItem("hevy_access_token", "api_key_mode");
       await store.switchToAPIMode();
       router.push("/dashboard");
     } else {
