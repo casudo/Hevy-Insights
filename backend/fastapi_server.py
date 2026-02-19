@@ -449,6 +449,46 @@ def logout(response: Response):
     clear_auth_cookies(response)
     return {"message": "Logged out successfully"}
 
+
+@app.get("/api/auth/status", response_model=AuthStatusResponse, tags=["Authentication"])
+def auth_status(
+    hevy_access_token: Optional[str] = Cookie(None),
+    hevy_api_key: Optional[str] = Cookie(None),
+):
+    """
+    Check current authentication status.
+
+    Returns whether user is authenticated and the auth mode.
+    Useful for frontend route guards.
+    """
+    ### CSV mode (client-side only, marked by special token)
+    if hevy_access_token == "csv_mode":
+        return AuthStatusResponse(
+            authenticated=True,
+            auth_mode="csv",
+        )
+
+    ### Hevy PRO API key mode
+    if hevy_api_key or hevy_access_token == "api_key_mode":
+        return AuthStatusResponse(
+            authenticated=True,
+            auth_mode="api_key",
+        )
+
+    ### OAuth2 mode (has access token but not CSV/API key mode)
+    if hevy_access_token and hevy_access_token not in ["csv_mode", "api_key_mode"]:
+        return AuthStatusResponse(
+            authenticated=True,
+            auth_mode="oauth2",
+        )
+
+    ### Not authenticated
+    return AuthStatusResponse(
+        authenticated=False,
+        auth_mode=None,
+    )
+
+
 @app.get("/api/user/account", tags=["User"])
 def get_user_account(
     authorization: Optional[str] = Header(None, alias="Authorization"), api_key: Optional[str] = Header(None, alias="api-key")
