@@ -25,14 +25,6 @@ export const authService = {
     return response.data;
   },
 
-  async refreshToken(refreshToken: string, accessToken?: string) {
-    const response = await api.post("/refresh_token", {
-      refresh_token: refreshToken,
-      access_token: accessToken,
-    });
-    return response.data;
-  },
-
   async validateApiKey(apiKey: string) {
     // Validate Hevy PRO API key
     // Backend will set HttpOnly cookies if valid
