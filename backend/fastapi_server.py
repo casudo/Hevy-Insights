@@ -335,19 +335,23 @@ async def login(credentials: LoginRequest, request: Request, response: Response)
 
 @app.post("/api/refresh_token", response_model=LoginResponse, tags=["Authentication"])
 @limiter.limit("10/minute")  # Max 10 refresh attempts per minute per IP
-def refresh_token(token_request: RefreshTokenRequest, request: Request) -> LoginResponse:
+def refresh_token(
+    request: Request,
+    response: Response,
+    hevy_refresh_token: Optional[str] = Cookie(None),
+    hevy_access_token: Optional[str] = Cookie(None),
+) -> LoginResponse:
     """
     Refresh an expired or expiring OAuth2 access token.
 
-    - **refresh_token**: The refresh token received during login
-
+    Reads refresh token from HttpOnly cookie.
     Returns new OAuth2 access token with updated expiration.
     Rate limited to 10 attempts per minute.
     """
     ### Demo mode: return demo tokens
     if DEMO_MODE:
         logging.info("Demo mode: Token refresh successful")
-        return LoginResponse(
+        refresh_response = LoginResponse(
             access_token="demo-access-token-refreshed",
             refresh_token="demo-refresh-token-refreshed",
             user_id="demo-user-id",
@@ -355,17 +359,26 @@ def refresh_token(token_request: RefreshTokenRequest, request: Request) -> Login
             email="demo_user@demo.local",
             expires_at=int((datetime.now() + timedelta(days=30)).timestamp()),
         )
+        set_auth_cookies(
+            response,
+            access_token=refresh_response.access_token,
+            refresh_token=refresh_response.refresh_token,
+            expires_at=refresh_response.expires_at,
+        )
+        return refresh_response
+
+    if not hevy_refresh_token:
+        raise HTTPException(status_code=401, detail="No refresh token found. Please login again.")
 
     try:
-        ### Refresh the access token using the refresh token
+        ### Refresh the access token using the refresh token from cookie
         client = HevyClient()
         user = client.refresh_access_token(
-            refresh_token=token_request.refresh_token, current_access_token=token_request.access_token
+            refresh_token=hevy_refresh_token,
+            current_access_token=hevy_access_token,
         )
 
-        ### TODO: Add same response checks as in hevy_api.login()
-
-        return LoginResponse(
+        refresh_response = LoginResponse(
             access_token=user.access_token,
             refresh_token=user.refresh_token,
             user_id=user.user_id,
@@ -374,8 +387,20 @@ def refresh_token(token_request: RefreshTokenRequest, request: Request) -> Login
             expires_at=user.expires_at,
         )
 
+        ### Update authentication cookies with refreshed tokens
+        set_auth_cookies(
+            response,
+            access_token=user.access_token,
+            refresh_token=user.refresh_token,
+            expires_at=user.expires_at,
+        )
+
+        return refresh_response
+
     except HevyError as e:
         logging.error(f"Token refresh error: {e}")
+        ### Clear invalid cookies
+        clear_auth_cookies(response)
         raise HTTPException(status_code=401, detail=str(e))
     except Exception as e:
         logging.error(f"Unexpected token refresh error: {e}")
