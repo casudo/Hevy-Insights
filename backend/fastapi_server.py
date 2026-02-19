@@ -113,7 +113,7 @@ def set_auth_cookies(
     refresh_token: Optional[str] = None,
     api_key: Optional[str] = None,
     expires_at: Optional[int] = None,
-):
+) -> None:
     """Set authentication cookies with secure attributes.
 
     Args:
@@ -169,6 +169,22 @@ def set_auth_cookies(
             path="/",
         )
 
+
+### Helper function to clear authentication cookies
+def clear_auth_cookies(response: Response) -> None:
+    """Clear all authentication cookies.
+
+    Args:
+        response: FastAPI Response object to clear cookies from
+    """
+    cookie_names = ["hevy_access_token", "hevy_refresh_token", "hevy_api_key", "hevy_token_expires_at"]
+    for cookie_name in cookie_names:
+        response.delete_cookie(
+            key=cookie_name,
+            path="/",
+            secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE,
+        )
     Args:
         authorization (Optional[str]): The Authorization header value (e.g., "Bearer <token>").
         api_key (Optional[str]): The api-key header value for PRO users.
