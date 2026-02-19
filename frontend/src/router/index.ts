@@ -8,6 +8,7 @@ import Settings from "../views/Settings.vue";
 import Share from "../views/Share.vue";
 import BodyMeasurements from "../views/BodyMeasurements.vue";
 import Profile from "../views/Profile.vue";
+import { authService } from "../services/api";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -84,21 +85,34 @@ const router = createRouter({
 });
 
 // Navigation guard to check authentication
-router.beforeEach((to, _from, next) => {
-  const token = localStorage.getItem("hevy_access_token");
+router.beforeEach(async (to, _from, next) => {
+ // Check CSV mode from localStorage (client-side only, no backend auth)
+  const csvMode = localStorage.getItem("hevy_access_token") === "csv_mode";
   
-  if (to.meta.requiresAuth && !token) {
+  // Check authentication from backend (for OAuth2 and API key modes)
+  let isAuthenticated = csvMode;
+  if (!csvMode) {
+    try {
+      const authStatus = await authService.getAuthStatus();
+      isAuthenticated = authStatus.authenticated;
+    } catch (error) {
+      console.error("Auth status check failed:", error);
+      isAuthenticated = false;
+    }
+  }
+  
+  if (to.meta.requiresAuth && !isAuthenticated) {
     return next("/login");
   }
 
-  if (to.path === "/login" && token) {
+  if (to.path === "/login" && isAuthenticated) {
     return next("/dashboard");
   }
 
   // If route is unmatched (catch-all), send to dashboard or login
   const isCatchAll = to.name === "NotFoundRedirect";
   if (isCatchAll) {
-    return next(token ? "/dashboard" : "/login");
+    return next(isAuthenticated ? "/dashboard" : "/login");
   }
 
   return next();

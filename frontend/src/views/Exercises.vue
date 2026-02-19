@@ -5,6 +5,7 @@ import { formatWeight, getWeightUnit, getDistanceUnit, formatPRValue, formatDate
 import { detectExerciseType, formatDurationSeconds, formatDistance, isBodyweightExercise } from "../utils/exerciseTypeDetector";
 import { Scatter, Bar, Line } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
+import { authService } from "../services/api";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -46,6 +47,9 @@ const expanded = ref<Record<string, boolean>>({});
 
 // Body weight for rep volume calculations (bodyweight exercises)
 const userBodyWeight = ref<number>(0);
+
+// Check if using Hevy PRO API (no body measurements available)
+const isUsingProApi = ref<boolean>(false);
 
 // Search by exercise name (debounced)
 const search = ref("");
@@ -116,6 +120,10 @@ const allWorkouts = computed(() => store.workouts || []);
 
 onMounted(async () => {
   await store.fetchWorkouts();
+  
+  // Check auth mode from backend
+  const authStatus = await authService.getAuthStatus();
+  isUsingProApi.value = authStatus.auth_mode === "api_key";
   
   // Load body weight for rep volume calculations (free API only)
   if (!isUsingProApi.value) {
@@ -774,8 +782,6 @@ function getDurationOverTimeChartData(ex: any, graphRange: GraphRange = 0) {
 }
 
 // Bodyweight exercise (reps_only) chart data builders
-// Check if using PRO API (no body measurements available)
-const isUsingProApi = computed(() => !!localStorage.getItem("hevy_api_key"));
 
 // Rep Volume chart for bodyweight exercises
 // Calculates volume as: reps × body_weight

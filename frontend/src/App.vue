@@ -9,7 +9,7 @@ const route = useRoute();
 const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
 const showNav = ref(false);
-const appVersion = "v1.8.3"; // Update version as needed
+const appVersion = "v1.8.4"; // Update version as needed
 const isMobileSidebarOpen = ref(false);
 const showTopbar = ref(true);
 const showScrollTop = ref(false);

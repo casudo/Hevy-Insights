@@ -48,7 +48,8 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
   - **Hevy Credentials (OAuth2)**: Login with your Hevy username/email and password using OAuth2 with automatic reCAPTCHA v3 handling (no PRO membership required)
   - **Hevy PRO API Key**: Use your revokable Hevy PRO API key from [hevy.com/settings?developer](https://hevy.com/settings?developer)
   - **CSV Upload**: Upload your exported workout CSV file from the Hevy app
-  - All credentials are stored in your browser's local storage **only**
+  - Authentication tokens are stored in **secure HttpOnly cookies** (not accessible to JavaScript, protecting against XSS attacks)
+  - User preferences are stored in your browser's local storage
 - **Dashboard**: Interactive charts and statistics of your workouts, including volume, muscle distribution and hours trained.
 - **Workout History**: Workout logs with detailed exercise information up to the date of account creation - card or list design.
 - **Exercises**: View all exercises with video thumbnails and detailed stats.
@@ -145,7 +146,9 @@ Navigate to the hosted version of Hevy Insights at: [https://hevy.kida.one](http
 The latest version is always hosted there.
 
 > [!IMPORTANT]
-> **Only** your Hevy API token is stored **at your own browser's local storage**. No other data is stored!
+> **Authentication tokens** are stored in **secure HttpOnly cookies** on **your browser only**! 
+> These cookies are not accessible to JavaScript (XSS protection) and are automatically sent with API requests.  
+> **User preferences** (theme, language, settings) are stored in your browser's local storage.
 
 ## Local Setup
 
@@ -188,7 +191,6 @@ Clone/download the repository and follow these steps:
 # Future Goals
 
 - Better logging
-- Replace localStorage with HTTP cookie
 - Add visual representation of trained muscle groups (body heatmap)
 - Add calendar filter
 - In-depth muscle analysis page
@@ -264,11 +266,11 @@ hevy-insights/
 - **index.html**: Browser loads this HTML document first. It defines the root node `<div id="app"></div>` and includes `<script type="module" src="/src/main.ts">`.
 - **main.ts**: Entry script runs. Vite serves ES modules and applies HMR in dev. We `createApp(App)`, install `Pinia` and the `Router`, then `mount("#app")`.
 - **App.vue**: Root component renders the global shell (fixed sidebar + main). On mount and after each route change it checks `localStorage` for `hevy_access_token` to toggle sidebar visibility and protect routes.
-- **Router**: Resolves the current URL (`/login`, `/dashboard`, `/workouts-card`, `/workouts-list`) and renders the matched view inside `<router-view />`. Auth guards prevent accessing protected routes without a token.
+- **Router**: Resolves the current URL (`/login`, `/dashboard`, `/workouts-card`, `/workouts-list`) and renders the matched view inside `<router-view />`. Auth guards check authentication status from backend via `/api/auth/status` endpoint.
 - **View Components**: The matched page component (`Login.vue`, `Dashboard.vue`, `Workouts_Card.vue`, `.....vue`) runs `setup()` and lifecycle hooks (`onMounted`).
 - **Pinia Store** (*frontend/src/stores/hevy_cache.ts*): Centralized state with 5‑minute caching for workouts (`workoutsLastFetched`). Exposes actions `fetchUserAccount()`, `fetchWorkouts(force)` and getters like `username`, `hasWorkouts`. Prevents redundant API calls when navigating.
-- **Axios Service** (*frontend/src/services/api.ts*): Configures base URL and injects authentication headers (`Authorization: Bearer <token>` or `api-key: <key>`) via interceptors. Includes automatic OAuth2 token refresh on 401 errors. All frontend API calls to the backend go through these typed helpers.
-- **Backend** (FastAPI): Serves `/api` endpoints. Supports dual authentication (OAuth2 Bearer tokens or PRO API keys) and proxies requests to the official Hevy API. Frontend receives JSON responses and Vue reactivity updates the UI.
+- **Axios Service** (*frontend/src/services/api.ts*): Configures base URL with `withCredentials: true` for cookie support. Authentication is handled automatically via HttpOnly cookies set by the backend. All frontend API calls to the backend go through these typed helpers.
+- **Backend** (FastAPI): Serves `/api` endpoints. Supports dual authentication (OAuth2 Bearer tokens or PRO API keys) via HttpOnly cookies. Proxies requests to the official Hevy API. Frontend receives JSON responses and Vue reactivity updates the UI.
 
 ### API Authentication Flow
 
@@ -277,16 +279,16 @@ hevy-insights/
 1. User logs in via `/api/login` endpoint with Hevy credentials
 2. Backend automatically generates reCAPTCHA v3 token using Playwright (headless Chrome)
 3. Backend authenticates with Hevy API using OAuth2 and receives `access_token` + `refresh_token`
-4. Frontend stores tokens in localStorage (`hevy_access_token`, `hevy_refresh_token`, `hevy_token_expires_at`)
-5. Subsequent API requests include `Authorization: Bearer <access_token>` header
-6. On 401 errors, frontend automatically refreshes token via `/api/refresh_token` and retries request
-7. Backend uses access token to authenticate requests to Hevy API
+4. Backend sets **HttpOnly cookies** (`hevy_access_token`, `hevy_refresh_token`, `hevy_token_expires_at`)
+5. Browser automatically sends cookies with subsequent API requests
+6. Backend reads authentication from cookies and proxies requests to Hevy API
+7. On token expiration, backend automatically refreshes tokens via `/api/refresh_token` using refresh token cookie
 
 **PRO API Key Authentication:**
 
 1. User validates API key via `/api/validate_api_key` endpoint
-2. Frontend stores API key in localStorage (`hevy_api_key`)
-3. Subsequent API requests include `api-key: <key>` header
+2. Backend sets **HttpOnly cookies** (`hevy_api_key`, marker token)
+3. Browser automatically sends cookies with subsequent API requests
 4. Backend routes requests to Hevy PRO API endpoints
 
 ## API in Dev vs Prod

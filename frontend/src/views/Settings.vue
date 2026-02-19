@@ -2,12 +2,14 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useHevyCache } from "../stores/hevy_cache";
+import { authService } from "../services/api";
 
 const store = useHevyCache();
 const { locale, t } = useI18n();
 const userAccount = computed(() => store.userAccount);
 const dataSource = computed(() => store.dataSource);
-const isUsingApiKey = computed(() => !!localStorage.getItem("hevy_api_key"));
+const authMode = ref<string | null>(null);
+const isUsingApiKey = computed(() => authMode.value === "api_key");
 
 // Color theme presets
 const colorThemes = [
@@ -60,8 +62,11 @@ watch(selectedTheme, (newTheme) => {
 });
 
 // Apply saved theme on mount
-onMounted(() => {
+onMounted(async () => {
   applyTheme(selectedTheme.value);
+  // Check authentication mode from backend
+  const authStatus = await authService.getAuthStatus();
+  authMode.value = authStatus.auth_mode;
 });
 
 // Language settings

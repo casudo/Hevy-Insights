@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Header, Query, Request
+from fastapi import FastAPI, HTTPException, Query, Request, Response, Cookie
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -36,14 +36,14 @@ if DEMO_MODE:
     logging.warning("=" * 80)
 
 ### Version check configuration
-CURRENT_VERSION = "1.8.3"
+CURRENT_VERSION = "1.8.4"
 GITHUB_REPO = "casudo/Hevy-Insights"
 version_cache = {"latest_version": None, "checked_at": None}
 
 app = FastAPI(
     title="Hevy Insights API",
     description="Backend API for Hevy Insights",
-    version="1.4.0",
+    version="1.5.0",
     docs_url="/api/docs",  # Swagger
 )
 ### Initialize rate limiter
@@ -100,34 +100,135 @@ class HealthResponse(BaseModel):
     status: str
 
 
-### Helper function to get client with OAuth2 Bearer token or PRO API key
-def get_hevy_client(authorization: Optional[str] = None, api_key: Optional[str] = None) -> HevyClient:
-    """Creates a HevyClient with OAuth2 Bearer token or API key.
+class AuthStatusResponse(BaseModel):
+    authenticated: bool
+    auth_mode: Optional[str] = None  # "oauth2", "api_key", or "csv"
+
+
+### Cookie configuration
+COOKIE_SECURE = getenv("COOKIE_SECURE", "false").lower() == "true"  # Set to True in production with HTTPS
+COOKIE_SAMESITE = "lax"  # "lax, strict, none: Lax for balance
+COOKIE_MAX_AGE = 60 * 60  # 1 hour max.
+
+
+### Helper function to set authentication cookies
+def set_auth_cookies(
+    response: Response,
+    access_token: Optional[str] = None,
+    refresh_token: Optional[str] = None,
+    api_key: Optional[str] = None,
+    expires_at: Optional[int] = None,
+) -> None:
+    """Set authentication cookies with secure attributes.
 
     Args:
-        authorization (Optional[str]): The Authorization header value (e.g., "Bearer <token>").
-        api_key (Optional[str]): The api-key header value for PRO users.
+        response: FastAPI Response object to set cookies on
+        access_token: OAuth2 access token
+        refresh_token: OAuth2 refresh token
+        api_key: Hevy PRO API key
+        expires_at: Token expiration timestamp
+    """
+    ### "Free" HEVY API login
+    if access_token:
+        response.set_cookie(
+            key="hevy_access_token",
+            value=access_token,
+            max_age=COOKIE_MAX_AGE,
+            httponly=True,  # Prevents JavaScript access (XSS protection)
+            secure=COOKIE_SECURE,  # HTTPS only in production
+            samesite=COOKIE_SAMESITE,  # CSRF protection
+            path="/",
+        )
+
+    if refresh_token:
+        response.set_cookie(
+            key="hevy_refresh_token",
+            value=refresh_token,
+            max_age=COOKIE_MAX_AGE,
+            httponly=True,
+            secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE,
+            path="/",
+        )
+
+    if expires_at:
+        response.set_cookie(
+            key="hevy_token_expires_at",
+            value=str(expires_at),
+            max_age=COOKIE_MAX_AGE,
+            httponly=True,
+            secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE,
+            path="/",
+        )
+
+    ### Hevy PRO API key login
+    if api_key:
+        response.set_cookie(
+            key="hevy_api_key",
+            value=api_key,
+            max_age=COOKIE_MAX_AGE,
+            httponly=True,
+            secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE,
+            path="/",
+        )
+
+
+### Helper function to clear authentication cookies
+def clear_auth_cookies(response: Response) -> None:
+    """Clear all authentication cookies.
+
+    Args:
+        response: FastAPI Response object to clear cookies from
+    """
+    cookie_names = ["hevy_access_token", "hevy_refresh_token", "hevy_api_key", "hevy_token_expires_at"]
+    for cookie_name in cookie_names:
+        response.delete_cookie(
+            key=cookie_name,
+            path="/",
+            secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE,
+        )
+
+
+### Helper function to get client with OAuth2 Bearer token or PRO API key from cookies
+def get_hevy_client(
+    access_token_cookie: Optional[str] = None,
+    api_key_cookie: Optional[str] = None,
+) -> HevyClient:
+    """Creates a HevyClient with OAuth2 Bearer token or API key from cookies.
+
+    Args:
+        access_token_cookie: The hevy_access_token cookie value (Free API OAuth2 token)
+        api_key_cookie: The hevy_api_key cookie value (Hevy PRO API key)
 
     Raises:
-        HTTPException: If neither authorization nor api_key header is provided.
+        HTTPException: If neither cookie is provided or tokens are invalid.
 
     Returns:
         HevyClient: Configured Hevy client.
     """
-    ### Extract Bearer token from Authorization header
-    access_token = None
-    if authorization:
-        if authorization.startswith("Bearer "):
-            access_token = authorization[7:]  # Remove "Bearer " prefix
-        else:
-            access_token = authorization  # Fallback for direct token
-
-    if not access_token and not api_key:
+    ### Check for CSV mode (frontend-only, no backend authentication needed)
+    if access_token_cookie == "csv_mode":
         raise HTTPException(
-            status_code=401, detail="Missing authentication: provide either Authorization Bearer token or api-key header"
+            status_code=400,
+            detail="CSV mode does not support backend API calls. Data is stored client-side only.",
         )
 
-    return HevyClient(access_token=access_token, api_key=api_key)
+    ### Hevy PRO API key takes precedence
+    if api_key_cookie:
+        return HevyClient(api_key=api_key_cookie)
+
+    ### Use OAuth2 access token
+    if access_token_cookie and access_token_cookie != "api_key_mode":
+        return HevyClient(access_token=access_token_cookie)
+
+    ### No valid authentication
+    raise HTTPException(
+        status_code=401,
+        detail="Missing authentication: please login again",
+    )
 
 
 ### Helper function to load sample data for demo mode
@@ -169,7 +270,7 @@ def load_sample_data(filename: str) -> dict:
 
 @app.post("/api/login", response_model=LoginResponse, tags=["Authentication"])
 @limiter.limit("5/minute")  # Max 5 login attempts per minute per IP
-async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
+async def login(credentials: LoginRequest, request: Request, response: Response) -> LoginResponse:
     """
     Login with Hevy credentials using OAuth2 authentication.
 
@@ -177,11 +278,12 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
     - **password**: Your Hevy password
 
     Returns OAuth2 access token with refresh token. Rate limited to 5 attempts per minute.
+    Sets HttpOnly cookies for secure token storage.
     """
     ### Demo mode: accept any credentials
     if DEMO_MODE:
         logging.info("Demo mode: Login successful (any credentials accepted)")
-        return LoginResponse(
+        login_response = LoginResponse(
             access_token="demo-access-token",
             refresh_token="demo-refresh-token",
             user_id="demo-user-id",
@@ -189,6 +291,14 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
             email="demo_user@demo.local",
             expires_at=int((datetime.now() + timedelta(days=30)).timestamp()),
         )
+        ### Set cookies for demo mode
+        set_auth_cookies(
+            response,
+            access_token=login_response.access_token,
+            refresh_token=login_response.refresh_token,
+            expires_at=login_response.expires_at,
+        )
+        return login_response
 
     try:
         ### Step 1: Get reCAPTCHA token automatically
@@ -198,7 +308,7 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
         client = HevyClient()
         user = client.login(credentials.emailOrUsername, credentials.password, recaptcha_token)
 
-        return LoginResponse(
+        login_response = LoginResponse(
             access_token=user.access_token,
             refresh_token=user.refresh_token,
             user_id=user.user_id,
@@ -206,6 +316,16 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
             email=user.email,
             expires_at=user.expires_at,
         )
+
+        ### Set authentication cookies
+        set_auth_cookies(
+            response,
+            access_token=user.access_token,
+            refresh_token=user.refresh_token,
+            expires_at=user.expires_at,
+        )
+
+        return login_response
 
     except HevyError as e:
         logging.error(f"Login error: {e}")
@@ -220,19 +340,23 @@ async def login(credentials: LoginRequest, request: Request) -> LoginResponse:
 
 @app.post("/api/refresh_token", response_model=LoginResponse, tags=["Authentication"])
 @limiter.limit("10/minute")  # Max 10 refresh attempts per minute per IP
-def refresh_token(token_request: RefreshTokenRequest, request: Request) -> LoginResponse:
+def refresh_token(
+    request: Request,
+    response: Response,
+    hevy_refresh_token: Optional[str] = Cookie(None),
+    hevy_access_token: Optional[str] = Cookie(None),
+) -> LoginResponse:
     """
     Refresh an expired or expiring OAuth2 access token.
 
-    - **refresh_token**: The refresh token received during login
-
+    Reads refresh token from HttpOnly cookie.
     Returns new OAuth2 access token with updated expiration.
     Rate limited to 10 attempts per minute.
     """
     ### Demo mode: return demo tokens
     if DEMO_MODE:
         logging.info("Demo mode: Token refresh successful")
-        return LoginResponse(
+        refresh_response = LoginResponse(
             access_token="demo-access-token-refreshed",
             refresh_token="demo-refresh-token-refreshed",
             user_id="demo-user-id",
@@ -240,17 +364,26 @@ def refresh_token(token_request: RefreshTokenRequest, request: Request) -> Login
             email="demo_user@demo.local",
             expires_at=int((datetime.now() + timedelta(days=30)).timestamp()),
         )
+        set_auth_cookies(
+            response,
+            access_token=refresh_response.access_token,
+            refresh_token=refresh_response.refresh_token,
+            expires_at=refresh_response.expires_at,
+        )
+        return refresh_response
+
+    if not hevy_refresh_token:
+        raise HTTPException(status_code=401, detail="No refresh token found. Please login again.")
 
     try:
-        ### Refresh the access token using the refresh token
+        ### Refresh the access token using the refresh token from cookie
         client = HevyClient()
         user = client.refresh_access_token(
-            refresh_token=token_request.refresh_token, current_access_token=token_request.access_token
+            refresh_token=hevy_refresh_token,
+            current_access_token=hevy_access_token,
         )
 
-        ### TODO: Add same response checks as in hevy_api.login()
-
-        return LoginResponse(
+        refresh_response = LoginResponse(
             access_token=user.access_token,
             refresh_token=user.refresh_token,
             user_id=user.user_id,
@@ -259,8 +392,20 @@ def refresh_token(token_request: RefreshTokenRequest, request: Request) -> Login
             expires_at=user.expires_at,
         )
 
+        ### Update authentication cookies with refreshed tokens
+        set_auth_cookies(
+            response,
+            access_token=user.access_token,
+            refresh_token=user.refresh_token,
+            expires_at=user.expires_at,
+        )
+
+        return refresh_response
+
     except HevyError as e:
         logging.error(f"Token refresh error: {e}")
+        ### Clear invalid cookies
+        clear_auth_cookies(response)
         raise HTTPException(status_code=401, detail=str(e))
     except Exception as e:
         logging.error(f"Unexpected token refresh error: {e}")
@@ -268,22 +413,29 @@ def refresh_token(token_request: RefreshTokenRequest, request: Request) -> Login
 
 
 @app.post("/api/validate_api_key", response_model=ValidateApiKeyResponse, tags=["Authentication"])
-def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
+def validate_api_key(key_data: ValidateApiKeyRequest, response: Response) -> ValidateApiKeyResponse:
     """
     Validate a Hevy PRO API key.
 
     - **api_key**: The API key to validate
 
-    Returns validation status.
+    Returns validation status and sets HttpOnly cookie if valid.
     """
     ### Demo mode: always return valid
     if DEMO_MODE:
         logging.info("Demo mode: API key validation bypassed (always valid)")
+        set_auth_cookies(response, api_key="demo-api-key")
         return ValidateApiKeyResponse(valid=True)
 
     try:
         client = HevyClient(api_key=key_data.api_key)
         is_valid = client.validate_api_key()
+
+        if is_valid:
+            ### Set API key cookie
+            set_auth_cookies(response, api_key=key_data.api_key)
+            ### Also set a marker to indicate API key mode
+            set_auth_cookies(response, access_token="api_key_mode")
 
         return ValidateApiKeyResponse(valid=is_valid)
 
@@ -292,14 +444,65 @@ def validate_api_key(key_data: ValidateApiKeyRequest) -> ValidateApiKeyResponse:
         return ValidateApiKeyResponse(valid=False, error=str(e))
 
 
+@app.post("/api/logout", tags=["Authentication"])
+def logout(response: Response):
+    """
+    Logout the current user by clearing authentication cookies.
+
+    Returns success message.
+    """
+    clear_auth_cookies(response)
+    return {"message": "Logged out successfully"}
+
+
+@app.get("/api/auth/status", response_model=AuthStatusResponse, tags=["Authentication"])
+def auth_status(
+    hevy_access_token: Optional[str] = Cookie(None),
+    hevy_api_key: Optional[str] = Cookie(None),
+):
+    """
+    Check current authentication status.
+
+    Returns whether user is authenticated and the auth mode.
+    Useful for frontend route guards.
+    """
+    ### CSV mode (client-side only, marked by special token)
+    if hevy_access_token == "csv_mode":
+        return AuthStatusResponse(
+            authenticated=True,
+            auth_mode="csv",
+        )
+
+    ### Hevy PRO API key mode
+    if hevy_api_key or hevy_access_token == "api_key_mode":
+        return AuthStatusResponse(
+            authenticated=True,
+            auth_mode="api_key",
+        )
+
+    ### OAuth2 mode (has access token but not CSV/API key mode)
+    if hevy_access_token and hevy_access_token not in ["csv_mode", "api_key_mode"]:
+        return AuthStatusResponse(
+            authenticated=True,
+            auth_mode="oauth2",
+        )
+
+    ### Not authenticated
+    return AuthStatusResponse(
+        authenticated=False,
+        auth_mode=None,
+    )
+
+
 @app.get("/api/user/account", tags=["User"])
 def get_user_account(
-    authorization: Optional[str] = Header(None, alias="Authorization"), api_key: Optional[str] = Header(None, alias="api-key")
+    hevy_access_token: Optional[str] = Cookie(None),
+    hevy_api_key: Optional[str] = Cookie(None),
 ) -> dict:
     """
     Get authenticated user's account information.
 
-    Requires either Authorization Bearer token or api-key header.
+    Requires authentication cookie (OAuth2 token or Hevy PRO API key).
     """
     ### Demo mode: return sample data
     if DEMO_MODE:
@@ -307,7 +510,7 @@ def get_user_account(
         return load_sample_data("user_account.json")
 
     try:
-        client = get_hevy_client(authorization=authorization, api_key=api_key)
+        client = get_hevy_client(access_token_cookie=hevy_access_token, api_key_cookie=hevy_api_key)
         account = client.get_user_account()
 
         return account
@@ -320,8 +523,8 @@ def get_user_account(
 
 @app.get("/api/workouts", tags=["Workouts"])
 def get_workouts(
-    authorization: Optional[str] = Header(None, alias="Authorization"),
-    api_key: Optional[str] = Header(None, alias="api-key"),
+    hevy_access_token: Optional[str] = Cookie(None),
+    hevy_api_key: Optional[str] = Cookie(None),
     offset: int = Query(0, ge=0, description="Pagination offset (increments of 5) - for OAuth2 mode"),
     username: Optional[str] = Query(None, description="Filter by username - for OAuth2 mode"),
     page: int = Query(1, ge=1, description="Page number - for api-key mode"),
@@ -338,7 +541,7 @@ def get_workouts(
     - **page**: Page number (default: 1)
     - **page_size**: Number of workouts per page (default: 10)
 
-    Requires either Authorization Bearer token or api-key header.
+    Requires authentication cookie (OAuth2 token or API key).
     """
     ### Demo mode: return complete sample data only on first request, empty afterwards
     if DEMO_MODE:
@@ -348,10 +551,10 @@ def get_workouts(
             return {"workouts": []}
 
     try:
-        client = get_hevy_client(authorization=authorization, api_key=api_key)
+        client = get_hevy_client(access_token_cookie=hevy_access_token, api_key_cookie=hevy_api_key)
 
         ### Use PRO API if API key is provided
-        if api_key:
+        if hevy_api_key:
             workouts = client.get_pro_workouts(page=page, page_size=page_size)
         else:
             ### Use OAuth2 API with Bearer token
@@ -369,24 +572,28 @@ def get_workouts(
 
 @app.get("/api/body_measurements", tags=["Body Measurements"])
 def get_body_measurements(
-    authorization: str = Header(..., alias="Authorization"),
+    hevy_access_token: Optional[str] = Cookie(None),
 ):
     """
     Get body measurements (weight tracking).
 
     Returns list of measurements with id, weight_kg, date, and created_at.
 
-    Requires Authorization Bearer token header. PRO API does not support body measurements.
+    Requires OAuth2 authentication cookie. PRO API does not support body measurements.
     """
     ### Demo mode: return sample data
     if DEMO_MODE:
         logging.info("Demo mode: Serving sample body measurements")
         return load_sample_data("body_measurements.json")
 
+    if not hevy_access_token or hevy_access_token in ["csv_mode", "api_key_mode"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Body measurements require OAuth2 authentication. Not available for Hevy PRO API key or CSV mode.",
+        )
+
     try:
-        ### Extract Bearer token
-        access_token = authorization[7:] if authorization.startswith("Bearer ") else authorization
-        client = HevyClient(access_token=access_token)
+        client = HevyClient(access_token=hevy_access_token)
         measurements = client.get_body_measurements()
         return measurements
 
@@ -399,12 +606,12 @@ def get_body_measurements(
 @app.post("/api/body_measurements_batch", tags=["Body Measurements"])
 def post_body_measurements(
     measurement: BodyMeasurementRequest,
-    authorization: str = Header(..., alias="Authorization"),
+    hevy_access_token: Optional[str] = Cookie(None),
 ):
     """
     Post a new body measurement (weight tracking).
 
-    Requires Authorization Bearer token header. PRO API does not support body measurements.
+    Requires OAuth2 authentication cookie. PRO API does not support body measurements.
 
     Args:
         measurement: Body measurement data (date and weight_kg)
@@ -414,10 +621,14 @@ def post_body_measurements(
         logging.info("Demo mode: Simulating body measurement post")
         return {"message": "Body measurement posted successfully (demo mode)"}
 
+    if not hevy_access_token or hevy_access_token in ["csv_mode", "api_key_mode"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Body measurements require OAuth2 authentication. Not available for Hevy PRO API key or CSV mode.",
+        )
+
     try:
-        ### Extract Bearer token
-        access_token = authorization[7:] if authorization.startswith("Bearer ") else authorization
-        client = HevyClient(access_token=access_token)
+        client = HevyClient(access_token=hevy_access_token)
         client.post_body_measurements(measurement.date, measurement.weight_kg)
         return {"message": "Body measurement posted successfully"}
 
