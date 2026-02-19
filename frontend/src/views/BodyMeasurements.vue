@@ -553,7 +553,7 @@ onMounted(async () => {
     <!-- Error State -->
     <div v-else-if="error" class="error-container">
       <p>{{ error }}</p>
-      <button class="btn-secondary" @click="loadMeasurements">{{ t("global.sw.retry") }}</button>
+      <button v-if="!isUsingProApi" class="btn-secondary" @click="loadMeasurements">{{ t("global.sw.retry") }}</button>
     </div>
 
     <!-- Main Content -->
