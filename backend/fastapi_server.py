@@ -439,6 +439,16 @@ def validate_api_key(key_data: ValidateApiKeyRequest, response: Response) -> Val
         return ValidateApiKeyResponse(valid=False, error=str(e))
 
 
+@app.post("/api/logout", tags=["Authentication"])
+def logout(response: Response):
+    """
+    Logout the current user by clearing authentication cookies.
+
+    Returns success message.
+    """
+    clear_auth_cookies(response)
+    return {"message": "Logged out successfully"}
+
 @app.get("/api/user/account", tags=["User"])
 def get_user_account(
     authorization: Optional[str] = Header(None, alias="Authorization"), api_key: Optional[str] = Header(None, alias="api-key")
