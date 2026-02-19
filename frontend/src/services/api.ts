@@ -34,11 +34,26 @@ export const authService = {
     return response.data;
   },
 
-  logout() {
-    localStorage.removeItem("hevy_access_token");
-    localStorage.removeItem("hevy_refresh_token");
-    localStorage.removeItem("hevy_token_expires_at");
-    localStorage.removeItem("hevy_api_key");
+  async logout() {
+    // Call backend to clear authentication cookies
+    try {
+      await api.post("/logout");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  },
+
+  async getAuthStatus() {
+    // Check authentication status from backend
+    try {
+      const response = await api.get("/auth/status");
+      return response.data;
+    } catch (error) {
+      return {
+        authenticated: false,
+        auth_mode: null,
+      };
+    }
   },
 };
 
