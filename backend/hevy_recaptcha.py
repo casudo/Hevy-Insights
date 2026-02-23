@@ -111,6 +111,20 @@ async def _generate_recaptcha_token() -> str:
                     "--disable-setuid-sandbox",
                     "--disable-blink-features=AutomationControlled",
                     "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                    "--disable-software-rasterizer",
+                    "--disable-extensions",
+                    "--disable-background-networking",
+                    "--disable-default-apps",
+                    "--disable-sync",
+                    "--metrics-recording-only",
+                    "--mute-audio",
+                    "--no-first-run",
+                    "--disable-features=TranslateUI",
+                    "--disable-hang-monitor",
+                    "--disable-ipc-flooding-protection",
+                    "--disable-renderer-backgrounding",
+                    "--enable-features=NetworkService,NetworkServiceInProcess",
                 ],
             )
             logging.debug("Browser launched successfully")
@@ -120,8 +134,15 @@ async def _generate_recaptcha_token() -> str:
             user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         )
 
-        ### Navigate to Hevy login page
-        await page.goto("https://www.hevy.com/login", wait_until="networkidle", timeout=30000)
+        ### Navigate to Hevy login page with retry logic
+        logging.debug("Navigating to Hevy login page...")
+        try:
+            await page.goto("https://www.hevy.com/login", wait_until="domcontentloaded", timeout=30000)
+            await page.wait_for_load_state("networkidle", timeout=10000)
+        except Exception as nav_error:
+            logging.warning(f"Navigation warning: {nav_error}, continuing anyway...")
+            ### Try to continue even if networkidle times out
+            await page.wait_for_timeout(2000)
 
         ### Wait for reCAPTCHA to load and get token
         ## The token is stored in window.recaptchaToken by Hevy's frontend
