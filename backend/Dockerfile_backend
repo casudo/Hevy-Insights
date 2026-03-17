@@ -1,16 +1,4 @@
 ### Backend Dockerfile
-
-### Stage 1: build wheels
-FROM python:3.13-slim AS builder
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
- && rm -rf /var/lib/apt/lists/*
-
-COPY backend/requirements.txt /requirements.txt
-RUN pip install --no-cache-dir --prefix=/install -r /requirements.txt
-
-### Stage 2: runtime
 FROM python:3.13-slim
 
 ### Prevent Python from writing .pyc files to disc
@@ -25,8 +13,14 @@ WORKDIR /app
 RUN groupadd -g 1000 hevygroup && \
     useradd -u 1000 -g hevygroup -s /bin/sh -m hevyuser
 
-### Copy installed Python packages from builder
-COPY --from=builder /install /usr/local
+### System dependencies (build-essential for some wheels)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+ && rm -rf /var/lib/apt/lists/*
+
+### Install Python dependencies
+COPY backend/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 ### Install Playwright browser to system-wide location
 RUN playwright install --with-deps chromium \
