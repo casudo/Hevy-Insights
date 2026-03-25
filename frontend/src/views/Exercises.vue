@@ -850,6 +850,86 @@ function getRepCountChartData(ex: any, graphRange: GraphRange = 0) {
   };
 }
 
+// Equipment Management Functions
+function saveEquipment() {
+  const exerciseTitle = equipmentForm.value.exerciseTitle.trim();
+  const equipmentName = equipmentForm.value.equipmentName.trim();
+  const searchKeyword = equipmentForm.value.searchKeyword.trim();
+
+  if (!exerciseTitle || !equipmentName || !searchKeyword) {
+    alert(t("exercises.equipment.fillRequired"));
+    return;
+  }
+
+  if (trainedExerciseOptions.value.length === 0) {
+    alert(t("exercises.equipment.noTrainedExercises"));
+    return;
+  }
+
+  if (!hasTrainedExerciseOption(exerciseTitle)) {
+    alert(t("exercises.equipment.selectExercise"));
+    return;
+  }
+  
+  if (editingEquipmentId.value) {
+    // Update existing
+    store.updateEquipmentConfig(editingEquipmentId.value, {
+      exerciseTitle,
+      equipmentName,
+      searchKeyword,
+      imageUrl: equipmentForm.value.imageUrl || undefined,
+    });
+    editingEquipmentId.value = null;
+  } else {
+    // Add new
+    store.addEquipmentConfig({
+      exerciseTitle,
+      equipmentName,
+      searchKeyword,
+      imageUrl: equipmentForm.value.imageUrl || undefined,
+    });
+  }
+  
+  // Reset form
+  equipmentForm.value = {
+    exerciseTitle: "",
+    equipmentName: "",
+    searchKeyword: "",
+    imageUrl: "",
+  };
+}
+
+function editEquipment(config: any) {
+  editingEquipmentId.value = config.id;
+  equipmentForm.value = {
+    exerciseTitle: config.exerciseTitle,
+    equipmentName: config.equipmentName,
+    searchKeyword: config.searchKeyword,
+    imageUrl: config.imageUrl || "",
+  };
+}
+
+function cancelEditEquipment() {
+  editingEquipmentId.value = null;
+  equipmentForm.value = {
+    exerciseTitle: "",
+    equipmentName: "",
+    searchKeyword: "",
+    imageUrl: "",
+  };
+}
+
+function deleteEquipment(id: string) {
+  if (confirm(t("exercises.equipment.confirmDelete"))) {
+    store.deleteEquipmentConfig(id);
+  }
+}
+
+function closeEquipmentModal() {
+  showEquipmentModal.value = false;
+  cancelEditEquipment();
+}
+
 const scatterChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
