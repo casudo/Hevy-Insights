@@ -1075,7 +1075,8 @@ const barChartOptions = {
         </button>
 
         <!-- Card Content (Expanded) -->
-        <div v-show="expanded[ex.id]" class="card-content">
+        <Transition name="card-expand">
+        <div v-if="expanded[ex.id]" class="card-content">
           <!-- Plateau Insight Message -->
           <div v-if="ex.strengthInsight" class="insight-message" :class="ex.strengthInsight.type">
             {{ ex.strengthInsight.message }}
@@ -1469,6 +1470,7 @@ const barChartOptions = {
             </template>
           </div>
         </div>
+        </Transition>
       </div>
     </div>
   </div>
@@ -1840,6 +1842,20 @@ const barChartOptions = {
 .insight-message.inactive { background: rgba(107, 114, 128, 0.12); color: #9ca3af; border-left: 3px solid #6b7280; }
 .insight-message.maintaining { background: rgba(59, 130, 246, 0.12); color: #60a5fa; border-left: 3px solid #3b82f6; }
 .card-content { margin-top: 0.75rem; }
+
+/* Card expand/collapse transition */
+.card-expand-enter-active,
+.card-expand-leave-active {
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+  transform-origin: top;
+}
+
+.card-expand-enter-from,
+.card-expand-leave-to {
+  opacity: 0;
+  transform: scaleY(0.95);
+}
+
 .card-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); }
 .exercise-title { margin: 0; color: var(--text-primary); font-size: 1.2rem; font-weight: 600; }
 .filter-label { color: var(--text-secondary); font-size: 0.85rem; }
