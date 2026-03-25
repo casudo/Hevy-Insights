@@ -118,6 +118,31 @@ function getLocalizedPRType(prType: string): string {
 
 const allWorkouts = computed(() => store.workouts || []);
 
+const trainedExerciseOptions = computed(() => {
+  const seen = new Map<string, string>();
+  for (const w of allWorkouts.value) {
+    for (const ex of (w.exercises || [])) {
+      const canonicalTitle = String(ex?.title || "").trim();
+      if (!canonicalTitle) continue;
+      if (!seen.has(canonicalTitle)) {
+        seen.set(canonicalTitle, getLocalizedTitle(ex));
+      }
+    }
+  }
+
+  return Array.from(seen.entries())
+    // Return like this: "Localized Title (English Title)" if localized title is different, otherwise just "Title"
+    .map(([value, localized]) => ({
+      value,
+      label: localized && localized !== value ? `${localized} (${value})` : value,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+});
+
+function hasTrainedExerciseOption(value: string): boolean {
+  return trainedExerciseOptions.value.some((option) => option.value === value);
+}
+
 onMounted(async () => {
   await store.fetchWorkouts();
   
