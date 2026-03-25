@@ -258,7 +258,8 @@ watch(() => route.query.day, async (d) => {
         </button>
 
         <!-- Expanded details -->
-        <div v-show="expanded[workout.id]" class="details">
+        <Transition name="item-expand">
+        <div v-if="expanded[workout.id]" class="details">
           <!-- Media + Stats row -->
           <div class="row">
             <div class="media" v-if="(workout.media || []).length">
@@ -329,6 +330,7 @@ watch(() => route.query.day, async (d) => {
             </div>
           </div>
         </div>
+        </Transition>
       </div>
     </div>
   </div>
@@ -526,6 +528,20 @@ watch(() => route.query.day, async (d) => {
   .filter-select { min-width: 160px; }
 
   .details { padding: 1rem; }
+
+  /* Item expand/collapse transition */
+  .item-expand-enter-active,
+  .item-expand-leave-active {
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+    transform-origin: top;
+  }
+
+  .item-expand-enter-from,
+  .item-expand-leave-to {
+    opacity: 0;
+    transform: scaleY(0.95);
+  }
+
   .row { display: grid; grid-template-columns: 240px 1fr; gap: 1rem; align-items: start; }
   .media-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
   .media-grid img, .media-grid video { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border-color); }
