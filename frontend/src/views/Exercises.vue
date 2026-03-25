@@ -1553,6 +1553,121 @@ const barChartOptions = {
         </Transition>
       </div>
     </div>
+
+    <!-- Equipment/Vendor Management Modal -->
+    <Transition name="modal-fade">
+      <div v-if="showEquipmentModal" class="modal-overlay" @click.self="closeEquipmentModal">
+        <div class="modal-content">
+        <div class="modal-header">
+          <h2>{{ $t("exercises.equipment.title") }}</h2>
+          <button class="modal-close" @click="closeEquipmentModal">✕</button>
+        </div>
+        
+        <div class="modal-body">
+          <!-- Info text -->
+          <p class="equipment-info">
+            {{ $t("exercises.equipment.info") }}
+          </p>
+          
+          <!-- "Manage Equipment/Vendor" Form -->
+          <div class="equipment-form">
+            <!-- Exercise Name -->
+            <div class="form-group">
+              <label>{{ $t("exercises.equipment.exerciseTitle") }}</label>
+              <select
+                v-model="equipmentForm.exerciseTitle"
+                class="form-input"
+                required
+              >
+                <option value="" disabled>{{ $t("exercises.equipment.selectExercise") }}</option>
+                <option
+                  v-if="equipmentForm.exerciseTitle && !hasTrainedExerciseOption(equipmentForm.exerciseTitle)"
+                  :value="equipmentForm.exerciseTitle"
+                >
+                  {{ equipmentForm.exerciseTitle }}
+                </option>
+                <option
+                  v-for="exerciseOption in trainedExerciseOptions"
+                  :key="exerciseOption.value"
+                  :value="exerciseOption.value"
+                >
+                  {{ exerciseOption.label }}
+                </option>
+              </select>
+              <small class="form-hint">{{ $t("exercises.equipment.exerciseTitleHint") }}</small>
+            </div>
+            
+            <!-- Equipment/Vendor Name -->
+            <div class="form-group">
+              <label>{{ $t("exercises.equipment.equipmentName") }}</label>
+              <input 
+                v-model.lazy="equipmentForm.equipmentName" 
+                type="text" 
+                :placeholder="$t('exercises.equipment.equipmentNamePlaceholder')"
+                class="form-input"
+              />
+            </div>
+            
+            <!-- Search Keyword -->
+            <div class="form-group">
+              <label>{{ $t("exercises.equipment.searchKeyword") }}</label>
+              <input 
+                v-model.lazy="equipmentForm.searchKeyword" 
+                type="text" 
+                :placeholder="$t('exercises.equipment.searchKeywordPlaceholder')"
+                class="form-input"
+              />
+              <small class="form-hint">{{ $t("exercises.equipment.searchKeywordHint") }}</small>
+            </div>
+            
+            <!-- Image URL -->
+            <div class="form-group">
+              <label>{{ $t("exercises.equipment.imageUrl") }}</label>
+              <input 
+                v-model.lazy="equipmentForm.imageUrl" 
+                type="text" 
+                :placeholder="$t('exercises.equipment.imageUrlPlaceholder')"
+                class="form-input"
+              />
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="form-actions">
+              <!-- Add or Update-->
+              <button @click="saveEquipment" class="btn btn-primary">
+                {{ editingEquipmentId ? ($t("exercises.equipment.update")) : ($t("exercises.equipment.add")) }}
+              </button>
+              <!-- Cancel if editing-->
+              <button v-if="editingEquipmentId" @click="cancelEditEquipment" class="btn btn-secondary">
+                {{ $t("exercises.equipment.cancel") }}
+              </button>
+            </div>
+          </div>
+          
+          <!-- List configured equipment list -->
+          <div class="equipment-list">
+            <h3>{{ $t("exercises.equipment.configured") }}</h3>
+            <div v-if="store.equipmentConfigs.length === 0" class="no-equipment">
+              {{ $t("exercises.equipment.noEquipment") }}
+            </div>
+            <div v-for="config in store.equipmentConfigs" :key="config.id" class="equipment-item">
+              <div class="equipment-details">
+                <div class="equipment-title">{{ config.exerciseTitle }} - <strong>{{ config.equipmentName }}</strong></div>
+                <div class="equipment-keyword">{{ $t("exercises.equipment.keyword") }}: <code>{{ config.searchKeyword }}</code></div>
+                <div v-if="config.imageUrl" class="equipment-image">
+                  <img :src="config.imageUrl" :alt="config.equipmentName" />
+                </div>
+              </div>
+              <div class="equipment-actions">
+                <button @click="editEquipment(config)" class="equipment-list-btn" title="Edit">✏️ {{ $t("exercises.equipment.edit") }}</button>
+                <button @click="deleteEquipment(config.id)" class="equipment-list-btn" title="Delete">🗑️ {{ $t("exercises.equipment.delete") }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </Transition>
   </div>
 </template>
 
@@ -2134,5 +2249,338 @@ const barChartOptions = {
   .title-section h1 {
     font-size: 1.625rem;
   }
+}
+
+/* Equipment Management Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: var(--bg-primary);
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+  max-height: calc(90vh - env(safe-area-inset-top, 0px));
+  margin-top: env(safe-area-inset-top, 0px);
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  contain: layout style;
+}
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0.5rem;
+    padding-top: 0.5rem;
+    top: var(--topbar-height, 56px);
+    align-items: flex-start;
+  }
+
+  .modal-content {
+    max-height: calc(100vh - var(--topbar-height, 56px) - 1rem);
+    margin-top: 0;
+  }
+}
+
+/* Modal transition */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.15s ease-out;
+}
+
+.modal-fade-enter-active .modal-content,
+.modal-fade-leave-active .modal-content {
+  transition: transform 0.15s ease-out;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-enter-from .modal-content,
+.modal-fade-leave-to .modal-content {
+  transform: scale(0.95);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.equipment-info {
+  margin: 0 0 1.5rem 0;
+  padding: 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.equipment-form {
+  margin-bottom: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.form-hint {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--color-primary) 80%, black);
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-tertiary);
+}
+
+.equipment-list {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+}
+
+.equipment-list h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.no-equipment {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.equipment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.equipment-item:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--bg-secondary) 95%, var(--color-primary));
+}
+
+.equipment-details {
+  flex: 1;
+}
+
+.equipment-title {
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.equipment-keyword {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.equipment-keyword code {
+  background: var(--bg-tertiary);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: monospace;
+  color: var(--color-primary);
+}
+
+.equipment-image {
+  margin-top: 0.5rem;
+}
+
+.equipment-image img {
+  max-width: 100px;
+  max-height: 100px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.equipment-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+.equipment-list-btn {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  transition: transform 0.2s;
+}
+
+.equipment-list-btn:hover {
+  transform: scale(1.2);
+}
+
+/* Equipment item mobile layout */
+@media (max-width: 640px) {
+  .equipment-item {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .equipment-actions {
+    margin-left: 0;
+    align-self: flex-end;
+  }
+}
+
+/* Equipment Selector in Exercise Cards */
+.equipment-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.equipment-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.equipment-dropdown {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.equipment-dropdown:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.equipment-dropdown:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--border-color));
+}
+
+.equipment-count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--color-primary, #10b981) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary, #10b981) 45%, var(--border-color));
 }
 </style>
