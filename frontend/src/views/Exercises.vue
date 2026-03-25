@@ -33,6 +33,20 @@ const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
 const loading = computed(() => store.isLoadingWorkouts || store.isLoadingUser);
 const { t } = useI18n();
+const SELECTED_EQUIPMENT_STORAGE_KEY = "selected_equipment_filters";
+
+// Equipment/Vendor Management Modal
+const showEquipmentModal = ref(false);
+const equipmentForm = ref({
+  exerciseTitle: "",
+  equipmentName: "",
+  searchKeyword: "",
+  imageUrl: "",
+});
+const editingEquipmentId = ref<string | null>(null);
+
+// Equipment filter per exercise (stores selected equipment config ID, or "all")
+const selectedEquipment = ref<Record<string, string>>({});
 
 // Get theme colors from CSS variables
 const primaryColor = computed(() => {
@@ -166,6 +180,14 @@ onMounted(async () => {
       // Body measurements not available. TODO: Better error handling
       console.log("Body measurements not available:", error);
     }
+  }
+  
+  // Load persisted equipment filters (exercise -> selected vendor/all)
+  try {
+    const saved = localStorage.getItem(SELECTED_EQUIPMENT_STORAGE_KEY);
+    selectedEquipment.value = saved ? JSON.parse(saved) : {};
+  } catch {
+    selectedEquipment.value = {};
   }
   
   // Check if there's an exercise ID in the URL hash
@@ -406,18 +428,43 @@ const exercises = computed(() => {
     for (const ex of (w.exercises || [])) {
       // Use localized title based on user's language preference
       const title = getLocalizedTitle(ex);
+      const canonicalTitle = String(ex.title || title || "Unknown Exercise");
       const id = String(title)
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
+      const selectionKey = String(canonicalTitle)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      
+      // Get equipment configs for this exercise
+      const equipmentConfigs = store.getEquipmentConfigsForExercise(canonicalTitle);
+      const selectedEquipmentId = selectedEquipment.value[selectionKey] || selectedEquipment.value[id];
       const entry = (map[id] ||= {
         id,
         title,
+        canonicalTitle,
+        selectionKey,
         video_url: ex.url || null,
         exercise_type: ex.exercise_type || null,
         sets: [] as any[],
         prs: [] as any[],
+        equipmentConfigs, // Store equipment configs for this exercise
       });
+      
+      // If equipment filtering is active for this exercise, check if the workout matches
+      if (selectedEquipmentId && selectedEquipmentId !== "all") {
+        const selectedConfig = equipmentConfigs.find(c => c.id === selectedEquipmentId);
+        if (selectedConfig) {
+          const exerciseNotes = (ex.notes || "").toLowerCase();
+          const keyword = selectedConfig.searchKeyword.toLowerCase();
+          // Skip this exercise instance if keyword not found in notes
+          if (!exerciseNotes.includes(keyword)) {
+            continue;
+          }
+        }
+      }
       for (const s of (ex.sets || [])) {
         const weight = Number((s as any).weight_kg ?? (s as any).weight ?? 0);
         const reps = Number((s as any).reps ?? 0);
@@ -593,6 +640,19 @@ const filteredExercises = computed(() => {
   
   return filtered;
 });
+
+function getSelectedEquipment(exerciseId: string): string {
+  return selectedEquipment.value[exerciseId] || "all";
+}
+
+function setSelectedEquipment(exerciseId: string, value: string) {
+  selectedEquipment.value = {
+    ...selectedEquipment.value,
+    [exerciseId]: value,
+  };
+
+  localStorage.setItem(SELECTED_EQUIPMENT_STORAGE_KEY, JSON.stringify(selectedEquipment.value));
+}
 
 // Exercise statistics
 const exerciseStats = computed(() => {
@@ -1188,6 +1248,27 @@ const barChartOptions = {
           <!-- Plateau Insight Message -->
           <div v-if="ex.strengthInsight" class="insight-message" :class="ex.strengthInsight.type">
             {{ ex.strengthInsight.message }}
+          </div>
+
+          <!-- Equipment Selector -->
+          <div v-if="ex.equipmentConfigs && ex.equipmentConfigs.length > 0" class="equipment-selector">
+            <label class="equipment-label">
+              🏋️ {{ $t("exercises.equipment.filter") }}:
+            </label>
+            <select 
+              :value="getSelectedEquipment(ex.selectionKey || ex.id)"
+              class="equipment-dropdown"
+              @change="setSelectedEquipment(ex.selectionKey || ex.id, ($event.target as HTMLSelectElement).value)"
+            >
+              <option value="all">{{ $t("exercises.equipment.allEquipment") }}</option>
+              <option 
+                v-for="config in ex.equipmentConfigs" 
+                :key="config.id" 
+                :value="config.id"
+              >
+                {{ config.equipmentName }}
+              </option>
+            </select>
           </div>
 
           <!-- Media and Stats -->
