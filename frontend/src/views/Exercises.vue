@@ -1151,6 +1151,9 @@ const barChartOptions = {
           <div class="toggle-left">
             <div class="exercise-title-container">
               <span class="exercise-title">{{ ex.title }}</span>
+              <span v-if="ex.equipmentConfigs && ex.equipmentConfigs.length > 0" class="equipment-count-pill">
+                🏋️ {{ ex.equipmentConfigs.length }}
+              </span>
               <span class="last-trained-date">{{ formatLastTrained(ex.lastTrainedDate) }}</span>
             </div>
             <!-- Strength Insight Badge -->
