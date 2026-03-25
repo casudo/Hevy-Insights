@@ -956,6 +956,11 @@ const barChartOptions = {
         </div>
 
         <div class="header-actions">
+          <!-- Equipment Management Button -->
+          <button class="equipment-btn" @click="showEquipmentModal = true">
+            {{ t("exercises.equipment.title") }}
+          </button>
+          
           <!-- Settings Button -->
           <button @click="$router.push('/settings')" class="settings-btn" title="Settings">
             ⚙️
@@ -963,7 +968,9 @@ const barChartOptions = {
           
           <!-- User Badge -->
           <div v-if="userAccount" class="user-badge" @click="$router.push('/profile')" title="View Profile">
-            <div class="user-avatar">{{ userAccount.username.charAt(0).toUpperCase() }}</div>
+            <div class="user-avatar">
+              {{ userAccount.username.charAt(0).toUpperCase() }}
+            </div>
             <div class="user-details">
               <strong>{{ userAccount.username }}</strong>
               <span>{{ userAccount.email }}</span>
@@ -984,8 +991,8 @@ const barChartOptions = {
       
       <!-- Exercise Statistics Summary -->
       <div class="exercise-stats-summary">
-        <div 
-          class="stat-pill clickable"
+        <div
+          class="stat-pill stat-total"
           :class="{ selected: plateauFilter === null }"
           @click="plateauFilter = null"
         >
@@ -996,8 +1003,8 @@ const barChartOptions = {
           <span class="stat-label">{{ $t("exercises.summary.active") }}:</span>
           <span class="stat-value">{{ exerciseStats.active }}</span>
         </div>
-        <div 
-          class="stat-pill stat-gaining clickable" 
+        <div
+          class="stat-pill stat-gaining clickable"
           v-if="exerciseStats.gaining > 0"
           :class="{ selected: plateauFilter === 'gaining' }"
           @click="plateauFilter = plateauFilter === 'gaining' ? null : 'gaining'"
@@ -1005,8 +1012,8 @@ const barChartOptions = {
           <span class="stat-icon">📈</span>
           <span class="stat-value">{{ exerciseStats.gaining }}</span>
         </div>
-        <div 
-          class="stat-pill stat-plateau clickable" 
+        <div
+          class="stat-pill stat-plateau clickable"
           v-if="exerciseStats.plateau > 0"
           :class="{ selected: plateauFilter === 'plateau' }"
           @click="plateauFilter = plateauFilter === 'plateau' ? null : 'plateau'"
@@ -1014,8 +1021,8 @@ const barChartOptions = {
           <span class="stat-icon">⏸️</span>
           <span class="stat-value">{{ exerciseStats.plateau }}</span>
         </div>
-        <div 
-          class="stat-pill stat-losing clickable" 
+        <div
+          class="stat-pill stat-losing clickable"
           v-if="exerciseStats.losing > 0"
           :class="{ selected: plateauFilter === 'losing' }"
           @click="plateauFilter = plateauFilter === 'losing' ? null : 'losing'"
@@ -1538,6 +1545,27 @@ const barChartOptions = {
   box-shadow: 0 4px 16px color-mix(in srgb, var(--color-primary, #10b981) 30%, transparent);
 }
 
+/* Equipment button */
+.equipment-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+}
+
+.equipment-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-primary, #10b981) 30%, transparent);
+}
+
 .user-badge {
   display: flex;
   align-items: center;
@@ -1593,18 +1621,31 @@ const barChartOptions = {
   .user-badge {
     display: none;
   }
-  
+
   .settings-btn {
     display: none;
   }
-  
+
+  .header-actions {
+    width: 100%;
+    margin-top: 0.75rem;
+  }
+
+  .equipment-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
   .exercises-header {
     margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
+    padding-bottom: 1rem;
   }
-  
+
   .header-content {
     gap: 0rem;
+    flex-wrap: wrap;
   }
 }
 
@@ -1967,6 +2008,30 @@ const barChartOptions = {
   .header-actions { width: 100%; }
   .search-input { width: 100%; min-width: unset; }
   .exercise-card { padding: 0.4rem; }
+
+  /* Stat pills mobile layout */
+  .exercise-stats-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  /* Total and Active: 50% width each on first row */
+  .exercise-stats-summary .stat-pill.stat-total,
+  .exercise-stats-summary .stat-pill.stat-active {
+    flex: 0 0 calc(50% - 0.25rem);
+    justify-content: center;
+  }
+
+  /* Other pills: share the second row equally */
+  .exercise-stats-summary .stat-pill.stat-gaining,
+  .exercise-stats-summary .stat-pill.stat-plateau,
+  .exercise-stats-summary .stat-pill.stat-losing {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 480px) {
