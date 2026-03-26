@@ -96,14 +96,32 @@ async def _generate_recaptcha_token() -> str:
 
     playwright = None
     page = None
+    browser_launched_new = False
 
     try:
         ### Launch Playwright
         logging.debug("Launching Playwright browser...")
         playwright = await async_playwright().start()
 
-        ### Reuse browser instance if available, otherwise create new one
-        if _browser is None or not _browser.is_connected():
+        ### Check if existing browser is healthy, otherwise create new one
+        browser_needs_reset = False
+        if _browser is not None:
+            try:
+                ### Test if browser is responsive
+                test_page = await _browser.new_page()
+                await test_page.close()
+                logging.debug("Reusing existing browser instance")
+            except Exception as health_check_error:
+                logging.warning(f"Browser health check failed: {health_check_error}, creating new browser")
+                browser_needs_reset = True
+                ### Try to close the broken browser
+                try:
+                    await _browser.close()
+                except:
+                    pass
+                _browser = None
+
+        if _browser is None or not _browser.is_connected() or browser_needs_reset:
             _browser = await playwright.chromium.launch(
                 headless=True,
                 args=[
@@ -127,12 +145,16 @@ async def _generate_recaptcha_token() -> str:
                     "--enable-features=NetworkService,NetworkServiceInProcess",
                 ],
             )
+            browser_launched_new = True
             logging.debug("Browser launched successfully")
 
         ### Create new page
         page = await _browser.new_page(
             user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         )
+
+        ### Set timeout for all operations on this page (15 seconds)
+        page.set_default_timeout(15000)
 
         ### Navigate to Hevy login page with retry logic
         logging.debug("Navigating to Hevy login page...")
@@ -144,43 +166,54 @@ async def _generate_recaptcha_token() -> str:
             ### Try to continue even if networkidle times out
             await page.wait_for_timeout(2000)
 
-        ### Wait for reCAPTCHA to load and get token
+        ### Wait for reCAPTCHA to load and get token with timeout
         ## The token is stored in window.recaptchaToken by Hevy's frontend
-        token = await page.evaluate(f"""
-            () => {{
-                return new Promise((resolve, reject) => {{
-                    const maxAttempts = 50;
-                    let attempts = 0;
-                    
-                    const checkToken = () => {{
-                        // Check for reCAPTCHA token in various possible locations
-                        const token = window.recaptchaToken || 
-                                     window.__recaptchaToken || 
-                                     window.grecaptcha?.enterprise?.execute ||
-                                     null;
-                        
-                        if (token && typeof token === 'string') {{
-                            resolve(token);
-                        }} else if (attempts >= maxAttempts) {{
-                            // Try to execute reCAPTCHA if available
-                            if (window.grecaptcha && window.grecaptcha.enterprise) {{
-                                window.grecaptcha.enterprise.execute(
-                                    '{RECAPTCHA_SITE_KEY}',
-                                    {{action: 'login'}}
-                                ).then(resolve).catch(reject);
+        try:
+            token = await page.evaluate(f"""
+                () => {{
+                    return new Promise((resolve, reject) => {{
+                        const maxAttempts = 50;
+                        let attempts = 0;
+
+                        const checkToken = () => {{
+                            // Check for reCAPTCHA token in various possible locations
+                            const token = window.recaptchaToken ||
+                                         window.__recaptchaToken ||
+                                         window.grecaptcha?.enterprise?.execute ||
+                                         null;
+
+                            if (token && typeof token === 'string') {{
+                                resolve(token);
+                            }} else if (attempts >= maxAttempts) {{
+                                // Try to execute reCAPTCHA if available
+                                if (window.grecaptcha && window.grecaptcha.enterprise) {{
+                                    window.grecaptcha.enterprise.execute(
+                                        '{RECAPTCHA_SITE_KEY}',
+                                        {{action: 'login'}}
+                                    ).then(resolve).catch(reject);
+                                }} else {{
+                                    reject(new Error('reCAPTCHA token not found after 10 seconds'));
+                                }}
                             }} else {{
-                                reject(new Error('reCAPTCHA token not found after 10 seconds'));
+                                attempts++;
+                                setTimeout(checkToken, 200);
                             }}
-                        }} else {{
-                            attempts++;
-                            setTimeout(checkToken, 200);
-                        }}
-                    }};
-                    
-                    checkToken();
-                }});
-            }}
-        """)
+                        }};
+
+                        checkToken();
+                    }});
+                }}
+            """)
+        except Exception as eval_error:
+            ### If evaluation crashes, reset browser for next attempt
+            logging.error(f"Page evaluation failed or crashed: {eval_error}")
+            if _browser:
+                try:
+                    await _browser.close()
+                except:
+                    pass
+                _browser = None
+            raise Exception(f"Browser crashed during token extraction: {eval_error}")
 
         if not token:
             raise Exception("Failed to obtain reCAPTCHA token")
@@ -202,7 +235,9 @@ async def _generate_recaptcha_token() -> str:
             except:
                 pass
 
-        if _browser:
+        ### If we just launched a new browser and it failed, close it
+        ### This prevents accumulation of broken browser instances
+        if browser_launched_new and _browser:
             try:
                 await _browser.close()
                 _browser = None

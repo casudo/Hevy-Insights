@@ -43,7 +43,7 @@ version_cache = {"latest_version": None, "checked_at": None}
 app = FastAPI(
     title="Hevy Insights API",
     description="Backend API for Hevy Insights",
-    version="1.5.1",
+    version="1.5.2",
     docs_url="/api/docs",  # Swagger
 )
 ### Initialize rate limiter
