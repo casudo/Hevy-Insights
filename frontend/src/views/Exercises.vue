@@ -33,6 +33,20 @@ const store = useHevyCache();
 const userAccount = computed(() => store.userAccount);
 const loading = computed(() => store.isLoadingWorkouts || store.isLoadingUser);
 const { t } = useI18n();
+const SELECTED_EQUIPMENT_STORAGE_KEY = "selected_equipment_filters";
+
+// Equipment/Vendor Management Modal
+const showEquipmentModal = ref(false);
+const equipmentForm = ref({
+  exerciseTitle: "",
+  equipmentName: "",
+  searchKeyword: "",
+  imageUrl: "",
+});
+const editingEquipmentId = ref<string | null>(null);
+
+// Equipment filter per exercise (stores selected equipment config ID, or "all")
+const selectedEquipment = ref<Record<string, string>>({});
 
 // Get theme colors from CSS variables
 const primaryColor = computed(() => {
@@ -118,6 +132,31 @@ function getLocalizedPRType(prType: string): string {
 
 const allWorkouts = computed(() => store.workouts || []);
 
+const trainedExerciseOptions = computed(() => {
+  const seen = new Map<string, string>();
+  for (const w of allWorkouts.value) {
+    for (const ex of (w.exercises || [])) {
+      const canonicalTitle = String(ex?.title || "").trim();
+      if (!canonicalTitle) continue;
+      if (!seen.has(canonicalTitle)) {
+        seen.set(canonicalTitle, getLocalizedTitle(ex));
+      }
+    }
+  }
+
+  return Array.from(seen.entries())
+    // Return like this: "Localized Title (English Title)" if localized title is different, otherwise just "Title"
+    .map(([value, localized]) => ({
+      value,
+      label: localized && localized !== value ? `${localized} (${value})` : value,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+});
+
+function hasTrainedExerciseOption(value: string): boolean {
+  return trainedExerciseOptions.value.some((option) => option.value === value);
+}
+
 onMounted(async () => {
   await store.fetchWorkouts();
   
@@ -141,6 +180,14 @@ onMounted(async () => {
       // Body measurements not available. TODO: Better error handling
       console.log("Body measurements not available:", error);
     }
+  }
+  
+  // Load persisted equipment filters (exercise -> selected vendor/all)
+  try {
+    const saved = localStorage.getItem(SELECTED_EQUIPMENT_STORAGE_KEY);
+    selectedEquipment.value = saved ? JSON.parse(saved) : {};
+  } catch {
+    selectedEquipment.value = {};
   }
   
   // Check if there's an exercise ID in the URL hash
@@ -381,18 +428,43 @@ const exercises = computed(() => {
     for (const ex of (w.exercises || [])) {
       // Use localized title based on user's language preference
       const title = getLocalizedTitle(ex);
+      const canonicalTitle = String(ex.title || title || "Unknown Exercise");
       const id = String(title)
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
+      const selectionKey = String(canonicalTitle)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      
+      // Get equipment configs for this exercise
+      const equipmentConfigs = store.getEquipmentConfigsForExercise(canonicalTitle);
+      const selectedEquipmentId = selectedEquipment.value[selectionKey] || selectedEquipment.value[id];
       const entry = (map[id] ||= {
         id,
         title,
+        canonicalTitle,
+        selectionKey,
         video_url: ex.url || null,
         exercise_type: ex.exercise_type || null,
         sets: [] as any[],
         prs: [] as any[],
+        equipmentConfigs, // Store equipment configs for this exercise
       });
+      
+      // If equipment filtering is active for this exercise, check if the workout matches
+      if (selectedEquipmentId && selectedEquipmentId !== "all") {
+        const selectedConfig = equipmentConfigs.find(c => c.id === selectedEquipmentId);
+        if (selectedConfig) {
+          const exerciseNotes = (ex.notes || "").toLowerCase();
+          const keyword = selectedConfig.searchKeyword.toLowerCase();
+          // Skip this exercise instance if keyword not found in notes
+          if (!exerciseNotes.includes(keyword)) {
+            continue;
+          }
+        }
+      }
       for (const s of (ex.sets || [])) {
         const weight = Number((s as any).weight_kg ?? (s as any).weight ?? 0);
         const reps = Number((s as any).reps ?? 0);
@@ -568,6 +640,19 @@ const filteredExercises = computed(() => {
   
   return filtered;
 });
+
+function getSelectedEquipment(exerciseId: string): string {
+  return selectedEquipment.value[exerciseId] || "all";
+}
+
+function setSelectedEquipment(exerciseId: string, value: string) {
+  selectedEquipment.value = {
+    ...selectedEquipment.value,
+    [exerciseId]: value,
+  };
+
+  localStorage.setItem(SELECTED_EQUIPMENT_STORAGE_KEY, JSON.stringify(selectedEquipment.value));
+}
 
 // Exercise statistics
 const exerciseStats = computed(() => {
@@ -850,6 +935,86 @@ function getRepCountChartData(ex: any, graphRange: GraphRange = 0) {
   };
 }
 
+// Equipment Management Functions
+function saveEquipment() {
+  const exerciseTitle = equipmentForm.value.exerciseTitle.trim();
+  const equipmentName = equipmentForm.value.equipmentName.trim();
+  const searchKeyword = equipmentForm.value.searchKeyword.trim();
+
+  if (!exerciseTitle || !equipmentName || !searchKeyword) {
+    alert(t("exercises.equipment.fillRequired"));
+    return;
+  }
+
+  if (trainedExerciseOptions.value.length === 0) {
+    alert(t("exercises.equipment.noTrainedExercises"));
+    return;
+  }
+
+  if (!hasTrainedExerciseOption(exerciseTitle)) {
+    alert(t("exercises.equipment.selectExercise"));
+    return;
+  }
+  
+  if (editingEquipmentId.value) {
+    // Update existing
+    store.updateEquipmentConfig(editingEquipmentId.value, {
+      exerciseTitle,
+      equipmentName,
+      searchKeyword,
+      imageUrl: equipmentForm.value.imageUrl || undefined,
+    });
+    editingEquipmentId.value = null;
+  } else {
+    // Add new
+    store.addEquipmentConfig({
+      exerciseTitle,
+      equipmentName,
+      searchKeyword,
+      imageUrl: equipmentForm.value.imageUrl || undefined,
+    });
+  }
+  
+  // Reset form
+  equipmentForm.value = {
+    exerciseTitle: "",
+    equipmentName: "",
+    searchKeyword: "",
+    imageUrl: "",
+  };
+}
+
+function editEquipment(config: any) {
+  editingEquipmentId.value = config.id;
+  equipmentForm.value = {
+    exerciseTitle: config.exerciseTitle,
+    equipmentName: config.equipmentName,
+    searchKeyword: config.searchKeyword,
+    imageUrl: config.imageUrl || "",
+  };
+}
+
+function cancelEditEquipment() {
+  editingEquipmentId.value = null;
+  equipmentForm.value = {
+    exerciseTitle: "",
+    equipmentName: "",
+    searchKeyword: "",
+    imageUrl: "",
+  };
+}
+
+function deleteEquipment(id: string) {
+  if (confirm(t("exercises.equipment.confirmDelete"))) {
+    store.deleteEquipmentConfig(id);
+  }
+}
+
+function closeEquipmentModal() {
+  showEquipmentModal.value = false;
+  cancelEditEquipment();
+}
+
 const scatterChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -956,6 +1121,11 @@ const barChartOptions = {
         </div>
 
         <div class="header-actions">
+          <!-- Equipment Management Button -->
+          <button class="equipment-btn" @click="showEquipmentModal = true">
+            {{ t("exercises.equipment.title") }}
+          </button>
+          
           <!-- Settings Button -->
           <button @click="$router.push('/settings')" class="settings-btn" title="Settings">
             ⚙️
@@ -963,7 +1133,9 @@ const barChartOptions = {
           
           <!-- User Badge -->
           <div v-if="userAccount" class="user-badge" @click="$router.push('/profile')" title="View Profile">
-            <div class="user-avatar">{{ userAccount.username.charAt(0).toUpperCase() }}</div>
+            <div class="user-avatar">
+              {{ userAccount.username.charAt(0).toUpperCase() }}
+            </div>
             <div class="user-details">
               <strong>{{ userAccount.username }}</strong>
               <span>{{ userAccount.email }}</span>
@@ -984,8 +1156,8 @@ const barChartOptions = {
       
       <!-- Exercise Statistics Summary -->
       <div class="exercise-stats-summary">
-        <div 
-          class="stat-pill clickable"
+        <div
+          class="stat-pill stat-total"
           :class="{ selected: plateauFilter === null }"
           @click="plateauFilter = null"
         >
@@ -996,8 +1168,8 @@ const barChartOptions = {
           <span class="stat-label">{{ $t("exercises.summary.active") }}:</span>
           <span class="stat-value">{{ exerciseStats.active }}</span>
         </div>
-        <div 
-          class="stat-pill stat-gaining clickable" 
+        <div
+          class="stat-pill stat-gaining clickable"
           v-if="exerciseStats.gaining > 0"
           :class="{ selected: plateauFilter === 'gaining' }"
           @click="plateauFilter = plateauFilter === 'gaining' ? null : 'gaining'"
@@ -1005,8 +1177,8 @@ const barChartOptions = {
           <span class="stat-icon">📈</span>
           <span class="stat-value">{{ exerciseStats.gaining }}</span>
         </div>
-        <div 
-          class="stat-pill stat-plateau clickable" 
+        <div
+          class="stat-pill stat-plateau clickable"
           v-if="exerciseStats.plateau > 0"
           :class="{ selected: plateauFilter === 'plateau' }"
           @click="plateauFilter = plateauFilter === 'plateau' ? null : 'plateau'"
@@ -1014,8 +1186,8 @@ const barChartOptions = {
           <span class="stat-icon">⏸️</span>
           <span class="stat-value">{{ exerciseStats.plateau }}</span>
         </div>
-        <div 
-          class="stat-pill stat-losing clickable" 
+        <div
+          class="stat-pill stat-losing clickable"
           v-if="exerciseStats.losing > 0"
           :class="{ selected: plateauFilter === 'losing' }"
           @click="plateauFilter = plateauFilter === 'losing' ? null : 'losing'"
@@ -1039,6 +1211,9 @@ const barChartOptions = {
           <div class="toggle-left">
             <div class="exercise-title-container">
               <span class="exercise-title">{{ ex.title }}</span>
+              <span v-if="ex.equipmentConfigs && ex.equipmentConfigs.length > 0" class="equipment-count-pill">
+                🏋️ {{ ex.equipmentConfigs.length }}
+              </span>
               <span class="last-trained-date">{{ formatLastTrained(ex.lastTrainedDate) }}</span>
             </div>
             <!-- Strength Insight Badge -->
@@ -1068,10 +1243,32 @@ const barChartOptions = {
         </button>
 
         <!-- Card Content (Expanded) -->
-        <div v-show="expanded[ex.id]" class="card-content">
+        <Transition name="card-expand">
+        <div v-if="expanded[ex.id]" class="card-content">
           <!-- Plateau Insight Message -->
           <div v-if="ex.strengthInsight" class="insight-message" :class="ex.strengthInsight.type">
             {{ ex.strengthInsight.message }}
+          </div>
+
+          <!-- Equipment Selector -->
+          <div v-if="ex.equipmentConfigs && ex.equipmentConfigs.length > 0" class="equipment-selector">
+            <label class="equipment-label">
+              🏋️ {{ $t("exercises.equipment.filter") }}:
+            </label>
+            <select 
+              :value="getSelectedEquipment(ex.selectionKey || ex.id)"
+              class="equipment-dropdown"
+              @change="setSelectedEquipment(ex.selectionKey || ex.id, ($event.target as HTMLSelectElement).value)"
+            >
+              <option value="all">{{ $t("exercises.equipment.allEquipment") }}</option>
+              <option 
+                v-for="config in ex.equipmentConfigs" 
+                :key="config.id" 
+                :value="config.id"
+              >
+                {{ config.equipmentName }}
+              </option>
+            </select>
           </div>
 
           <!-- Media and Stats -->
@@ -1462,8 +1659,124 @@ const barChartOptions = {
             </template>
           </div>
         </div>
+        </Transition>
       </div>
     </div>
+
+    <!-- Equipment/Vendor Management Modal -->
+    <Transition name="modal-fade">
+      <div v-if="showEquipmentModal" class="modal-overlay" @click.self="closeEquipmentModal">
+        <div class="modal-content">
+        <div class="modal-header">
+          <h2>{{ $t("exercises.equipment.title") }}</h2>
+          <button class="modal-close" @click="closeEquipmentModal">✕</button>
+        </div>
+        
+        <div class="modal-body">
+          <!-- Info text -->
+          <p class="equipment-info">
+            {{ $t("exercises.equipment.info") }}
+          </p>
+          
+          <!-- "Manage Equipment/Vendor" Form -->
+          <div class="equipment-form">
+            <!-- Exercise Name -->
+            <div class="form-group">
+              <label>{{ $t("exercises.equipment.exerciseTitle") }}</label>
+              <select
+                v-model="equipmentForm.exerciseTitle"
+                class="form-input"
+                required
+              >
+                <option value="" disabled>{{ $t("exercises.equipment.selectExercise") }}</option>
+                <option
+                  v-if="equipmentForm.exerciseTitle && !hasTrainedExerciseOption(equipmentForm.exerciseTitle)"
+                  :value="equipmentForm.exerciseTitle"
+                >
+                  {{ equipmentForm.exerciseTitle }}
+                </option>
+                <option
+                  v-for="exerciseOption in trainedExerciseOptions"
+                  :key="exerciseOption.value"
+                  :value="exerciseOption.value"
+                >
+                  {{ exerciseOption.label }}
+                </option>
+              </select>
+              <small class="form-hint">{{ $t("exercises.equipment.exerciseTitleHint") }}</small>
+            </div>
+            
+            <!-- Equipment/Vendor Name -->
+            <div class="form-group">
+              <label>{{ $t("exercises.equipment.equipmentName") }}</label>
+              <input 
+                v-model.lazy="equipmentForm.equipmentName" 
+                type="text" 
+                :placeholder="$t('exercises.equipment.equipmentNamePlaceholder')"
+                class="form-input"
+              />
+            </div>
+            
+            <!-- Search Keyword -->
+            <div class="form-group">
+              <label>{{ $t("exercises.equipment.searchKeyword") }}</label>
+              <input 
+                v-model.lazy="equipmentForm.searchKeyword" 
+                type="text" 
+                :placeholder="$t('exercises.equipment.searchKeywordPlaceholder')"
+                class="form-input"
+              />
+              <small class="form-hint">{{ $t("exercises.equipment.searchKeywordHint") }}</small>
+            </div>
+            
+            <!-- Image URL -->
+            <div class="form-group">
+              <label>{{ $t("exercises.equipment.imageUrl") }}</label>
+              <input 
+                v-model.lazy="equipmentForm.imageUrl" 
+                type="text" 
+                :placeholder="$t('exercises.equipment.imageUrlPlaceholder')"
+                class="form-input"
+              />
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="form-actions">
+              <!-- Add or Update-->
+              <button @click="saveEquipment" class="btn btn-primary">
+                {{ editingEquipmentId ? ($t("exercises.equipment.update")) : ($t("exercises.equipment.add")) }}
+              </button>
+              <!-- Cancel if editing-->
+              <button v-if="editingEquipmentId" @click="cancelEditEquipment" class="btn btn-secondary">
+                {{ $t("exercises.equipment.cancel") }}
+              </button>
+            </div>
+          </div>
+          
+          <!-- List configured equipment list -->
+          <div class="equipment-list">
+            <h3>{{ $t("exercises.equipment.configured") }}</h3>
+            <div v-if="store.equipmentConfigs.length === 0" class="no-equipment">
+              {{ $t("exercises.equipment.noEquipment") }}
+            </div>
+            <div v-for="config in store.equipmentConfigs" :key="config.id" class="equipment-item">
+              <div class="equipment-details">
+                <div class="equipment-title">{{ config.exerciseTitle }} - <strong>{{ config.equipmentName }}</strong></div>
+                <div class="equipment-keyword">{{ $t("exercises.equipment.keyword") }}: <code>{{ config.searchKeyword }}</code></div>
+                <div v-if="config.imageUrl" class="equipment-image">
+                  <img :src="config.imageUrl" :alt="config.equipmentName" />
+                </div>
+              </div>
+              <div class="equipment-actions">
+                <button @click="editEquipment(config)" class="equipment-list-btn" title="Edit">✏️ {{ $t("exercises.equipment.edit") }}</button>
+                <button @click="deleteEquipment(config.id)" class="equipment-list-btn" title="Delete">🗑️ {{ $t("exercises.equipment.delete") }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </Transition>
   </div>
 </template>
 
@@ -1538,6 +1851,27 @@ const barChartOptions = {
   box-shadow: 0 4px 16px color-mix(in srgb, var(--color-primary, #10b981) 30%, transparent);
 }
 
+/* Equipment button */
+.equipment-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+}
+
+.equipment-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-primary, #10b981) 30%, transparent);
+}
+
 .user-badge {
   display: flex;
   align-items: center;
@@ -1593,18 +1927,31 @@ const barChartOptions = {
   .user-badge {
     display: none;
   }
-  
+
   .settings-btn {
     display: none;
   }
-  
+
+  .header-actions {
+    width: 100%;
+    margin-top: 0.75rem;
+  }
+
+  .equipment-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
   .exercises-header {
     margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
+    padding-bottom: 1rem;
   }
-  
+
   .header-content {
     gap: 0rem;
+    flex-wrap: wrap;
   }
 }
 
@@ -1799,6 +2146,20 @@ const barChartOptions = {
 .insight-message.inactive { background: rgba(107, 114, 128, 0.12); color: #9ca3af; border-left: 3px solid #6b7280; }
 .insight-message.maintaining { background: rgba(59, 130, 246, 0.12); color: #60a5fa; border-left: 3px solid #3b82f6; }
 .card-content { margin-top: 0.75rem; }
+
+/* Card expand/collapse transition */
+.card-expand-enter-active,
+.card-expand-leave-active {
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+  transform-origin: top;
+}
+
+.card-expand-enter-from,
+.card-expand-leave-to {
+  opacity: 0;
+  transform: scaleY(0.95);
+}
+
 .card-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); }
 .exercise-title { margin: 0; color: var(--text-primary); font-size: 1.2rem; font-weight: 600; }
 .filter-label { color: var(--text-secondary); font-size: 0.85rem; }
@@ -1967,11 +2328,368 @@ const barChartOptions = {
   .header-actions { width: 100%; }
   .search-input { width: 100%; min-width: unset; }
   .exercise-card { padding: 0.4rem; }
+
+  /* Stat pills mobile layout */
+  .exercise-stats-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  /* Total and Active: 50% width each on first row */
+  .exercise-stats-summary .stat-pill.stat-total,
+  .exercise-stats-summary .stat-pill.stat-active {
+    flex: 0 0 calc(50% - 0.25rem);
+    justify-content: center;
+  }
+
+  /* Other pills: share the second row equally */
+  .exercise-stats-summary .stat-pill.stat-gaining,
+  .exercise-stats-summary .stat-pill.stat-plateau,
+  .exercise-stats-summary .stat-pill.stat-losing {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 480px) {
   .title-section h1 {
     font-size: 1.625rem;
   }
+}
+
+/* Equipment Management Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: var(--bg-primary);
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+  max-height: calc(90vh - env(safe-area-inset-top, 0px));
+  margin-top: env(safe-area-inset-top, 0px);
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  contain: layout style;
+}
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0.5rem;
+    padding-top: 0.5rem;
+    top: var(--topbar-height, 56px);
+    align-items: flex-start;
+  }
+
+  .modal-content {
+    max-height: calc(100vh - var(--topbar-height, 56px) - 1rem);
+    margin-top: 0;
+  }
+}
+
+/* Modal transition */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.15s ease-out;
+}
+
+.modal-fade-enter-active .modal-content,
+.modal-fade-leave-active .modal-content {
+  transition: transform 0.15s ease-out;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-enter-from .modal-content,
+.modal-fade-leave-to .modal-content {
+  transform: scale(0.95);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.equipment-info {
+  margin: 0 0 1.5rem 0;
+  padding: 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.equipment-form {
+  margin-bottom: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.form-hint {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--color-primary) 80%, black);
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-tertiary);
+}
+
+.equipment-list {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+}
+
+.equipment-list h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.no-equipment {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.equipment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.equipment-item:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--bg-secondary) 95%, var(--color-primary));
+}
+
+.equipment-details {
+  flex: 1;
+}
+
+.equipment-title {
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.equipment-keyword {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.equipment-keyword code {
+  background: var(--bg-tertiary);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: monospace;
+  color: var(--color-primary);
+}
+
+.equipment-image {
+  margin-top: 0.5rem;
+}
+
+.equipment-image img {
+  max-width: 100px;
+  max-height: 100px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.equipment-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+.equipment-list-btn {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  transition: transform 0.2s;
+}
+
+.equipment-list-btn:hover {
+  transform: scale(1.2);
+}
+
+/* Equipment item mobile layout */
+@media (max-width: 640px) {
+  .equipment-item {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .equipment-actions {
+    margin-left: 0;
+    align-self: flex-end;
+  }
+}
+
+/* Equipment Selector in Exercise Cards */
+.equipment-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.equipment-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.equipment-dropdown {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.equipment-dropdown:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.equipment-dropdown:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--border-color));
+}
+
+.equipment-count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--color-primary, #10b981) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary, #10b981) 45%, var(--border-color));
 }
 </style>

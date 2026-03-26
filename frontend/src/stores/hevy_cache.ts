@@ -12,6 +12,25 @@ interface Workout {
   [key: string]: any;
 }
 
+// Equipment/Vendor configuration for exercise variants
+export interface EquipmentConfig {
+  id: string; // Unique identifier
+  exerciseTitle: string;
+  equipmentName: string;
+  searchKeyword: string;
+  imageUrl?: string;
+}
+
+// Helper to load equipment configs from localStorage
+function loadEquipmentConfigs(): EquipmentConfig[] {
+  try {
+    const stored = localStorage.getItem("exercise_equipment_configs");
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
 
 export const useHevyCache = defineStore("hevyCache", {
   state: () => ({
@@ -27,6 +46,7 @@ export const useHevyCache = defineStore("hevyCache", {
     dateFormat: (localStorage.getItem("date_format") || "iso") as "iso" | "eu" | "us" | "uk",
     graphAxisFormat: (localStorage.getItem("graph_axis_format") || "short") as "numeric" | "short" | "long",
     userHeight: parseFloat(localStorage.getItem("user_height") || "0"),
+    equipmentConfigs: loadEquipmentConfigs() as EquipmentConfig[],
   }),
 
   getters: {
@@ -263,6 +283,37 @@ export const useHevyCache = defineStore("hevyCache", {
     setUserHeight(height: number) {
       this.userHeight = height;
       localStorage.setItem("user_height", height.toString());
+    },
+
+    // Equipment Configuration Management
+    addEquipmentConfig(config: Omit<EquipmentConfig, "id">) {
+      const newConfig: EquipmentConfig = {
+        ...config,
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      };
+      this.equipmentConfigs.push(newConfig);
+      localStorage.setItem("exercise_equipment_configs", JSON.stringify(this.equipmentConfigs));
+    },
+
+    updateEquipmentConfig(id: string, updates: Partial<Omit<EquipmentConfig, "id">>) {
+      const index = this.equipmentConfigs.findIndex(c => c.id === id);
+      if (index !== -1) {
+        const currentConfig = this.equipmentConfigs[index];
+        if (!currentConfig) return;
+        this.equipmentConfigs[index] = { ...currentConfig, ...updates };
+        localStorage.setItem("exercise_equipment_configs", JSON.stringify(this.equipmentConfigs));
+      }
+    },
+
+    deleteEquipmentConfig(id: string) {
+      this.equipmentConfigs = this.equipmentConfigs.filter(c => c.id !== id);
+      localStorage.setItem("exercise_equipment_configs", JSON.stringify(this.equipmentConfigs));
+    },
+
+    getEquipmentConfigsForExercise(exerciseTitle: string): EquipmentConfig[] {
+      return this.equipmentConfigs.filter(c => 
+        c.exerciseTitle.toLowerCase() === exerciseTitle.toLowerCase()
+      );
     },
   },
 });

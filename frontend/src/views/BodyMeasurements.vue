@@ -515,16 +515,20 @@ onMounted(async () => {
           <p class="subtitle">{{ t("bodyMeasurements.subtitle") }}</p>
         </div>
         <div class="header-actions">
+          <!-- Add Measurement Button -->
           <button class="add-btn" @click="showAddModal = true" :disabled="isUsingProApi">
-            <span>+</span>
-            {{ t("bodyMeasurements.addMeasurement") }}
+            + {{ t("bodyMeasurements.addMeasurement") }}
           </button>
+
+          <!-- Settings Button -->
           <button class="settings-btn" @click="router.push('/settings')" title="Settings">
             ⚙️
           </button>
+
+          <!-- User Badge -->
           <div v-if="userAccount" class="user-badge" @click="router.push('/profile')" title="View Profile">
             <div class="user-avatar">
-              {{ userAccount.username?.[0]?.toUpperCase() || "U" }}
+              {{ userAccount.username?.[0]?.toUpperCase()}}
             </div>
             <div class="user-details">
               <strong>{{ userAccount.username }}</strong>
@@ -1024,16 +1028,21 @@ onMounted(async () => {
   .user-badge {
     display: none;
   }
-  
+
   .settings-btn {
     display: none;
   }
-  
+
+  .header-actions {
+    width: 100%;
+    margin-top: 0.75rem;
+  }
+
   .bodymeasurements-header {
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
   }
-  
+
   .header-content {
     gap: 0rem;
   }
@@ -1706,12 +1715,10 @@ onMounted(async () => {
   }
 
   .add-btn {
+    width: 100%;
+    justify-content: center;
     padding: 0.625rem 1.25rem;
     font-size: 0.875rem;
-  }
-
-  .add-btn span {
-    font-size: 1.25rem;
   }
 
   /* Make modal more mobile friendly */

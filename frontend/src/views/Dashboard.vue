@@ -1962,7 +1962,6 @@ onMounted(() => {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
-    margin-bottom: 1.5rem;
   }
   
   .kpi-mobile-card {
