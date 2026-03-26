@@ -221,6 +221,7 @@ Clone/download the repository and follow these steps:
 - Support for distance-based workouts (running, cycling, etc.) and their specific stats (e.g., pace, distance)
   - Seperate distance stats for duraion-based workouts (e.g. Dead Hang)
 - "Top 3 Best Sets" not actually showing the best sets for bodyweight exercises
+- Multi-Vendor Support: In addition to filtering for include "All Vendors" or "Only Vendor X", add a exclude filter "Exclude Vendor X" so that you can exclude a specific vendor from the stats without excluding all other vendors.
 
 ---
 
