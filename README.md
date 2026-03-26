@@ -24,6 +24,7 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 
 - [Features](#features)
   - [Plateau \& Strength Detection](#plateau--strength-detection)
+  - [Multi-Vendor Support](#multi-vendor-support)
 - [Screenshots](#screenshots)
 - [Login Comparison](#login-comparison)
 - [Usage](#usage)
@@ -55,6 +56,7 @@ Hevy Insights allows you to log in with your Hevy credentials and fetch your wor
 - **Exercises**: View all exercises with video thumbnails and detailed stats.
   - **Plateau Detection**: Automatically detects when your performance has plateaued on an exercise
   - **Strength Tracking**: Shows if you're gaining or losing strength over your recent sessions
+  - **Multi-Vendor Support**: Track the same exercise even if trained with different vendors (e.g. Chest Flys from Gym A and Gym B) without mixing progress or stats.
 - **Body Measurements**: Track your weight and body fat percentage over time with interactive charts.
 - **Custom Settings**: Individualize your experience when using Hevy Insights.
 - **Languages**: Language support for 🇺🇸, 🇩🇪 and 🇪🇸.
@@ -93,6 +95,14 @@ This feature helps you identify when it's time to:
 - **Take recovery time** or **check form** (when declining)
 - **Build more history** (when insufficient data)
 
+## Multi-Vendor Support
+
+It can happen that you train the same exercise (e.g. Chest Flys) in different gyms or with different equipment, which can lead to incorrect statistics because you are mixing two vendors together which may have a different weight progression. For example, you might have trained Chest Flys in Gym A which has a maximum weight of 80kg, and then you switch to Gym B which has a maximum weight of 110kg. 
+
+If you mix the stats together, strength progression, personal records and other metrics will be skewed. In Hevy Insights you can create multiple vendors for the same exercise so that Hevy Insights can automatically assign each workout session to the correct vendor, so that you can track your progress accurately for each vendor without mixing them together.
+
+[Image](/readme_images/exercises_multivendor.png)
+
 # Screenshots
 
 > [!NOTE]
@@ -120,7 +130,7 @@ You can decide based on your needs which login method suits you best:
 > I recommed using the **Hevy Credentials Login** for the best experience since it shows the most data.
 
 | Feature                      | Hevy Credentials Login       | Hevy PRO API Key Login       | CSV Upload                   |
-| ---------------------------- | ----------------------------- | ----------------------------- | ---------------------------- |
+| ---------------------------- | ---------------------------- | ---------------------------- | ---------------------------- |
 | Requires Hevy PRO Membership | ✅ No                         | ❌ Yes                        | ✅ No                         |
 | Data Freshness               | ✅ Live data from Hevy API    | ✅ Live data from Hevy API    | ❌ Static data from CSV file  |
 | Data Range                   | ✅ Full history from Hevy API | ✅ Full history from Hevy API | ✅ Full history from CSV file |
@@ -131,6 +141,7 @@ You can decide based on your needs which login method suits you best:
 | Workout Streaks              | ✅ Yes                        | ✅ Yes                        | ❌ No                         |
 | Calories & Heart Rate Data   | ✅ Yes                        | ❌ No                         | ❌ No                         |
 | Body Measurements            | ✅ Yes                        | ❌ No                         | ❌ No                         |
+| Multi-Vendor Support         | ✅ Yes                        | ✅ Yes                        | ✅ Yes                        |
 
 > [!IMPORTANT]
 > **Why the differences in the login modes?** It's because not every login method provides the same data to use. The [Hevy PRO API](https://api.hevyapp.com/docs/#/) key login only provides data for a small amount of features compared to what you can see inside the Hevy app (which is using the **Hevy Credentials** login method). The CSV upload is the most basic one, it only provides the data that is contained in the CSV file you can export from the Hevy app, which is by far not everything that the Hevy API provides.
@@ -146,7 +157,7 @@ Navigate to the hosted version of Hevy Insights at: [https://hevy.kida.one](http
 The latest version is always hosted there.
 
 > [!IMPORTANT]
-> **Authentication tokens** are stored in **secure HttpOnly cookies** on **your browser only**! 
+> **Authentication tokens** are stored in **secure HttpOnly cookies** on **your browser only**!
 > These cookies are not accessible to JavaScript (XSS protection) and are automatically sent with API requests.  
 > **User preferences** (theme, language, settings) are stored in your browser's local storage.
 
@@ -192,7 +203,6 @@ Clone/download the repository and follow these steps:
 
 - Better logging
 - Add visual representation of trained muscle groups (body heatmap)
-- Add calendar filter
 - In-depth muscle analysis page
 - Remove emojis, use icons instead
 - Resort/group CSS styles better
@@ -217,7 +227,7 @@ Clone/download the repository and follow these steps:
 # Technical Documentation
 
 > [!NOTE]
-> As of February 2026, **v1.8.2**
+> As of March 2026, **v1.8.6**
 
 ## Project Structure
 

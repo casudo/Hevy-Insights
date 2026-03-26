@@ -634,10 +634,9 @@ onMounted(() => {
   background: var(--bg-primary);
 }
 
-/* Header Styles - Match Dashboard.vue */
+/* Header Styles */
 .share-header {
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-color);
 }
 

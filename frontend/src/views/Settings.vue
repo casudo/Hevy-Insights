@@ -1077,15 +1077,28 @@ const resetSettings = () => {
 /* Responsive */
 @media (max-width: 768px) {
   .settings {
-    padding: 1.5rem 1rem;
+    padding: 1rem 0.5rem;
+  }
+
+  .settings-header {
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  } 
+
+  .settings-section {
+    padding: 0.8rem;
+  }
+
+  .settings-content {
+    gap: 1rem;
+  }
+
+  .settings-row {
+    gap: 1rem;
   }
 
   .title-section h1 {
     font-size: 1.875rem;
-  }
-
-  .settings-section {
-    padding: 1.5rem;
   }
 
   .theme-grid {
