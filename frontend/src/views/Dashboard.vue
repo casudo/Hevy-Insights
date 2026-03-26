@@ -2693,8 +2693,8 @@ onMounted(() => {
   }
   
   /* Hide plateau/PR section titles when collapsible is active */
-  .plateau-section .plateau-section-title:not(),
-  .pr-section .pr-section-title:not() {
+  .plateau-section .plateau-section-title,
+  .pr-section .pr-section-title {
     display: none;
   }
   
