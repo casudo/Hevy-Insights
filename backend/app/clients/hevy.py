@@ -1,29 +1,18 @@
-"""Single Module File for Hevy API"""
+"""Hevy API client."""
 
 import requests
 import logging
-from dataclasses import dataclass
-from typing import Optional
 from os import getenv
+from typing import Any, cast
 from dotenv import load_dotenv
+
+from app.models.hevy import HevyUser
 
 ### ============================================================================
 
 load_dotenv()  # Load environment variables from .env file
 
-### Data classes to replace passing many parameters around
-
-
-@dataclass
-class HevyUser:
-    """User data returned from Hevy API login (OAuth2)"""
-
-    access_token: str  # OAuth2 access token
-    user_id: str
-    username: Optional[str] = None
-    email: Optional[str] = None
-    refresh_token: Optional[str] = None  # OAuth2 refresh token
-    expires_at: Optional[str] = None  # Token expiration timestamp
+JsonDict = dict[str, Any]
 
 
 ### Configuration class
@@ -32,10 +21,11 @@ class HevyConfig:
     """Default configuration for Hevy API client."""
 
     def __init__(self):
-        self.base_url = "https://api.hevyapp.com"
-        self.x_api_key = getenv("X_API_KEY")  # Static for all users (free API)
-        if not self.x_api_key:
+        self.base_url: str = "https://api.hevyapp.com"
+        x_api_key = getenv("X_API_KEY")  # Static for all users (free API)
+        if not x_api_key:
             raise ValueError("X_API_KEY environment variable is required")
+        self.x_api_key: str = x_api_key
 
     @property
     def login_url(self) -> str:
@@ -43,7 +33,7 @@ class HevyConfig:
 
     @property
     def refresh_token_url(self) -> str:
-        """OAuth2 token refresh endpoint"""
+        """OAuth2 token refresh endpoint."""
         return f"{self.base_url}/refresh_token"
 
     @property
@@ -73,7 +63,7 @@ class HevyClient:
     2. Hevy PRO API key (for PRO subscribers)
     """
 
-    def __init__(self, access_token: Optional[str] = None, api_key: Optional[str] = None, config: Optional[HevyConfig] = None):
+    def __init__(self, access_token: str | None = None, api_key: str | None = None, config: HevyConfig | None = None):
         self.access_token = access_token  # OAuth2 access token
         self.api_key = api_key  # Hevy PRO API key
         self.config = config or HevyConfig()
@@ -126,7 +116,7 @@ class HevyClient:
             response = self.session.post(self.config.login_url, headers=headers, json=body, timeout=30)
             response.raise_for_status()
 
-            data = response.json()
+            data = cast(JsonDict, response.json())
 
             ### Extract response and validate
             access_token = data.get("access_token") or data.get("auth_token")  # fallback
@@ -140,10 +130,11 @@ class HevyClient:
             ### Update client's access token and headers after successful login
             self.access_token = access_token
             self._update_headers()
+            user_id = data.get("user_id")
 
             return HevyUser(
                 access_token=access_token,
-                user_id=data.get("user_id"),
+                user_id=user_id if isinstance(user_id, str) else "",
                 username=email_or_username if "@" not in email_or_username else None,
                 email=email_or_username if "@" in email_or_username else None,
                 refresh_token=refresh_token,
@@ -193,7 +184,7 @@ class HevyClient:
             response = self.session.post(self.config.refresh_token_url, headers=headers, json=body, timeout=30)
             response.raise_for_status()
 
-            data = response.json()
+            data = cast(JsonDict, response.json())
 
             ### Extract response and validate
             access_token = data.get("access_token") or data.get("auth_token")  # fallback
@@ -207,10 +198,11 @@ class HevyClient:
             ### Update client's access token and headers after successful login
             self.access_token = access_token
             self._update_headers()
+            user_id = data.get("user_id")
 
             return HevyUser(
                 access_token=access_token,
-                user_id=data.get("user_id"),
+                user_id=user_id if isinstance(user_id, str) else "",
                 refresh_token=new_refresh_token,
                 expires_at=data.get("expires_at"),
             )
@@ -225,12 +217,12 @@ class HevyClient:
             logging.error(f"Unexpected error during token refresh: {e}")
             raise HevyError(f"Unexpected error occurred: {e}")
 
-    def get_user_account(self) -> Optional[dict]:
+    def get_user_account(self) -> JsonDict:
         """
         Fetch user account information.
 
         Returns:
-            Optional[dict]: User account data if successful, None otherwise
+            dict | None: User account data if successful, None otherwise
 
         Raises:
             HevyError: If API request fails
@@ -244,7 +236,7 @@ class HevyClient:
             response = self.session.get(self.config.user_account_url, timeout=30)
             response.raise_for_status()
 
-            data = response.json()
+            data = cast(JsonDict, response.json())
             logging.debug(f"Successfully fetched account for user: {data.get('username')}")
             return data
 
@@ -266,7 +258,7 @@ class HevyClient:
             logging.error(f"Unexpected error fetching user account: {e}")
             raise HevyError(f"Unexpected error occurred: {e}")
 
-    def get_workouts(self, username: str, offset: int = 0) -> dict:
+    def get_workouts(self, username: str, offset: int = 0) -> JsonDict:
         """
         Fetch paginated workouts from Hevy API.
 
@@ -291,7 +283,7 @@ class HevyClient:
             response = self.session.get(self.config.user_workouts_paged_url, params=params, timeout=30)
             response.raise_for_status()
 
-            data = response.json()
+            data = cast(JsonDict, response.json())
             workout_count = len(data.get("workouts", []))
             logging.debug(f"Successfully fetched {workout_count} workouts")
             return data
@@ -314,7 +306,7 @@ class HevyClient:
             logging.error(f"Unexpected error fetching workouts: {e}")
             raise HevyError(f"Unexpected error occurred: {e}")
 
-    def get_body_measurements(self) -> list:
+    def get_body_measurements(self) -> list[JsonDict]:
         """
         Fetch body measurements from Hevy API.
 
@@ -333,7 +325,7 @@ class HevyClient:
             response = self.session.get(self.config.body_measurements_url, timeout=30)
             response.raise_for_status()
 
-            data = response.json()
+            data = cast(list[JsonDict], response.json())
             logging.debug(f"Successfully fetched {len(data)} body measurements")
             return data
 
@@ -355,7 +347,7 @@ class HevyClient:
             logging.error(f"Unexpected error fetching body measurements: {e}")
             raise HevyError(f"Unexpected error occurred: {e}")
 
-    def post_body_measurements(self, date: str, weight_kg: float) -> None:
+    def post_body_measurements(self, date: str, weight_kg: float) -> dict[str, bool]:
         """
         Post body measurements to Hevy API.
 
@@ -377,15 +369,9 @@ class HevyClient:
             response = self.session.post(f"{self.config.body_measurements_url}_batch", json=body, timeout=30)
             response.raise_for_status()
 
-            ### Hevy API returns 200 OK with empty body on successful POST
-            if response.status_code == 200:
-                logging.debug("Successfully posted body measurement")
-                return {"success": True}
+            logging.debug("Successfully posted body measurement")
+            return {"success": True}
 
-        except requests.JSONDecodeError as e:
-            logging.error(f"JSON decode error posting body measurements: {e}")
-            logging.error(f"Response status: {response.status_code}, Content: {response.text[:200]}")
-            raise HevyError(f"JSON decode error occurred: {e}")
         except requests.HTTPError as e:
             logging.error(f"HTTP error posting body measurements: {e}")
             if e.response.status_code == 401:
@@ -403,7 +389,7 @@ class HevyClient:
 
     ### ========== Hevy PRO API Methods ==========
 
-    def get_pro_workouts(self, page: int = 1, page_size: int = 10) -> dict:
+    def get_pro_workouts(self, page: int = 1, page_size: int = 10) -> JsonDict:
         """
         Fetch paginated workouts from Hevy PRO API.
 
@@ -428,8 +414,8 @@ class HevyClient:
             response = self.session.get(self.config.pro_workouts_url, params=params)
             response.raise_for_status()
 
-            data = response.json()
-            workouts = data.get("workouts", [])
+            data = cast(JsonDict, response.json())
+            workouts = cast(list[JsonDict], data.get("workouts", []))
 
             ### Transform PRO API format to match free API format
             from datetime import datetime

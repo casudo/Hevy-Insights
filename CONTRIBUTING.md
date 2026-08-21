@@ -97,12 +97,12 @@ Clone/download the repository and follow the [Setup development environment](#se
    ```
 
    > [!NOTE]
-   > The `playwright install chromium` command downloads the Chromium browser (~300MB). This only needs to be done once per environment.
+   > The `playwright install chromium` command downloads the Chromium browser (~300MB). Re-run it after Playwright upgrades or if the backend reports a missing browser executable.
 
 4. Run the FastAPI backend:
 
    ```bash
-   python backend/fastapi_server.py
+   uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 5000
    ```
 
    FastAPI endpoint documentation: `http://localhost:5000/api/docs`
@@ -135,7 +135,7 @@ Hevy Insights uses [Playwright](https://playwright.dev/) to automate reCAPTCHA v
 
 #### What does Playwright do?
 
-The `backend/hevy_recaptcha.py` module uses Playwright to:
+The `backend/app/clients/recaptcha.py` module uses Playwright to:
 
 1. Launch a headless Chrome browser
 2. Navigate to Hevy's login page

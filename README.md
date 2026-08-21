@@ -169,9 +169,21 @@ Clone/download the repository and follow these steps:
 
 2. Install the backend and frontend dependencies.
 
+   ```bash
+   python -m venv venv
+   .\venv\Scripts\activate
+   pip install -r backend\requirements.txt
+   playwright install chromium
+   cd frontend && npm ci
+   ```
+
+   On macOS/Linux, activate the virtual environment with `source venv/bin/activate` and use `/` instead of `\` in paths.
+
+   Re-run `playwright install chromium` if Playwright is upgraded or the backend reports a missing browser executable.
+
 3. **Start the backend** (Terminal 1):
 
-   `python backend/fastapi_server.py`
+   `uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 5000`
 
 4. **Start the frontend** (Terminal 2):
 
@@ -237,9 +249,14 @@ hevy-insights/
 ├── backend/                   # Backend Components
 │   ├── .dockerignore          # Docker ignore file for backend
 │   ├── Dockerfile_backend     # Dockerfile for backend
-│   ├── fastapi_server.py      # FastAPI server with REST endpoints
-│   ├── hevy_api.py            # Hevy API module
-│   ├── hevy_recaptcha.py      # reCAPTCHA v3 automation via Playwright
+│   ├── app/                   # FastAPI application package
+│   │   ├── api/               # API router and route modules
+│   │   ├── clients/           # Hevy API and reCAPTCHA clients
+│   │   ├── core/              # Settings, logging, rate limiting, security helpers
+│   │   ├── models/            # Internal domain models
+│   │   ├── schemas/           # Pydantic request/response schemas
+│   │   ├── services/          # Demo data and version-check services
+│   │   └── main.py            # FastAPI app factory and ASGI app
 │   └── requirements.txt       # Python backend dependencies
 └── frontend/                  # Frontend Components
     ├── public/                # Static assets
@@ -290,10 +307,11 @@ hevy-insights/
 1. User logs in via `/api/login` endpoint with Hevy credentials
 2. Backend automatically generates reCAPTCHA v3 token using Playwright (headless Chrome)
 3. Backend authenticates with Hevy API using OAuth2 and receives `access_token` + `refresh_token`
-4. Backend sets **HttpOnly cookies** (`hevy_access_token`, `hevy_refresh_token`, `hevy_token_expires_at`)
-5. Browser automatically sends cookies with subsequent API requests
-6. Backend reads authentication from cookies and proxies requests to Hevy API
-7. On token expiration, backend automatically refreshes tokens via `/api/refresh_token` using refresh token cookie
+4. Backend creates a Hevy saved-account secret for browser-login token refresh
+5. Backend sets **HttpOnly cookies** (`hevy_access_token`, `hevy_refresh_token`, `hevy_token_expires_at`, `hevy_saved_account_user_id`, `hevy_saved_account_secret`)
+6. Browser automatically sends cookies with subsequent API requests
+7. Backend reads authentication from cookies and proxies requests to Hevy API
+8. On token expiration, backend refreshes browser-login sessions via `/api/auth/refresh_token` using the saved-account cookies
 
 **PRO API Key Authentication:**
 
@@ -319,7 +337,7 @@ hevy-insights/
 ### Direct-to-Backend with CORS
 
 - In local development, the frontend dev server runs on `http://localhost:5173` and the backend on `http://localhost:5000`. Because these are different origins, FastAPI enables CORS middleware so the browser can call the backend directly.
-- CORS setup in `fastapi_server.py`.
+- CORS setup in `backend/app/main.py`.
 - In production behind Nginx, CORS is not required because the frontend and `/api` share the same origin.
 
 # Legal Disclaimer
