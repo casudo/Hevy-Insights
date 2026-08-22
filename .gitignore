@@ -232,3 +232,14 @@ dist-ssr
 *.sw?
 
 /backend/sample_data
+/backend/data
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+.opencode/
+
+# Local HTTP client secrets
+kulala/http-client.private.env.json

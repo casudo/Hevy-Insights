@@ -41,4 +41,4 @@ USER hevyuser
 EXPOSE 5000
 
 ### Run FastAPI with Uvicorn (bind on 0.0.0.0 for container)
-CMD ["uvicorn", "fastapi_server:app", "--host", "0.0.0.0", "--port", "5000", "--proxy-headers"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5000", "--proxy-headers"]

@@ -14,7 +14,6 @@ Key features:
 
 import logging
 import time
-from typing import Optional
 from playwright.async_api import async_playwright, Browser
 from os import getenv
 
@@ -22,11 +21,27 @@ from os import getenv
 RECAPTCHA_SITE_KEY = getenv("RECAPTCHA_SITE_KEY")
 RECAPTCHA_TTL = 90  # reCAPTCHA tokens expire after 90 seconds (API limit)
 RECAPTCHA_CACHE_DURATION = 15  # Cache tokens for only 15 seconds to prevent reuse (tokens are single-use)
+PLAYWRIGHT_INSTALL_COMMAND = "playwright install chromium"
 
 ### Global browser instance and token cache
-_browser: Optional[Browser] = None
-_cached_token: Optional[str] = None
+_browser: Browser | None = None
+_cached_token: str | None = None
 _token_timestamp: float = 0
+
+
+def _is_missing_browser_error(error: Exception) -> bool:
+    error_message = str(error)
+    return "Executable doesn't exist" in error_message and "playwright install" in error_message
+
+
+def _missing_browser_message() -> str:
+    browser_path = getenv("PLAYWRIGHT_BROWSERS_PATH")
+    browser_path_hint = f" PLAYWRIGHT_BROWSERS_PATH is currently '{browser_path}'." if browser_path else ""
+    return (
+        "Playwright browser binaries are not installed for this environment. "
+        f"Run `{PLAYWRIGHT_INSTALL_COMMAND}` from the repository root, then restart the backend."
+        f"{browser_path_hint}"
+    )
 
 
 async def get_recaptcha_token() -> str:
@@ -249,5 +264,8 @@ async def _generate_recaptcha_token() -> str:
                 await playwright.stop()
             except:
                 pass
+
+        if _is_missing_browser_error(e):
+            raise RuntimeError(_missing_browser_message())
 
         raise Exception(f"Failed to generate reCAPTCHA token: {e}")
